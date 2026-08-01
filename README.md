@@ -178,7 +178,7 @@ or
 
 ```java
 .onException((exchange, exception) -> {
-    LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
+    Logger.log("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
     exchange.sendErrorResponse("An error occurred.");
 })
 ```
@@ -196,7 +196,6 @@ myServer.on("/change", exchange -> {
     exchange.sendResponse("Updated");
 })
 .on("/setLogo", (exchange) -> {
-    LoggerManager.quickLog(exchange.getQueryParameters().get("path"));
     try {
         myServer.serveFile("/logo", exchange.getQueryParameter("path", "./logos/default.png"));
     } catch (IllegalArgumentException e) {
@@ -632,7 +631,7 @@ public class Main {
                 return true;
             })
             .onException((exchange, exception) -> {
-                    LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
+                    Logger.log("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
                     exchange.sendErrorResponse("An error occurred.");
                 })
             .limitUploadSize(50 * 1024 * 1024) // 50 MB
