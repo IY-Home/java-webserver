@@ -23,7 +23,7 @@ public class InternalHandlerWrapper implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange httpExchange) {
+    public void handle(HttpExchange httpExchange) throws IOException {
         Exchange exchange = new Exchange(httpExchange, logger);
         try {
             boolean hooksPassed = true;
