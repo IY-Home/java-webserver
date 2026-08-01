@@ -38,8 +38,7 @@ build/
 ### Mac OS ###
 .DS_Store
 
-./public/
-./templates/
-./src/main/java/com/youfuns/webserver/demo/
-./target/
-./uploads/
+public/
+templates/
+src/main/java/com/youfuns/webserver/demo/
+uploads/

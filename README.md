@@ -34,7 +34,7 @@ Add these dependencies to your `pom.xml`:
 </dependencies>
 ```
 
-Import the JAR file to your project, and add this depencendy:
+Import the JAR file to your project, and add this dependency:
 ```xml
 <dependency>
     <groupId>com.youfuns</groupId>
@@ -60,6 +60,15 @@ import com.youfuns.webserver.*;
 ```java
 new WebServer(8080)
     .start();
+```
+## Using custom `InetSocketAddress`
+
+```java
+import java.net.InetSocketAddress;
+
+// Bind ONLY to localhost (127.0.0.1)
+InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8080);
+WebServer myServer = new WebServer(address, your_logger);
 ```
 
 ## Defining Basic Endpoints

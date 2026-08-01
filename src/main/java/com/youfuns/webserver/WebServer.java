@@ -19,8 +19,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class WebServer {
-    private final int port;
-
     private final HttpServer server;
 
     private SimpleLogger logger;
@@ -44,18 +42,27 @@ public class WebServer {
             logger.log(WebServer.class, "Invalid port number: " + port, SimpleLogger.Level.ERROR);
             throw new IllegalArgumentException(String.format("Invalid port number: %d", port));
         }
-        this.port = port;
+
+        this(new InetSocketAddress(port), logger);
+    }
+
+    public WebServer(InetSocketAddress address) {
+        this(address, new DummyLogger());
+    }
+
+    public WebServer(InetSocketAddress address, SimpleLogger logger) {
+        this.logger = logger;
 
         logger.log(WebServer.class, "Starting HttpServer...", SimpleLogger.Level.INFO);
 
         try {
-            this.server = HttpServer.create(new InetSocketAddress(port), 0);
+            this.server = HttpServer.create(address, 0);
         } catch (IOException e) {
             logger.log(WebServer.class, "HttpServer start failed. Encountered " + e.getClass().getSimpleName() + ": " + e.getMessage(), SimpleLogger.Level.ERROR);
             throw new RuntimeException("Failed to create HttpServer", e);
         }
 
-        logger.log(WebServer.class, "Created HttpServer at port " + port, SimpleLogger.Level.INFO);
+        logger.log(WebServer.class, "Created HttpServer at port " + address.getPort(), SimpleLogger.Level.INFO);
 
         this.hooksAndTails = new InternalHandlerWrapper.HooksAndTails();
 
@@ -240,7 +247,7 @@ public class WebServer {
         server.setExecutor(executor);
 
         server.start();
-        logger.log(WebServer.class, "Started HttpServer on port " + port, SimpleLogger.Level.INFO);
+        logger.log(WebServer.class, "Started HttpServer", SimpleLogger.Level.INFO);
         return this;
     }
 
