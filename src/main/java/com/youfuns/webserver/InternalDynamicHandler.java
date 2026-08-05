@@ -3,8 +3,6 @@ package com.youfuns.webserver;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 public class InternalDynamicHandler implements InternalHandler {
     private final TemplateMatcher templateMatcher;
@@ -43,6 +41,7 @@ public class InternalDynamicHandler implements InternalHandler {
     @Override
     public void handle(Exchange exchange) throws IOException {
         String address = exchange.getRequestPath();
+        String matchableAddress = address.endsWith("/") ? address : address + "/";
 
         Map<String, DynamicExchangeHandler> defaultTemplateHandlers = new HashMap<>();
         for (Map.Entry<Map.Entry<String, String>, DynamicExchangeHandler> entry : dynamicPaths.entrySet()) {
@@ -57,8 +56,9 @@ public class InternalDynamicHandler implements InternalHandler {
                 continue;
             }
             String[] extracted = templateMatcher.extractValues(template, address);
-            if (extracted != null && extracted.length > 0) {
-                entry.getValue().handle(extracted, exchange);
+            String[] extracted2 = extracted != null && extracted.length > 0 ? extracted : templateMatcher.extractValues(template, matchableAddress);
+            if (extracted2 != null && extracted2.length > 0) {
+                entry.getValue().handle(extracted2, exchange);
                 return;
             }
         }
@@ -66,8 +66,9 @@ public class InternalDynamicHandler implements InternalHandler {
         for (Map.Entry<String, DynamicExchangeHandler> entry : defaultTemplateHandlers.entrySet()) {
             String template = entry.getKey();
             String[] extracted = templateMatcher.extractValues(template, address);
-            if (extracted != null && extracted.length > 0) {
-                entry.getValue().handle(extracted, exchange);
+            String[] extracted2 = extracted != null && extracted.length > 0 ? extracted : templateMatcher.extractValues(template, matchableAddress);
+            if (extracted2 != null && extracted2.length > 0) {
+                entry.getValue().handle(extracted2, exchange);
                 return;
             }
         }

@@ -79,6 +79,9 @@ public class WebServer {
             logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
             return this;
         }
+        if (endpoint.endsWith("/")) {
+            endpoint = endpoint.substring(0, endpoint.length() - 1);
+        }
         boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
         dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler().setOnNotFound(homeHandler.getNotFound()));
         InternalDynamicHandler dynamicHandler = dynamicHandlers.get(endpoint);
@@ -102,6 +105,9 @@ public class WebServer {
     public WebServer dynamicEndpoint(String template, String method, DynamicExchangeHandler action) {
         int index = template.indexOf('$');
         String endpoint = index == -1 ? template : template.substring(0, index);
+        if (endpoint.endsWith("/")) {
+            endpoint = endpoint.substring(0, endpoint.length() - 1);
+        }
         boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
         dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler().setOnNotFound(homeHandler.getNotFound()));
         InternalDynamicHandler dynamicHandler = dynamicHandlers.get(endpoint);
