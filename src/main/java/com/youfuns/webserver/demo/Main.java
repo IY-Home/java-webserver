@@ -8,7 +8,7 @@ import com.youfuns.webserver.WebServer;
 public class Main {
     // Testing the webserver
     public static void main(String[] args) {
-        WebServer myServer = new WebServer(8081, LoggerManager.INSTANCE.getLogger());
+        WebServer myServer = new WebServer(8080, LoggerManager.INSTANCE.getLogger());
         myServer.on("/greet/$", (params, exchange) -> {
                     TemplateEngine engine = TemplateEngine.fromFile("./templates/index.html");
                     engine.replace("title", "Welcome");
