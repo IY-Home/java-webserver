@@ -40,5 +40,5 @@ build/
 
 public/
 templates/
-src/main/java/com/youfuns/webserver/demo/
 uploads/
+/src/main/java/com/youfuns/webserver/demo/

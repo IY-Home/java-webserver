@@ -631,9 +631,13 @@ public class Main {
                 return true;
             })
             .onException((exchange, exception) -> {
-                    Logger.log("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
+                Logger.log("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
+                if (exception instanceof IllegalArgumentException) {
+                    exchange.sendBadRequestResponse("Bad request: " + exception.getMessage());
+                } else {
                     exchange.sendErrorResponse("An error occurred.");
-                })
+                }
+            })
             .limitUploadSize(50 * 1024 * 1024) // 50 MB
             .start();
     }

@@ -5,19 +5,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.youfuns.logger.SimpleLogger;
-
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class Exchange implements AutoCloseable {
@@ -123,6 +127,11 @@ public class Exchange implements AutoCloseable {
 
     public List<String> getRequestHeaders(String name) {
         return headers.get(name);
+    }
+
+    public Map<String, List<String>> getRequestHeaderMap() {
+        Map<String, List<String>> headerMap = headers;
+        return headerMap;
     }
 
     public boolean hasRequestHeader(String name) {
@@ -681,7 +690,7 @@ public class Exchange implements AutoCloseable {
         return savePath.toString();
     }
 
-    public void serveFile(String filePath) {
+    public void serveFile(String filePath) throws IOException {
         String expandedPath = filePath.replace("~", System.getProperty("user.home"));
         Path file = Paths.get(expandedPath);
         if (!Files.exists(file) || Files.isDirectory(file)) {
@@ -707,6 +716,7 @@ public class Exchange implements AutoCloseable {
             }
         } catch (IOException e) {
             logger.log(WebServer.class, "Failed to serve file: " + e.getMessage(),  SimpleLogger.Level.ERROR);
+            throw e;
         };
     }
 

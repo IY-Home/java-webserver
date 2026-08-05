@@ -1,10 +1,6 @@
 package com.youfuns.webserver;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 public class InternalHomeHandler implements InternalHandler {
     private ExchangeHandler notFound;
@@ -39,7 +35,10 @@ public class InternalHomeHandler implements InternalHandler {
         if (address == null || address.isEmpty() || address.equals("/")) {
             dynamicHandler.handle(exchange);
         } else {
-            if (notFound == null) exchange.sendNotFoundResponse();
+            if (notFound == null) {
+                exchange.sendNotFoundResponse();
+                return;
+            }
             notFound.handle(exchange);
         }
     }
