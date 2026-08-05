@@ -37,7 +37,7 @@ public class Main {
                         myServer.serveFile("/config", "./config");
 
                     } else {
-                        exchange.sendBadRequestResponse("Only PNG and JPEG allowed");
+                        exchange.sendBadRequestResponse("Only JSON allowed");
                     }
                 })
                 .hook(exchange -> {
