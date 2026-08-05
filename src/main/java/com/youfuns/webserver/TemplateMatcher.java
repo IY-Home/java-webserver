@@ -1,7 +1,5 @@
 package com.youfuns.webserver;
 
-import com.youfuns.logger.LoggerManager;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +11,6 @@ public class TemplateMatcher {
     }
 
     public String[] extractValues(String template, String input) {
-        LoggerManager.quickLog(this, template + " " + input);
         // If template has no placeholder, return empty array
         if (!template.contains(String.valueOf(placeholder))) {
             return new String[0];
