@@ -61,7 +61,8 @@ import com.youfuns.webserver.*;
 new WebServer(8080)
     .start();
 ```
-## Using custom `InetSocketAddress`
+
+### Using custom `InetSocketAddress`
 
 ```java
 import java.net.InetSocketAddress;
@@ -69,6 +70,21 @@ import java.net.InetSocketAddress;
 // Bind ONLY to localhost (127.0.0.1)
 InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8080);
 WebServer myServer = new WebServer(address, your_logger);
+```
+
+### Server operations
+
+```java
+server.start(); // starts the server
+server.
+
+stop(); // stops the server
+server.
+
+stop(10); // stops the server with up to 10 seconds to wait until exchanges have finished
+server.
+
+restart(); // restarts the server
 ```
 
 ## Defining Basic Endpoints
@@ -336,7 +352,10 @@ webServer.limitUploadSize(int_size_in_bytes)
 })
 ```
 
-***Note:** You can have multiple hook and tails, and they run at the order that they are added. Even if the main handler was not run due to a hook returning false, tails will still run, allowing you to close database connections or log timing. Tails also return a boolean to halt the execution of subsequent tails.
+***Note:** You can have multiple hook and tails, and they run at the order that they are added.
+Even if the main handler was not run due to a hook returning false,
+tails will still run, allowing you to close database connections or log timing.
+Tails also return a boolean to halt the execution of subsequent tails.*
 
 ## Response Methods
 
@@ -370,6 +389,21 @@ exchange.sendUnauthorizedResponse();   // 401
 exchange.sendForbiddenResponse();      // 403
 exchange.sendCreatedResponse();        // 201
 exchange.sendNoContentResponse();      // 204
+```
+
+### Helper format functions
+
+```java
+exchange.formatHTML(); // equivalent to `addResponseHeader("Content-Type", "text/html; charset=UTF-8");`
+exchange.
+
+formatJSON();
+exchange.
+
+formatXML();
+exchange.
+
+formatPlainText();
 ```
 
 ### CORS
@@ -425,9 +459,36 @@ exchange.isPDF(file)
 exchange.isExtension(file, "jpg")
 ```
 
+### Helper function to save files
+
+There is a function in Exchange to simplify saving uploaded files:
+
+```java
+short getAndSaveAt(String filename, String[] extensions, String savePath) throws IOException
+```
+
+Returns:
+
+- `-1` if request is not `multipart/form-data`
+- `-2` if the file was not found
+- `-3` if the extension does not match the provided extensions (for accepting all extensions, provide this array:
+  `["all"]`)
+- `1` if the file was successfully saved
+
+Note that savePath is the exact file path, including file name. If you want to do custom operations on a successfully
+fetched file instead of saving it, pass:
+
+```java
+getAndSaveAt(String filename, String[] extensions, FileAction<UploadedFile> fileAction) 
+```
+
+It still returns the codes, but instead of saveFileAt it performs your action.
+Note that `FileAction` is a `FunctionalInterface` that declares throwing `IOException` so you don't have to catch it.
+The action is only executed if the validation is passed (code = 1).
+
 ## HTML Templating
 
-***Note: This feature is very basic and for convenience only. Using Thymeleaf for complex templating is recommended.***
+***Note:** This feature is very basic and for convenience only. Using Thymeleaf for complex templating is recommended.*
 
 ### HTML Template File Example
 
@@ -609,7 +670,7 @@ public class Main {
                     myServer.serveFile("/config", "./config");
 
                 } else {
-                    exchange.sendBadRequestResponse("Only PNG and JPEG allowed");
+                    exchange.sendBadRequestResponse("Only JSON allowed");
                 }
             })
             .serveStatic("/", "./public", false, "index.html")

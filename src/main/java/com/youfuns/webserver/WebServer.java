@@ -264,6 +264,21 @@ public class WebServer {
         return this;
     }
 
+    public WebServer stop(int delay) {
+        logger.log(WebServer.class, "Stopping HttpServer...", SimpleLogger.Level.INFO);
+        server.stop(delay);
+        logger.log(WebServer.class, "Stopped HttpServer", SimpleLogger.Level.INFO);
+        return this;
+    }
+
+    public WebServer restart() {
+        logger.log(WebServer.class, "Restarting HttpServer...", SimpleLogger.Level.INFO);
+        server.stop(0);
+        server.start();
+        logger.log(WebServer.class, "Restarted HttpServer", SimpleLogger.Level.INFO);
+        return this;
+    }
+
     private void createContextSafe(String endpoint, HttpHandler handler) {
         try {
             server.createContext(endpoint, handler);

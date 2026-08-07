@@ -690,6 +690,38 @@ public class Exchange implements AutoCloseable {
         return savePath.toString();
     }
 
+    public short getAndSaveAt(String filename, String[] extensions, FileAction<UploadedFile> fileAction) throws IOException {
+        if (!this.isMultipartRequest()) {
+            return -1;  // "Expected multipart/form-data"
+        }
+
+        if (!this.hasFile(filename)) {
+            return -2; // "No file uploaded"
+        }
+
+        UploadedFile file = this.getFile(filename);
+
+        if (file == null) return -2;
+
+        boolean isExtensionMatch = false;
+        for (String extension : extensions) {
+            if (isExtension(file, extension)) {
+                isExtensionMatch = true;
+                break;
+            }
+        }
+        if (!isExtensionMatch && !extensions[0].equals("all")) {
+            return -3; // "Only " + extensionsAccepted + " accepted"
+        }
+
+        fileAction.accept(file);
+        return 1;
+    }
+
+    public short getAndSaveAt(String filename, String[] extensions, String savePath) throws IOException {
+        return this.getAndSaveAt(filename, extensions, file -> saveFileAt(file, savePath));
+    }
+
     public void serveFile(String filePath) throws IOException {
         String expandedPath = filePath.replace("~", System.getProperty("user.home"));
         Path file = Paths.get(expandedPath);
@@ -983,6 +1015,26 @@ public class Exchange implements AutoCloseable {
 
     public void sendNoContentResponse() throws IOException {
         sendResponse(204, "");
+    }
+
+    public Exchange formatHTML() {
+        addResponseHeader("Content-Type", "text/html; charset=UTF-8");
+        return this;
+    }
+
+    public Exchange formatJSON() {
+        addResponseHeader("Content-Type", "application/json; charset=UTF-8");
+        return this;
+    }
+
+    public Exchange formatXML() {
+        addResponseHeader("Content-Type", "text/xml; charset=UTF-8");
+        return this;
+    }
+
+    public Exchange formatPlainText() {
+        addResponseHeader("Content-Type", "text/plain; charset=UTF-8");
+        return this;
     }
 
     // ===== REQUEST INSPECTION HELPERS =====
