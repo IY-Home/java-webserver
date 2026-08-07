@@ -395,15 +395,9 @@ exchange.sendNoContentResponse();      // 204
 
 ```java
 exchange.formatHTML(); // equivalent to `addResponseHeader("Content-Type", "text/html; charset=UTF-8");`
-exchange.
-
-formatJSON();
-exchange.
-
-formatXML();
-exchange.
-
-formatPlainText();
+exchange.formatJSON();
+exchange.formatXML();
+exchange.formatPlainText();
 ```
 
 ### CORS
