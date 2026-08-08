@@ -58,8 +58,11 @@ import com.youfuns.webserver.*;
 ## Basic Server
 
 ```java
-new WebServer(8080)
-    .start();
+class DemoClass {
+  void demo() {
+    server.on("status", "OK");
+  }
+}
 ```
 
 ### Using custom `InetSocketAddress`
@@ -76,15 +79,9 @@ WebServer myServer = new WebServer(address, your_logger);
 
 ```java
 server.start(); // starts the server
-server.
-
-stop(); // stops the server
-server.
-
-stop(10); // stops the server with up to 10 seconds to wait until exchanges have finished
-server.
-
-restart(); // restarts the server
+server.stop(); // stops the server
+server.stop(10); // stops the server with up to 10 seconds to wait until exchanges have finished
+server.restart(); // restarts the server
 ```
 
 ## Defining Basic Endpoints
