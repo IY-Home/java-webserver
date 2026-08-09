@@ -57,10 +57,10 @@ public final class UserCredentials {
     }
 
     public boolean validateJwt(String jwt) {
-        String subject = JwtService.extractSubject(jwt);
         try {
-            UUID uuid = UUID.fromString(jwt);
-        } catch (NullPointerException | IllegalArgumentException e) {
+            String subject = JwtService.extractSubject(jwt);
+            UUID uuid = UUID.fromString(subject);
+        } catch (Exception e) {
             return false;
         }
         return true;

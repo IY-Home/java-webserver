@@ -44,14 +44,10 @@ Import the JAR file to your project, and add this dependency:
 ```
 
 Then import the WebServer and interfaces:
-```java
-import com.youfuns.webserver.WebServer;
-import com.youfuns.webserver.Exchange;
-import com.youfuns.webserver.Exchange.UploadedFile; // for file uploading
-```
-or
+
 ```java
 import com.youfuns.webserver.*;
+import com.youfuns.webserver.interfaces.*;
 ```
 
 
@@ -642,27 +638,17 @@ public class Main {
                 }
             })
             .on("/api/setConfig", "POST", exchange -> {
-                if (!exchange.isMultipartRequest()) {
-                    exchange.sendBadRequestResponse("Expected multipart/form-data");
-                    return;
-                }
-                
-                if (!exchange.hasFile("config")) {
-                    exchange.sendBadRequestResponse("No logo uploaded");
-                    return;
-                }
-                
-                UploadedFile file = exchange.getFile("config");
+              int result = exchange.getAndSaveAt("config", new String[]{"json"}, file -> {
+                String savedPath = exchange.saveFileSafe(file, "./config", false);
+                myServer.serveFile("/config", savedPath);
+              });
 
-                // Check file type
-                if (exchange.isJSON(file)) {
-                    exchange.saveFileSafe(file, "./config", false); // Don't overwrite previous configs for debug
-                    exchange.sendResponse("Uploaded: " + file.getFilename());
-                    myServer.serveFile("/config", "./config");
-
-                } else {
-                    exchange.sendBadRequestResponse("Only JSON allowed");
-                }
+              switch (result) {
+                case -1 -> exchange.sendBadRequestResponse("Expected multipart/form-data");
+                case -2 -> exchange.sendBadRequestResponse("No config uploaded");
+                case -3 -> exchange.sendBadRequestResponse("Only JSON files allowed");
+                case 1 -> exchange.sendResponse("Uploaded successfully!");
+              }
             })
             .serveStatic("/", "./public", false, "index.html")
             .onNotFound(exchange -> {

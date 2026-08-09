@@ -1,7 +1,6 @@
 package com.youfuns.auth;
 
 import com.password4j.Argon2Function;
-import com.password4j.Hash;
 import com.password4j.Password;
 import com.password4j.types.Argon2;
 import com.youfuns.logger.LoggerManager;
