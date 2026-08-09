@@ -1,6 +1,7 @@
 package com.youfuns.webserver;
 
 import java.io.IOException;
+import com.youfuns.webserver.interfaces.*;
 
 public class InternalHomeHandler implements InternalHandler {
     private ExchangeHandler notFound;

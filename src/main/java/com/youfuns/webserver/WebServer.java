@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.youfuns.webserver.interfaces.*;
+
 public class WebServer {
     private final HttpServer server;
 

@@ -1,4 +1,4 @@
-package com.youfuns.webserver;
+package com.youfuns.webserver.interfaces;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;

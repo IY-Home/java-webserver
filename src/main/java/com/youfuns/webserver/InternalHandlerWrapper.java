@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import com.youfuns.webserver.interfaces.*;
 
 public class InternalHandlerWrapper implements HttpHandler {
     private final InternalHandler handler;

@@ -3,6 +3,7 @@ package com.youfuns.webserver;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import com.youfuns.webserver.interfaces.*;
 
 public class InternalDynamicHandler implements InternalHandler {
     private final TemplateMatcher templateMatcher;

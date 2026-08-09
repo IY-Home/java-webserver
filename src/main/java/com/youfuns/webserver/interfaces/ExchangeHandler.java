@@ -1,4 +1,4 @@
-package com.youfuns.webserver;
+package com.youfuns.webserver.interfaces;
 
 import java.io.IOException;
 
