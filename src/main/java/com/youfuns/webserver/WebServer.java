@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.youfuns.logger.DummyLogger;
 import com.youfuns.logger.SimpleLogger;
+import com.youfuns.webserver.interfaces.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,12 +19,10 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.youfuns.webserver.interfaces.*;
-
 public class WebServer {
-    private final HttpServer server;
+    protected final HttpServer server;
 
-    private SimpleLogger logger;
+    protected SimpleLogger logger;
 
     private final Map<String, InternalDynamicHandler> dynamicHandlers;
 
@@ -57,12 +56,7 @@ public class WebServer {
 
         logger.log(WebServer.class, "Starting HttpServer...", SimpleLogger.Level.INFO);
 
-        try {
-            this.server = HttpServer.create(address, 0);
-        } catch (IOException e) {
-            logger.log(WebServer.class, "HttpServer start failed. Encountered " + e.getClass().getSimpleName() + ": " + e.getMessage(), SimpleLogger.Level.ERROR);
-            throw new RuntimeException("Failed to create HttpServer", e);
-        }
+        this.server = createServer(address, 0);
 
         logger.log(WebServer.class, "Created HttpServer at port " + address.getPort(), SimpleLogger.Level.INFO);
 
@@ -73,6 +67,15 @@ public class WebServer {
         dynamicHandlers = new HashMap<>();
         homeHandler = new InternalHomeHandler();
         createContextSafe("/", new InternalHandlerWrapper(homeHandler, hooksAndTails, () -> exceptionHandler, logger));
+    }
+
+    protected HttpServer createServer(InetSocketAddress address, int backlog) {
+        try {
+            return HttpServer.create(address, 0);
+        } catch (IOException e) {
+            logger.log(WebServer.class, "HttpServer start failed. Encountered " + e.getClass().getSimpleName() + ": " + e.getMessage(), SimpleLogger.Level.ERROR);
+            throw new RuntimeException("Failed to create HttpServer", e);
+        }
     }
 
     public WebServer endpoint(String endpoint, String method, ExchangeHandler action) {

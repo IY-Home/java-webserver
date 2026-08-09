@@ -599,6 +599,98 @@ exchange.removeCookie("jwt");
 exchange.removeCookie("jwt", "/");
 ```
 
+## HTTPS Support
+
+***Note:** This feature is very basic and for development or prototyping only. Do not use this in commercial HTTPS
+servers.*
+
+### Basic HTTPS Server
+
+```java
+import com.youfuns.webserver.WebServerSecure;
+
+// Generate a self-signed certificate (for development)
+WebServerSecure.generateSelfSigned("myapp","./https/keystore.p12","changeit",
+                                           "CN=localhost, OU=Dev, O=MyCompany, L=NYC, ST=NY, C=US");
+
+// Create and start HTTPS server
+new
+
+WebServerSecure(8443)
+    .
+
+setupHttps("changeit","./https/keystore.p12")
+    .
+
+on("/status","Running with HTTPS")
+    .
+
+start();
+```
+
+### HTTPS with Custom SSL Configuration
+
+```java
+import com.sun.net.httpserver.HttpsParameters;
+
+new WebServerSecure(8443)
+    .
+
+setupHttps("changeit","./https/keystore.p12",params ->{
+        // Custom SSL parameters (optional)
+        params.
+
+setNeedClientAuth(false);
+        params.
+
+setWantClientAuth(false);
+    })
+            .
+
+on("/secure",exchange ->{
+        exchange.
+
+sendResponse("Secure connection established!");
+    })
+            .
+
+start();
+```
+
+### Generating Certificates Manually
+
+```java
+// Generate a self-signed certificate programmatically
+WebServerSecure.generateSelfSigned(
+    "myapp",                              // alias
+            "./https/keystore.p12",               // keystore path
+            "changeit",                           // password
+            "CN=myapp.com, OU=Dev, O=MyCompany, L=NYC, ST=NY, C=US"  // distinguished name
+);
+
+// Delete an existing alias (if regenerating)
+WebServerSecure.
+
+deleteAlias("./https/keystore.p12","myapp","changeit");
+```
+
+### Using a Custom Keystore
+
+```java
+// Use an existing PKCS12 keystore (e.g., from Let's Encrypt or a CA)
+new WebServerSecure(443)
+    .
+
+setupHttps("your_password","/path/to/your/keystore.p12")
+    .
+
+on("/",exchange ->exchange.
+
+sendResponse("Production HTTPS!"))
+        .
+
+start();
+```
 
 ## Complete Example
 
