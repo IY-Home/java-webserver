@@ -44,14 +44,10 @@ Import the JAR file to your project, and add this dependency:
 ```
 
 Then import the WebServer and interfaces:
-```java
-import com.youfuns.webserver.WebServer;
-import com.youfuns.webserver.Exchange;
-import com.youfuns.webserver.Exchange.UploadedFile; // for file uploading
-```
-or
+
 ```java
 import com.youfuns.webserver.*;
+import com.youfuns.webserver.interfaces.*;
 ```
 
 

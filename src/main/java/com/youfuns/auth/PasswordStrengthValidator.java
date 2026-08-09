@@ -1,8 +1,9 @@
 package com.youfuns.auth;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.youfuns.logger.LoggerManager;
+import com.youfuns.logger.SimpleLogger;
+
+import java.util.*;
 
 public class PasswordStrengthValidator {
     private static final int MIN_LENGTH = 6;
@@ -37,12 +38,14 @@ public class PasswordStrengthValidator {
                     "password1",
                     "qwerty123",
                     "1234567890",
-                    "123123"
+            "123123",
+            "hello"
     );
     private static final List<String> commonFragments = Arrays.asList(
                     // Common fragments for contains checking
                     "123",
                     "qwert",
+            "quert",
                     "asdfg",
                     "zxcvb",
                     "pass",
@@ -56,7 +59,7 @@ public class PasswordStrengthValidator {
                     "monkey",
                     "princess",
                     "trust",
-                    "ilove",
+            "love",
                     "letme",
                     "password",
                     "12345",
@@ -64,22 +67,88 @@ public class PasswordStrengthValidator {
                     "qwerty",
                     "admin",
                     "user",
-                    "hello"
+            "hello",
+            "the",
+            "this",
+            "long",
+            "correct",
+            "horse",
+            "battery",
+            "staple",
+            "dog",
+            "coffee"
     );
 
     private static boolean containsCommonPassword(String password) {
+        password = password.strip().toLowerCase();
+
+        // Check exact match first
         if (commonPasswords.contains(password)) return true;
-        if (commonPasswords.contains(password.toLowerCase())) return true;
+
+        // Check with substitutions
+        String substitutedPassword = applySubstitutions(password);
+        if (commonPasswords.contains(substitutedPassword)) return true;
+
         List<String> passwordsContained = new ArrayList<>();
         for (String commonPassword : commonFragments) {
-            if (password.contains(commonPassword)) passwordsContained.add(commonPassword);
+            String substitutedCommon = applySubstitutions(commonPassword);
+
+            // Check exact matches with substitutions
+            if (password.equals(commonPassword) ||
+                    password.equals(substitutedCommon) ||
+                    substitutedPassword.equals(commonPassword) ||
+                    substitutedPassword.equals(substitutedCommon)) {
+                return true;
+            }
+
+            // Check if password contains common fragments (with substitutions)
+            if (password.contains(commonPassword) ||
+                    password.contains(substitutedCommon) ||
+                    substitutedPassword.contains(commonPassword) ||
+                    substitutedPassword.contains(substitutedCommon)) {
+                passwordsContained.add(commonPassword);
+            }
         }
-        int total_contained_password_length = 0;
+
+        int totalContainedPasswordLength = 0;
         for (String commonPassword : passwordsContained) {
-            if (password.length() < 2*commonPassword.length()) return true;
-            total_contained_password_length += commonPassword.length();
+            if (password.length() < 2 * commonPassword.length()) return true;
+            totalContainedPasswordLength += commonPassword.length();
         }
-        return total_contained_password_length + 4 > password.length();
+
+        return totalContainedPasswordLength + 6 >= password.length();
+    }
+
+    private static String applySubstitutions(String input) {
+        // Apply common substitutions (case-insensitive)
+        Map<Character, String> substitutions = new HashMap<>();
+        substitutions.put('o', "[o0]");
+        substitutions.put('0', "[o0]");
+        substitutions.put('s', "[s$5]");
+        substitutions.put('5', "[s$5]");
+        substitutions.put('$', "[s$5]");
+        substitutions.put('a', "[a@4]");
+        substitutions.put('@', "[a@4]");
+        substitutions.put('4', "[a@4]");
+        substitutions.put('e', "[e3]");
+        substitutions.put('3', "[e3]");
+        substitutions.put('i', "[i1!]");
+        substitutions.put('1', "[i1!]");
+        substitutions.put('!', "[i1!]");
+        substitutions.put('t', "[t7]");
+        substitutions.put('7', "[t7]");
+        substitutions.put('b', "[b8]");
+        substitutions.put('8', "[b8]");
+
+        StringBuilder result = new StringBuilder();
+        for (char c : input.toLowerCase().toCharArray()) {
+            if (substitutions.containsKey(c)) {
+                result.append(substitutions.get(c));
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
     }
 
     private static boolean isOfLength(String password) {
@@ -153,14 +222,14 @@ public class PasswordStrengthValidator {
     }
 
     public static ResultReturn validatePasswordWithMessage(String password) {
-        if (password == null || password.isEmpty()) {
+        if (password.isEmpty()) {
             return new ResultReturn(ResultReturn.Result.FAILURE, "Password is null or empty.");
         }
         if (!isOfLength(password)) {
             return new ResultReturn(ResultReturn.Result.FAILURE, "Password is too short or too long. (6-128 chars)");
         }
         if (!containsCharacters(password)) {
-            return new ResultReturn(ResultReturn.Result.FAILURE, "Password does not contain letters, numbers, or symbols.");
+            return new ResultReturn(ResultReturn.Result.FAILURE, "Password does not contain upper/lowercase letters, numbers, or symbols.");
         }
         if (hasRepetitivePattern(password)) {
             return new ResultReturn(ResultReturn.Result.FAILURE, "Password contains too many repeated characters.");
@@ -169,5 +238,16 @@ public class PasswordStrengthValidator {
             return new ResultReturn(ResultReturn.Result.FAILURE, "Password contains common passwords.");
         }
         return new ResultReturn(ResultReturn.Result.SUCCESS, "Password is valid.");
+    }
+
+    public static void main(String[] args) {
+        LoggerManager.INSTANCE.getLogger().setLogLevel(SimpleLogger.Level.WARN);
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.print("Enter a password: ");
+            String password = scanner.nextLine();
+            ResultReturn result = validatePasswordWithMessage(password);
+            System.out.println("Success: " + result.isSuccess() + ", " + result.message());
+        }
     }
 }

@@ -1,10 +1,11 @@
-package com.youfuns.webserver;
+package com.youfuns.webserver.interfaces;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.youfuns.logger.SimpleLogger;
+import com.youfuns.webserver.WebServer;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -1305,7 +1306,7 @@ public class Exchange implements AutoCloseable {
         httpExchange.close();
     }
 
-    static void setFileUploadLimit(int fileUploadLimit) {
+    public static void setFileUploadLimit(int fileUploadLimit) {
         MAX_FILE_SIZE = fileUploadLimit;
     }
 }

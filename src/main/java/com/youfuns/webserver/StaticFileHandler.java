@@ -2,15 +2,19 @@ package com.youfuns.webserver;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.youfuns.logger.LoggerManager;
 import com.youfuns.logger.SimpleLogger;
+import com.youfuns.webserver.interfaces.Exchange;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class StaticFileHandler implements HttpHandler {
     private final Path baseDirectory;

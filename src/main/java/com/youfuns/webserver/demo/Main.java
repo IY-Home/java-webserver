@@ -1,9 +1,9 @@
 package com.youfuns.webserver.demo;
 
 import com.youfuns.logger.LoggerManager;
-import com.youfuns.webserver.Exchange;
 import com.youfuns.webserver.TemplateEngine;
 import com.youfuns.webserver.WebServer;
+import com.youfuns.webserver.interfaces.Exchange;
 
 public class Main {
     // Testing the webserver
