@@ -34,7 +34,7 @@ Add these dependencies to your `pom.xml`:
 </dependencies>
 ```
 
-Import the JAR file to your project, and add this dependency:
+Import the JAR file (or clone and build the source code) to your project, and add this dependency:
 ```xml
 <dependency>
     <groupId>com.youfuns</groupId>
