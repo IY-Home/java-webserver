@@ -604,8 +604,7 @@ servers.*
 import com.youfuns.webserver.WebServerSecure;
 
 // Generate a self-signed certificate (for development)
-WebServerSecure.generateSelfSigned("myapp","./https/keystore.p12","changeit",
-                                           "CN=localhost, OU=Dev, O=MyCompany, L=NYC, ST=NY, C=US");
+WebServerSecure.generateSelfSigned("myapp","./https/keystore.p12","changeit","CN=localhost, OU=Dev, O=MyCompany, L=NYC, ST=NY, C=US");
 
 // Create and start HTTPS server
 new
@@ -644,7 +643,7 @@ setWantClientAuth(false);
 on("/secure",exchange ->{
         exchange.
 
-sendResponse("Secure connection established!");
+sendResponse("Secure connection established");
     })
             .
 
