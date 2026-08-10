@@ -7,7 +7,10 @@ import com.youfuns.webserver.interfaces.ExchangeHandler;
 import java.nio.file.Paths;
 
 public class HotUtils {
+    private static boolean isUsed = false;
+
     public static Result loadEndpoint(WebServer webServer, String filePath, String classFolder, String endpoint) {
+        if (!isUsed) throw new UnsupportedOperationException("Dynamic endpoint loading is not enabled.");
         String className = extractClassName(filePath);
         if (className == null) {
             return new Result(false, (short) -1, "File is an invalid Java file");
@@ -102,5 +105,9 @@ public class HotUtils {
         }
 
         return true;
+    }
+
+    public static void enableHotLoadingUnsafe(boolean enable) {
+        isUsed = enable;
     }
 }
