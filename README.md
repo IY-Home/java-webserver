@@ -34,12 +34,12 @@ Add these dependencies to your `pom.xml`:
 </dependencies>
 ```
 
-Clone the source code to your project (no prebuilt `JARs` are provided).
+Clone the source code to your project (no prebuilt `JAR`s are provided).
 
 Then import the WebServer and interfaces:
 
 ```java
-import com.youfuns.webserver.*;
+import com.youfuns.webserver.WebServer;
 import com.youfuns.webserver.interfaces.*;
 ```
 
@@ -653,6 +653,8 @@ start();
 
 ### Generating Certificates Manually
 
+***Note:**  Self-signed certificates should not be used in production. Currently, this framework does not support ACME.*
+
 ```java
 // Generate a self-signed certificate programmatically
 WebServerSecure.generateSelfSigned(
@@ -680,7 +682,7 @@ setupHttps("your_password","/path/to/your/keystore.p12")
 
 on("/",exchange ->exchange.
 
-sendResponse("Production HTTPS!"))
+sendResponse("Using real HTTPS certificate"))
         .
 
 start();

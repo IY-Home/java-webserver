@@ -14,6 +14,8 @@ import java.security.KeyStore;
 import java.util.function.Consumer;
 
 public class WebServerSecure extends WebServer {
+    private boolean initialized = false;
+
     public WebServerSecure(int port) {
         super(port);
     }
@@ -31,6 +33,36 @@ public class WebServerSecure extends WebServer {
     }
 
     public static void generateSelfSigned(String alias, String keystorePath, String password, String dname) {
+        // === VALIDATE INPUTS ===
+
+        // 1. Validate alias: alphanumeric, underscore, hyphen only
+        if (!alias.matches("^[a-zA-Z0-9_\\-]+$")) {
+            throw new IllegalArgumentException("Invalid alias. Use only letters, numbers, underscore, and hyphen.");
+        }
+
+        // 2. Validate keystorePath: safe characters, no command injection, no traversal
+        if (!keystorePath.matches("^[a-zA-Z0-9_\\-./]+$") || keystorePath.contains("../")) {
+            throw new IllegalArgumentException("Invalid keystore path. Use only letters, numbers, underscore, hyphen, dot, and slash.");
+        }
+
+        // 3. Validate password: safe characters, no spaces, no special shell chars
+        if (!password.matches("^[a-zA-Z0-9_\\-!@#%^&*()+=]+$")) {
+            throw new IllegalArgumentException("Invalid password. Use only alphanumeric and common safe symbols.");
+        }
+
+        // 4. Validate distinguished name format: exactly "CN=..., OU=..., O=..., L=..., ST=..., C=..."
+        if (!dname.matches("^CN=[a-zA-Z0-9_.\\-]+,\\s*OU=[a-zA-Z0-9_.\\-]+,\\s*O=[a-zA-Z0-9_.\\-]+,\\s*L=[a-zA-Z0-9_.\\-]+,\\s*ST=[a-zA-Z0-9_.\\-]+,\\s*C=[A-Z]{2}$")) {
+            throw new IllegalArgumentException("Invalid distinguished name. Format: CN=..., OU=..., O=..., L=..., ST=..., C=XX (where XX is a 2-letter country code)");
+        }
+
+        // 5. Blacklist dangerous shell characters (extra safety)
+        String[] inputs = {alias, keystorePath, password, dname};
+        for (String input : inputs) {
+            if (input.matches(".*[;&|`$(){}<>].*")) {
+                throw new IllegalArgumentException("Input contains forbidden shell characters: " + input);
+            }
+        }
+
         File keystoreFile = new File(keystorePath);
         File parentDir = keystoreFile.getParentFile();
         if (parentDir != null && !parentDir.exists()) {
@@ -136,6 +168,7 @@ public class WebServerSecure extends WebServer {
             throw new RuntimeException("Failed to configure HttpsServer", e);
         }
         logger.log(this.getClass(), "Https set up successfully", SimpleLogger.Level.INFO);
+        initialized = true;
         return this;
     }
 
@@ -144,4 +177,12 @@ public class WebServerSecure extends WebServer {
         });
     }
 
+    @Override
+    public WebServer start() {
+        if (!initialized) {
+            logger.log(this.getClass(), "HTTPS not initialized", SimpleLogger.Level.ERROR);
+            throw new IllegalStateException("HTTPS not initialized");
+        }
+        return (WebServer) super.start();
+    }
 }

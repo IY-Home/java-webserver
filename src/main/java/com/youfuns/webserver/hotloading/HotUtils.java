@@ -45,6 +45,7 @@ public class HotUtils {
                 handler = (ExchangeHandler) handlerClass.getDeclaredConstructor().newInstance();
             } catch (NoSuchMethodException | java.lang.InstantiationException | java.lang.IllegalAccessException |
                      java.lang.reflect.InvocationTargetException | ClassCastException e) {
+                e.printStackTrace();
                 return new Result(false, (short) -8, e.getClass().getSimpleName() + " while loading class: " + e.getMessage());
             }
 
@@ -56,6 +57,7 @@ public class HotUtils {
                 handler = (DynamicExchangeHandler) handlerClass.getDeclaredConstructor().newInstance();
             } catch (NoSuchMethodException | java.lang.InstantiationException | java.lang.IllegalAccessException |
                      java.lang.reflect.InvocationTargetException | ClassCastException e) {
+                e.printStackTrace();
                 return new Result(false, (short) -8, e.getClass().getSimpleName() + " while loading class: " + e.getMessage());
             }
 
