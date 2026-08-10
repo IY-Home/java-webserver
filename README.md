@@ -34,16 +34,7 @@ Add these dependencies to your `pom.xml`:
 </dependencies>
 ```
 
-Import the JAR file (or clone and build the source code) to your project, and add this dependency:
-```xml
-<dependency>
-    <groupId>com.youfuns</groupId>
-    <artifactId>webserver</artifactId>
-  <version><!-- Please refer to pom.xml for the latest version --></version>
-</dependency>
-```
-
-**Please refer to `pom.xml` for the latest version.**
+Clone the source code to your project (no prebuilt `JARs` are provided).
 
 Then import the WebServer and interfaces:
 
@@ -697,8 +688,12 @@ start();
 
 ## Adding endpoints from source file over-the-air
 
-The framework provides a convenient way to upload `.java` source code of classes that implement `ExchangeHandler` or
+The framework provides a way to upload `.java` source code of classes that implement `ExchangeHandler` or
 `DynamicExchangeHandler`.
+
+***Warning:** This feature is **highly dangerous** as it allows arbitrary code execution and is designed ONLY for
+hot-loading in development. Disable in production or allow only to authenticated users.
+To disable, delete the `com.youfuns.webserver.hotloading` package from your project or simply do not import it.*
 
 ### Clarification
 

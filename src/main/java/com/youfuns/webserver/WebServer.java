@@ -71,7 +71,7 @@ public class WebServer {
 
     protected HttpServer createServer(InetSocketAddress address, int backlog) {
         try {
-            return HttpServer.create(address, 0);
+            return HttpServer.create(address, backlog);
         } catch (IOException e) {
             logger.log(WebServer.class, "HttpServer start failed. Encountered " + e.getClass().getSimpleName() + ": " + e.getMessage(), SimpleLogger.Level.ERROR);
             throw new RuntimeException("Failed to create HttpServer", e);
