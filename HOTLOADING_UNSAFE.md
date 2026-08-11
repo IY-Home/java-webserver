@@ -1,4 +1,4 @@
-# [Unsafe] Adding endpoints from source files over-the-air
+# *[Unsafe]* Adding endpoints from source files over-the-air
 
 The framework provides a basic way to upload `.java` source code of classes that implement `ExchangeHandler` or
 `DynamicExchangeHandler`.
@@ -42,7 +42,7 @@ Returns a `com.youfuns.webserver.hotloading.Result` record:
 In the `Result` record, the `code` field is the result code.
 You are recommended to just deliver the formatted `message` field, but here are the codes for reference:
 
-- `-1` if file is an invalid Java class
+- `-1` if file is an invalid Java class or the file was unable to be read
 - `-2` if the Java compiler was not found (common with using raw JRE instead of JDK)
 - `-3` if the Java compiler failed to compile the code
 - `-4` if an IOException was encountered during compilation
@@ -51,6 +51,7 @@ You are recommended to just deliver the formatted `message` field, but here are 
 - `-7` if the class does not implement `ExchangeHandler` or `DynamicExchangeHandler`
 - `-8` if `NoSuchMethodException | java.lang.InstantiationException | java.lang.IllegalAccessException |
   java.lang.reflect.InvocationTargetException | ClassCastException` was encountered during class instantiation
+- `-9` if banned patterns are found in the uploaded code
 - `0` if successful
 
 ## Example
@@ -75,7 +76,7 @@ vulnerabilities. Use them for reference only.*
 </head>
 <body>
 <h2>Upload a Java Handler</h2>
-<h4>WARNING: If you are testing this code copied as-is, DELETE IT IMMEDIATELY!</h4>
+<h4 style="color:red;">WARNING: If you are testing this code copied as-is, DELETE IT IMMEDIATELY!</h4>
 <form method="POST" action="/upload-handler" enctype="multipart/form-data">
     <div style="margin-bottom: 10px;">
         <label for="endpoint">Endpoint Path (e.g., /api/hello):</label>
@@ -214,5 +215,36 @@ public class MyHandler implements ExchangeHandler {
     }
 }
 ```
+
+## Banned constructs
+
+The following list of Regex patterns are banned:
+
+```java
+List.of(
+    "(?i)addShutdownHook",
+            "(?i)Runtime\\.getRuntime",
+            "(?i)Runtime\\.exec",
+            "(?i)ProcessBuilder",
+            "\\.\\./",
+            "System\\.(?!in|out)",
+            "Class\\.forName",
+            "(?i)while\\s*\\(\\s*true\\s*\\)",
+            "sun\\s+\\.misc\\s+\\.Unsafe",
+            "javax\\s*\\.\\s*script\\s*\\.\\s*ScriptEngine",
+            "java\\s*\\.\\s*lang\\s*\\.\\s*ClassLoader",
+            "java\\s*\\.\\s*lang\\s*\\.\\s*reflect",
+            "java\\s*\\.\\s*nio\\s*\\.\\s*file\\s*\\.\\s*Paths",
+            "java\\s*\\.\\s*nio\\s*\\.\\s*file\\s*\\.\\s*Files",
+            "java\\s*\\.\\s*io\\s*\\.\\s*File",
+            "java\\s*\\.\\s*net\\s*\\.\\s*URL"
+);
+```
+
+If they are found in the code, error code `-9` will be returned.
+
+**This feature only tries to prevent basic attacks and is not an excuse to leave this hot-loading feature open.**
+
+---
 
 ***As said, this is a dangerous feature and should be used with utmost caution.***

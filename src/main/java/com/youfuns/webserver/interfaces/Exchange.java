@@ -815,6 +815,11 @@ public class Exchange implements AutoCloseable {
             logger.log(Exchange.class, "File is null, cannot save", SimpleLogger.Level.WARN);
             return "";
         }
+        if (saveDir.contains("../")) {
+            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
+            this.setAttribute("_path_traversal_", true);
+            return "";
+        }
         logger.log(Exchange.class, "Saving file '" + file.filename + "' to directory: " + saveDir, SimpleLogger.Level.INFO);
         Path dir = Paths.get(saveDir);
         if (!Files.exists(dir)) {
@@ -832,6 +837,11 @@ public class Exchange implements AutoCloseable {
     public String saveFileAt(UploadedFile file, String saveLocation) throws IOException {
         if (file == null) {
             logger.log(Exchange.class, "File is null, cannot save", SimpleLogger.Level.WARN);
+            return "";
+        }
+        if (saveLocation.contains("../")) {
+            logger.log(Exchange.class, "Save location contains potential path traversal attempt", SimpleLogger.Level.WARN);
+            this.setAttribute("_path_traversal_", true);
             return "";
         }
         logger.log(Exchange.class, "Saving file '" + file.filename + "' to: " + saveLocation, SimpleLogger.Level.INFO);
@@ -860,6 +870,13 @@ public class Exchange implements AutoCloseable {
             logger.log(Exchange.class, "File is null, cannot save", SimpleLogger.Level.WARN);
             return null;
         }
+
+        if (saveDir.contains("../")) {
+            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
+            this.setAttribute("_path_traversal_", true);
+            return "";
+        }
+
         logger.log(Exchange.class, "Saving file safely '" + file.filename + "' to directory: " + saveDir + ", preserveOriginalName: " + preserveOriginalName, SimpleLogger.Level.INFO);
 
         Path dir = Paths.get(saveDir);
@@ -943,14 +960,21 @@ public class Exchange implements AutoCloseable {
 
     public short getAndSaveAt(String filename, String[] extensions, String savePath) throws IOException {
         logger.log(Exchange.class, "getAndSaveAt called with filename: " + filename + ", extensions: " + Arrays.toString(extensions) + ", savePath: " + savePath, SimpleLogger.Level.DEBUG);
-        return this.getAndSaveAt(filename, extensions, file -> {
+        short result = this.getAndSaveAt(filename, extensions, file -> {
             logger.log(Exchange.class, "Saving file to: " + savePath, SimpleLogger.Level.DEBUG);
             saveFileAt(file, savePath);
         });
+        if (this.getAttribute("_path_traversal_", Boolean.class) != null) {
+            return -4;
+        }
+        return result;
     }
 
     public void serveFile(String filePath) throws IOException {
         logger.log(Exchange.class, "Serving file: " + filePath, SimpleLogger.Level.INFO);
+        if (filePath.contains("../")) {
+            logger.log(Exchange.class, "File path contains potential path traversal attempt", SimpleLogger.Level.WARN);
+        }
         String expandedPath = filePath.replace("~", System.getProperty("user.home"));
         Path file = Paths.get(expandedPath);
         if (!Files.exists(file) || Files.isDirectory(file)) {

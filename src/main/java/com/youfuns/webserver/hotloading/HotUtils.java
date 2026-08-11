@@ -4,16 +4,48 @@ import com.youfuns.webserver.WebServer;
 import com.youfuns.webserver.interfaces.DynamicExchangeHandler;
 import com.youfuns.webserver.interfaces.ExchangeHandler;
 
+import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.regex.Pattern;
 
 public class HotUtils {
     private static boolean isUsed = false;
+
+    private static final List<String> BANNED_PATTERNS = List.of(
+            "(?i)addShutdownHook",
+            "(?i)Runtime\\.getRuntime",
+            "(?i)Runtime\\.exec",
+            "(?i)ProcessBuilder",
+            "\\.\\./",
+            "System\\.(?!in|out)",
+            "Class\\.forName",
+            "(?i)while\\s*\\(\\s*true\\s*\\)",
+            "sun\\s+\\.misc\\s+\\.Unsafe",
+            "javax\\s*\\.\\s*script\\s*\\.\\s*ScriptEngine",
+            "java\\s*\\.\\s*lang\\s*\\.\\s*ClassLoader",
+            "java\\s*\\.\\s*lang\\s*\\.\\s*reflect",
+            "java\\s*\\.\\s*nio\\s*\\.\\s*file\\s*\\.\\s*Paths",
+            "java\\s*\\.\\s*nio\\s*\\.\\s*file\\s*\\.\\s*Files",
+            "java\\s*\\.\\s*io\\s*\\.\\s*File",
+            "java\\s*\\.\\s*net\\s*\\.\\s*URL"
+    );
 
     public static Result loadEndpoint(WebServer webServer, String filePath, String classFolder, String endpoint) {
         if (!isUsed) throw new UnsupportedOperationException("Dynamic endpoint loading is not enabled.");
         String className = extractClassName(filePath);
         if (className == null) {
             return new Result(false, (short) -1, "File is an invalid Java file");
+        }
+
+        try {
+            String content = java.nio.file.Files.readString(
+                    Paths.get(filePath));
+            if (validate(content) != null) {
+                return new Result(false, (short) -9, validate(content));
+            }
+        } catch (IOException e) {
+            return new Result(false, (short) -1, "File loading failed — encountered IOException: " + e.getMessage());
         }
 
         Result compiled = DynamicCompiler.compile(filePath, classFolder);
@@ -70,7 +102,25 @@ public class HotUtils {
         return new Result(true, (short) 0, "Class " + className + " at endpoint " + endpoint + " was registered successfully.");
     }
 
-    public static String extractClassName(String filePath) {
+    private static boolean isValidJavaClassName(String name) {
+        if (name == null || name.isEmpty()) return false;
+
+        // Must start with a letter, underscore, or dollar sign
+        if (!Character.isJavaIdentifierStart(name.charAt(0))) {
+            return false;
+        }
+
+        // All characters must be valid Java identifier parts
+        for (int i = 1; i < name.length(); i++) {
+            if (!Character.isJavaIdentifierPart(name.charAt(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static String extractClassName(String filePath) {
         String fileName = Paths.get(filePath).getFileName().toString();
 
         // 3. Check extension (must be .java)
@@ -89,22 +139,13 @@ public class HotUtils {
         return baseName;
     }
 
-    private static boolean isValidJavaClassName(String name) {
-        if (name == null || name.isEmpty()) return false;
-
-        // Must start with a letter, underscore, or dollar sign
-        if (!Character.isJavaIdentifierStart(name.charAt(0))) {
-            return false;
-        }
-
-        // All characters must be valid Java identifier parts
-        for (int i = 1; i < name.length(); i++) {
-            if (!Character.isJavaIdentifierPart(name.charAt(i))) {
-                return false;
+    private static String validate(String sourceCode) {
+        for (String pattern : BANNED_PATTERNS) {
+            if (Pattern.compile(pattern).matcher(sourceCode).find()) {
+                return "Banned construct found: " + pattern.replace("\\", "");
             }
         }
-
-        return true;
+        return null;
     }
 
     public static void enableHotLoadingUnsafe(boolean enable) {

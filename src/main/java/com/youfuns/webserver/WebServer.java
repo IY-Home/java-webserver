@@ -197,6 +197,8 @@ public class WebServer {
 
     public WebServer serveFileResource(String path, String resourcePath) {
         createContextSafe(path, new InternalHandlerWrapper(serveFileResourceHandler(resourcePath), hooksAndTails, () -> exceptionHandler, logger));
+
+        logger.log(WebServer.class, "Serving file from resource " + resourcePath + " at " + path, SimpleLogger.Level.INFO);
         return this;
     }
 
@@ -327,6 +329,7 @@ public class WebServer {
                 }
             } catch (IOException e) {
                 logger.log(WebServer.class, "Failed to serve file: " + e.getMessage(),  SimpleLogger.Level.ERROR);
+                req.sendErrorResponse(e.getMessage());
             }};
     }
 
@@ -351,6 +354,7 @@ public class WebServer {
                     os.write(data);
                 }
             } catch (IOException e) {
+                logger.log(WebServer.class, "Failed to serve file from resource: " + e.getMessage(), SimpleLogger.Level.ERROR);
                 exchange.sendErrorResponse(e.getMessage());
             }
         };

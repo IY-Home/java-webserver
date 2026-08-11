@@ -434,7 +434,9 @@ String path3 = exchange.saveFileSafe(file, "./uploads", true);
 // With duplicate handling.
 // Returned path will be "" if file is null.
 // (UploadedFile uploadedFile, String filePath, boolean preserveOriginalName) -> String savedFilePath
-// If preserveOriginalName is false, it generates a random UUID for filename. If preserveOriginalName is true, it saves with original filename, and if duplicate, saves as filename_X.extension where X is the incremented file number.
+// If preserveOriginalName is false, it generates a random UUID for filename. If preserveOriginalName is true, 
+// it saves with original filename, and if duplicate, saves as filename_X.extension where X is the incremented file number.
+// For all of these, if "../" is found in the save path, it will be BLOCKED, and an attribute "_path_traversal_" (Boolean true) will be added to the exchange.
 ```
 
 ### Check File Types
@@ -460,6 +462,7 @@ Returns:
 - `-2` if the file was not found
 - `-3` if the extension does not match the provided extensions (for accepting all extensions, provide this array:
   `["all"]`)
+- `-4` if path traversal was detected (if using getAndSaveAt with savePath and not Consumer)
 - `0` if the file was successfully saved
 
 Note that savePath is the exact file path, including file name. If you want to do custom operations on a successfully
