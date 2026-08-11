@@ -1,7 +1,12 @@
 package com.youfuns.webserver;
 
 import java.io.IOException;
-import java.util.*;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -149,6 +154,17 @@ public class TemplateEngine {
                 java.nio.charset.StandardCharsets.UTF_8
         );
         return new TemplateEngine(content);
+    }
+
+    public static TemplateEngine fromResource(String path) throws IOException {
+        try (InputStream is = TemplateEngine.class.getClassLoader()
+                .getResourceAsStream(path)) {
+            if (is == null) {
+                throw new IOException("Resource not found: " + path);
+            }
+            String content = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            return new TemplateEngine(content);
+        }
     }
 
     /**

@@ -937,8 +937,8 @@ public class Exchange implements AutoCloseable {
 
         logger.log(Exchange.class, "File validation passed, executing file action", SimpleLogger.Level.DEBUG);
         fileAction.accept(file);
-        logger.log(Exchange.class, "File action executed successfully, returning 1", SimpleLogger.Level.INFO);
-        return 1;
+        logger.log(Exchange.class, "File action executed successfully, returning 0", SimpleLogger.Level.INFO);
+        return 0;
     }
 
     public short getAndSaveAt(String filename, String[] extensions, String savePath) throws IOException {

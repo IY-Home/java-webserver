@@ -4,7 +4,11 @@ The framework provides a basic way to upload `.java` source code of classes that
 `DynamicExchangeHandler`.
 
 ***Warning:** This feature is **highly dangerous** as it allows arbitrary code execution and is designed ONLY for
-hot-loading in development. Disable in production or allow only to authenticated users.
+hot-loading in development. This is just an **experiment** and **subject to change**.*
+
+*If you do not trust this, do **not** use this feature at all, not even in development!*
+
+*Disable in production or allow only to authenticated users.
 To disable, set `enableHotLoadingUnsafe` to `false`, simply do not import it, or delete
 the `com.youfuns.webserver.hotloading` package from your project.*
 
@@ -47,7 +51,7 @@ You are recommended to just deliver the formatted `message` field, but here are 
 - `-7` if the class does not implement `ExchangeHandler` or `DynamicExchangeHandler`
 - `-8` if `NoSuchMethodException | java.lang.InstantiationException | java.lang.IllegalAccessException |
   java.lang.reflect.InvocationTargetException | ClassCastException` was encountered during class instantiation
-- `1` if successful
+- `0` if successful
 
 ## Example
 
@@ -61,7 +65,7 @@ vulnerabilities. Use them for reference only.*
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Add endpoint</title>
+    <title>[DANGER] Add endpoint</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
         .success { color: green; }
@@ -71,6 +75,7 @@ vulnerabilities. Use them for reference only.*
 </head>
 <body>
 <h2>Upload a Java Handler</h2>
+<h4>WARNING: If you are testing this code copied as-is, DELETE IT IMMEDIATELY!</h4>
 <form method="POST" action="/upload-handler" enctype="multipart/form-data">
     <div style="margin-bottom: 10px;">
         <label for="endpoint">Endpoint Path (e.g., /api/hello):</label>
@@ -178,7 +183,7 @@ public class HotLoadingTest {
                         case -1 -> exchange.sendBadRequestResponse("Expected multipart/form-data");
                         case -2 -> exchange.sendBadRequestResponse("No config uploaded");
                         case -3 -> exchange.sendBadRequestResponse("Only JSON files allowed");
-                        case 1 ->
+                        case 0 ->
                                 exchange.sendResponse("The file was uploaded successfully, but an unknown error prevented the endpoint registration.");
                     }
                 });

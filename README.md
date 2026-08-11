@@ -164,6 +164,12 @@ Only serving a single file:
 .on("/login", exchange -> exchange.serveFile("./login.html"))
 ```
 
+Serving a file from resource (/src/main/resources):
+
+```java
+.serveFileResource("/login","./login.html") // serving /src/main/resources/login.html
+```
+
 ## 404 Handler
 
 ```java
@@ -454,7 +460,7 @@ Returns:
 - `-2` if the file was not found
 - `-3` if the extension does not match the provided extensions (for accepting all extensions, provide this array:
   `["all"]`)
-- `1` if the file was successfully saved
+- `0` if the file was successfully saved
 
 Note that savePath is the exact file path, including file name. If you want to do custom operations on a successfully
 fetched file instead of saving it, pass:
@@ -705,7 +711,7 @@ public class Main {
                 case -1 -> exchange.sendBadRequestResponse("Expected multipart/form-data");
                 case -2 -> exchange.sendBadRequestResponse("No config uploaded");
                 case -3 -> exchange.sendBadRequestResponse("Only JSON files allowed");
-                case 1 -> exchange.sendResponse("Uploaded successfully!");
+                0 ->exchange.sendResponse("Uploaded successfully!");
               }
             })
             .serveStatic("/", "./public", false, "index.html")

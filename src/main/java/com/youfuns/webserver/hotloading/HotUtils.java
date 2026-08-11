@@ -67,7 +67,7 @@ public class HotUtils {
             webServer.dynamicEndpoint(endpoint, handler);
         }
 
-        return new Result(true, (short) 1, "Class " + className + " at endpoint " + endpoint + " was registered successfully.");
+        return new Result(true, (short) 0, "Class " + className + " at endpoint " + endpoint + " was registered successfully.");
     }
 
     public static String extractClassName(String filePath) {

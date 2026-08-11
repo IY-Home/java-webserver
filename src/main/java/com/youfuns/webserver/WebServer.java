@@ -195,6 +195,11 @@ public class WebServer {
         return this;
     }
 
+    public WebServer serveFileResource(String path, String resourcePath) {
+        createContextSafe(path, new InternalHandlerWrapper(serveFileResourceHandler(resourcePath), hooksAndTails, () -> exceptionHandler, logger));
+        return this;
+    }
+
     public WebServer onNotFoundServe(String filePath) {
         homeHandler.setNotFound(serveFileHandler(filePath));
         for (InternalDynamicHandler dynamicHandler : dynamicHandlers.values()) {
@@ -323,5 +328,31 @@ public class WebServer {
             } catch (IOException e) {
                 logger.log(WebServer.class, "Failed to serve file: " + e.getMessage(),  SimpleLogger.Level.ERROR);
             }};
+    }
+
+    private ExchangeHandler serveFileResourceHandler(String resourcePath) {
+        return exchange -> {
+            try (InputStream is = getClass().getClassLoader()
+                    .getResourceAsStream(resourcePath)) {
+                if (is == null) {
+                    logger.log(WebServer.class, "InputStream is null: " + resourcePath, SimpleLogger.Level.ERROR);
+                    throw new IllegalArgumentException("File does not exist: " + resourcePath);
+                }
+                byte[] data = is.readAllBytes();
+
+                String mimeType = URLConnection.getFileNameMap()
+                        .getContentTypeFor(resourcePath);
+                if (mimeType == null) mimeType = "application/octet-stream";
+
+                exchange.addResponseHeader("Content-Type", mimeType);
+                exchange.addResponseHeader("Content-Length", String.valueOf(data.length));
+                exchange.getUnderlyingHttpExchange().sendResponseHeaders(200, data.length);
+                try (OutputStream os = exchange.getUnderlyingHttpExchange().getResponseBody()) {
+                    os.write(data);
+                }
+            } catch (IOException e) {
+                exchange.sendErrorResponse(e.getMessage());
+            }
+        };
     }
 }
