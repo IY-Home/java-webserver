@@ -54,7 +54,7 @@ new WebServer(8080)
 ### Using custom `SimpleLogger`
 
 ```java
-new WebServer(8080,new ConsoleLogger(System.out))
+new WebServer(8080, new ConsoleLogger(System.out))
         .start();
 ```
 
@@ -113,6 +113,8 @@ ConsoleLogger logger = new ConsoleLogger(System.out);
 // Log to a file
 ConsoleLogger fileLogger = new ConsoleLogger(new java.io.PrintStream("./logs/app.log"));
 
+// Only for ConsoleLogger:
+
 // Set config
 logger
     .setShowTimestamp(true)
@@ -121,6 +123,11 @@ logger
     .setPrefix("> ")
     .setLogLevel(Level.DEBUG)
     .setOutputOn(true);
+
+// Convenience logging methods
+logger.debug(this.getClass(), "Debugging");
+logger.info(this.getClass(), "Info");
+// same for warn and error
 ```
 
 To get the provided singleton logger as a SimpleLogger, call
