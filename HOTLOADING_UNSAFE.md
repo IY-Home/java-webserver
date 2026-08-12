@@ -243,7 +243,7 @@ List.of(
 
 If they are found in the code, error code `-9` will be returned.
 
-**This feature only tries to prevent basic attacks and is not an excuse to leave this hot-loading feature open.**
+**This feature only tries to prevent basic attacks and is NOT an excuse to leave this hot-loading feature open.**
 
 ---
 

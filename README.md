@@ -305,23 +305,29 @@ webServer.limitUploadSize(int_size_in_bytes)
 })
 ```
 
-## Multiple Hooks/Tails (Request Interceptors)
+## Multiple Heads/Tails (Request Interceptors)
 
-### Pre-Request Hook
+### Pre-Request Head
 
 ```java
-.hook(exchange -> {
+.head(exchange ->{
     System.out.println("Request: " + exchange.getRequestPath());
     return true; // Continue processing
 })
-// Start timing in hook
-.hook(exchange -> {
+// Start timing in head
+        .
+
+head(exchange ->{
     exchange.setAttribute("startTime", System.nanoTime());
     return true;
 })
-.hook(exchange -> {
+        .
+
+head(exchange ->{
     String jwt = exchange.getBearerToken();
-    return jwtService.authenticate(jwt); // if false, do not run the main endpoint. Stops subsequent hooks too. Tails are unaffected.
+    return jwtService.
+
+authenticate(jwt); // if false, do not run the main endpoint. Stops subsequent heads too. Tails are unaffected.
 })
 ```
 
@@ -330,7 +336,6 @@ webServer.limitUploadSize(int_size_in_bytes)
 ```java
 .tail(exchange -> {
     System.out.println("Request completed: " + exchange.getRequestPath());
-    return true;
 })
 // End timing in tail
 .tail(exchange -> {
@@ -340,14 +345,13 @@ webServer.limitUploadSize(int_size_in_bytes)
         System.out.println("Request to " + exchange.getRequestPath() + 
                             " took " + duration + "ms");
     }
-    return true;
 })
 ```
 
-***Note:** You can have multiple hook and tails, and they run at the order that they are added.
-Even if the main handler was not run due to a hook returning false,
-tails will still run, allowing you to close database connections or log timing.
-Tails also return a boolean to halt the execution of subsequent tails.*
+***Note:** You can have multiple head and tails, and they run at the order that they are added.
+Only heads return boolean.
+Even if the main handler was not run due to a head returning false,
+tails will still run, allowing you to close database connections or log timing.*
 
 ## Response Methods
 
@@ -721,11 +725,11 @@ public class Main {
             .onNotFound(exchange -> {
                 exchange.sendResponse(404, "Not Found: " + exchange.getRequestPath());
             })
-            .hook(exchange -> {
+                .head(exchange -> {
                 System.out.println("Request: " + exchange.getRequestPath());
                 return true;
             })
-            .hook(exchange -> {
+                .head(exchange -> {
                 if (exchange.getRequestPath().startsWith("/api")) {
                     return jwtService.authorize(exchange.getBearerToken());
                 }
@@ -733,7 +737,6 @@ public class Main {
             })
             .tail(exchange -> {
                 System.out.println("Finished handling response");
-                return true;
             })
             .onException((exchange, exception) -> {
                 Logger.log("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());

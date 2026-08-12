@@ -28,7 +28,7 @@ public class WebServer {
 
     private final InternalHomeHandler homeHandler;
 
-    private final InternalHandlerWrapper.HooksAndTails hooksAndTails;
+    private final InternalHandlerWrapper.HeadsAndTails headsAndTails;
 
     private ExceptionHandler exceptionHandler;
 
@@ -60,13 +60,13 @@ public class WebServer {
 
         logger.log(WebServer.class, "Created HttpServer at port " + address.getPort(), SimpleLogger.Level.INFO);
 
-        this.hooksAndTails = new InternalHandlerWrapper.HooksAndTails();
+        this.headsAndTails = new InternalHandlerWrapper.HeadsAndTails();
 
         this.exceptionHandler = (exchange, exception) -> { exception.printStackTrace(); };
 
         dynamicHandlers = new HashMap<>();
         homeHandler = new InternalHomeHandler();
-        createContextSafe("/", new InternalHandlerWrapper(homeHandler, hooksAndTails, () -> exceptionHandler, logger));
+        createContextSafe("/", new InternalHandlerWrapper(homeHandler, headsAndTails, () -> exceptionHandler, logger));
     }
 
     protected HttpServer createServer(InetSocketAddress address, int backlog) {
@@ -91,7 +91,8 @@ public class WebServer {
         dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler().setOnNotFound(homeHandler.getNotFound()));
         InternalDynamicHandler dynamicHandler = dynamicHandlers.get(endpoint);
         dynamicHandler.addPath(endpoint, method, action);
-        if (!alreadyExists) createContextSafe(endpoint, new InternalHandlerWrapper(dynamicHandler, hooksAndTails, () -> exceptionHandler, logger));
+        if (!alreadyExists)
+            createContextSafe(endpoint, new InternalHandlerWrapper(dynamicHandler, headsAndTails, () -> exceptionHandler, logger));
         logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
         return this;
     }
@@ -117,7 +118,8 @@ public class WebServer {
         dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler().setOnNotFound(homeHandler.getNotFound()));
         InternalDynamicHandler dynamicHandler = dynamicHandlers.get(endpoint);
         dynamicHandler.addPath(template, method, action);
-        if (!alreadyExists) createContextSafe(endpoint, new InternalHandlerWrapper(dynamicHandler, hooksAndTails, () -> exceptionHandler, logger));
+        if (!alreadyExists)
+            createContextSafe(endpoint, new InternalHandlerWrapper(dynamicHandler, headsAndTails, () -> exceptionHandler, logger));
         logger.log(WebServer.class, "Created dynamic endpoint: " + template, SimpleLogger.Level.INFO);
         return this;
     }
@@ -175,12 +177,16 @@ public class WebServer {
         String expandedDir = directory.replace("~", System.getProperty("user.home"));
 
         StaticFileHandler handler = new StaticFileHandler(expandedDir, normalizedPath, logger, directoryListing, indexFile);
-        createContextSafe(normalizedPath, handler);
 
         // Also serve the root of the static path
         if (!normalizedPath.equals("/")) {
+            createContextSafe(normalizedPath, handler);
             String rootPath = normalizedPath + "/";
             createContextSafe(rootPath, handler);
+        }
+
+        if (normalizedPath.equals("/")) {
+            homeHandler.setRoot("DEFAULT", ex -> handler.handle(ex.getUnderlyingHttpExchange()));
         }
 
         logger.log(WebServer.class, "Serving static files from " + directory + " at " + normalizedPath, SimpleLogger.Level.INFO);
@@ -189,14 +195,17 @@ public class WebServer {
 
 
     public WebServer serveFile(String path, String filePath) {
-        createContextSafe(path, new InternalHandlerWrapper(serveFileHandler(filePath), hooksAndTails, () -> exceptionHandler, logger));
+        if (path.isEmpty() || path.equals("/")) {
+            homeHandler.setRoot("DEFAULT", serveFileHandler(filePath));
+        }
+        createContextSafe(path, new InternalHandlerWrapper(serveFileHandler(filePath), headsAndTails, () -> exceptionHandler, logger));
 
         logger.log(WebServer.class, "Serving file " + filePath + " at " + path, SimpleLogger.Level.INFO);
         return this;
     }
 
     public WebServer serveFileResource(String path, String resourcePath) {
-        createContextSafe(path, new InternalHandlerWrapper(serveFileResourceHandler(resourcePath), hooksAndTails, () -> exceptionHandler, logger));
+        createContextSafe(path, new InternalHandlerWrapper(serveFileResourceHandler(resourcePath), headsAndTails, () -> exceptionHandler, logger));
 
         logger.log(WebServer.class, "Serving file from resource " + resourcePath + " at " + path, SimpleLogger.Level.INFO);
         return this;
@@ -211,38 +220,38 @@ public class WebServer {
         return this;
     }
 
-    public WebServer hook(HookHandler action) {
-        hooksAndTails.addHook(action);
-        logger.log(WebServer.class, "Set request hook", SimpleLogger.Level.INFO);
+    public WebServer head(HeadHandler action) {
+        headsAndTails.addHead(action);
+        logger.log(WebServer.class, "Set request head", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer removeHook(HookHandler action) {
-        hooksAndTails.removeHook(action);
-        logger.log(WebServer.class, "Removed request hook", SimpleLogger.Level.INFO);
+    public WebServer removeHead(HeadHandler action) {
+        headsAndTails.removeHead(action);
+        logger.log(WebServer.class, "Removed request head", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer removeAllHooks() {
-        hooksAndTails.clearHooks();
-        logger.log(WebServer.class, "Removed all hooks", SimpleLogger.Level.INFO);
+    public WebServer removeAllHeads() {
+        headsAndTails.clearHeads();
+        logger.log(WebServer.class, "Removed all heads", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer tail(HookHandler action) {
-        hooksAndTails.addTail(action);
+    public WebServer tail(ExchangeHandler action) {
+        headsAndTails.addTail(action);
         logger.log(WebServer.class, "Set request tail", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer removeTail(HookHandler action) {
-        hooksAndTails.removeTail(action);
+    public WebServer removeTail(ExchangeHandler action) {
+        headsAndTails.removeTail(action);
         logger.log(WebServer.class, "Removed request tail", SimpleLogger.Level.INFO);
         return this;
     }
 
     public WebServer removeAllTails() {
-        hooksAndTails.clearTails();
+        headsAndTails.clearTails();
         logger.log(WebServer.class, "Removed all tails", SimpleLogger.Level.INFO);
         return this;
     }
