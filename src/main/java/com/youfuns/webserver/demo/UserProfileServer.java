@@ -183,7 +183,7 @@ public class UserProfileServer {
 
             TemplateEngine engine = TemplateEngine.fromFile("./userServiceDemo/templates/admin.html");
 
-            // Build user list HTML (excluding admin from the list)
+            // Build user list HTML
             StringBuilder userListHtml = new StringBuilder();
 
             if (users.isEmpty()) {

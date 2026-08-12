@@ -4,17 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Made major file changes">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/JwtService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userServiceDemo/templates/admin.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userServiceDemo/templates/login.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/userServiceDemo/templates/register.html" afterDir="false" />
+    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Added demo">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Basic.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/Exchange.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/Exchange.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -390,7 +382,15 @@
       <option name="project" value="LOCAL" />
       <updated>1786521553899</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Added demo">
+      <option name="closed" value="true" />
+      <created>1786528225317</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1786528225317</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -408,7 +408,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Generate a commit message here" />
     <MESSAGE value="Refactor and modernize API for configuration uploads&#10;&#10;This commit introduces several significant updates to the project structure and functionality:&#10;&#10;- Bumped the project version from 1.0-SNAPSHOT to 1.1.0 and updated the group ID.&#10;- Refactored file serving logic in `Exchange.java` to properly throw `IOException` instead of internal logging/handling, ensuring proper exception propagation.&#10;- Replaced the old `/setLogo` endpoint with a robust `/api/setConfig` endpoint to handle multipart file uploads for configuration.&#10;- Added validation to ensure uploaded files are only PNG or JPEG formats, and implemented safe saving for configurations.&#10;- Updated logging behavior in various places for clearer debugging." />
     <MESSAGE value="Updated typo" />
     <MESSAGE value="Patches" />
@@ -433,7 +432,8 @@
     <MESSAGE value="Fixed formatting issues" />
     <MESSAGE value="Added logger config" />
     <MESSAGE value="Made major file changes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Made major file changes" />
+    <MESSAGE value="Added demo" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added demo" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
