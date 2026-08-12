@@ -5,7 +5,7 @@ import com.youfuns.webserver.WebServer;
 
 import java.util.Map;
 
-public class Main {
+public class Basic {
     public static void main(String[] args) {
         // Create server on port 8080
         WebServer server = new WebServer(8080, LoggerManager.INSTANCE.getLogger());

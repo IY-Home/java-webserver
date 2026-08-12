@@ -41,8 +41,8 @@ public class Exchange implements AutoCloseable {
     private boolean responseAlreadySent = false;
 
     // File upload fields
-    private Map<String, UploadedFile> uploadedFiles = new HashMap<>();
-    private Map<String, String> formFields = new HashMap<>();
+    private final Map<String, UploadedFile> uploadedFiles = new HashMap<>();
+    private final Map<String, String> formFields = new HashMap<>();
     private boolean multipartParsed = false;
 
     // File upload configuration
@@ -916,11 +916,7 @@ public class Exchange implements AutoCloseable {
             filename = file.filename;
             logger.log(Exchange.class, "Preserving original filename: " + filename, SimpleLogger.Level.DEBUG);
         } else {
-            String ext = "";
-            int dotIndex = file.filename.lastIndexOf('.');
-            if (dotIndex > 0) {
-                ext = file.filename.substring(dotIndex);
-            }
+            String ext = file.getExtension();
             filename = UUID.randomUUID().toString() + ext;
             logger.log(Exchange.class, "Generated UUID filename: " + filename, SimpleLogger.Level.DEBUG);
         }
@@ -1216,6 +1212,10 @@ public class Exchange implements AutoCloseable {
         T result = clazz.isInstance(value) ? clazz.cast(value) : null;
         logger.log(Exchange.class, "Getting attribute: " + key + " as " + clazz.getName() + " = " + result, SimpleLogger.Level.DEBUG);
         return result;
+    }
+
+    public <T> T getAttribute(String key, Class<T> clazz, T defaultValue) {
+        return this.getAttribute(key, clazz) == null ? defaultValue : getAttribute(key, clazz);
     }
 
     // ===== SEND RESPONSE =====
@@ -1647,6 +1647,15 @@ public class Exchange implements AutoCloseable {
         public byte[] getData() { return data; }
         public long getSize() { return size; }
         public boolean isEmpty() { return data == null || data.length == 0; }
+
+        public String getExtension() {
+            String ext = "";
+            int dotIndex = this.filename.lastIndexOf('.');
+            if (dotIndex > 0) {
+                ext = this.filename.substring(dotIndex);
+            }
+            return ext;
+        }
 
         @Override
         public String toString() {

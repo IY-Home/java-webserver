@@ -154,6 +154,18 @@ public Exchange(String method, URI requestUri, String protocol, InetSocketAddres
                 Map<String, List<String>> requestHeaderMap, String body, SimpleLogger logger)
 ```
 
+The `Exchange` also lets you store attributes for use between heads, tails, and handlers. Simply use:
+
+```java
+exchange.setAttribute("key",value_of_any_type);
+exchange.
+
+getAttribute("key",Type_Of_Value .class); // returns null if not instance
+exchange.
+
+getAttribute("key",String .class, "default");
+```
+
 ## Defining Basic Endpoints
 
 ### GET Endpoint
@@ -561,6 +573,19 @@ exchange.isPDF(file)
 exchange.isExtension(file, "jpg")
 ```
 
+### `UploadedFile`
+
+```java
+UploadedFile file = exchange.getFile("file");
+String fieldName = file.getFieldName();
+String filename = file.getFilename();
+String contentType = file.getContentType();
+String extension = file.getExtension();
+byte[] data = file.getData();
+long size = file.getSize();
+boolean empty = file.isEmpty();
+```
+
 ## HTML Templating
 
 ***Note:** This feature is very basic and for convenience only. Using Thymeleaf for complex templating is recommended.*
@@ -751,6 +776,24 @@ new WebServerSecure(443)
     .start();
 ```
 
+## JWT utility
+
+`com.youfuns.webserver.JwtService` provides a basic convenient way to generate and validate JWTs (JSON Web Tokens):
+
+```java
+import com.youfuns.webserver.JwtService;
+
+JwtService.setSecretKey(String key);
+JwtService.
+
+setExpiration(long seconds);
+JwtService.
+
+generateToken(String subject);
+
+boolean isValid = JwtService.validateToken(String token);
+String subject = JwtService.extractSubject(String token); // null if invalid
+```
 
 ## Complete Example
 
@@ -854,3 +897,13 @@ mvn exec:java -Dexec.mainClass="your.Main"
 ```
 
 Or from IntelliJ: Run the Main class directly.
+
+## Other demonstrations
+
+See `com.youfuns.webserver.demo` for full demonstrations:
+
+- `Basic` for a basic server
+- `FileUploadTest` for a file upload demo
+- `HttpsTest` for HTTPS
+- `UserProfileServer` for a user registration and admin system
+- `Proxy` for an advanced proxy program
