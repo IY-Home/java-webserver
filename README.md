@@ -48,18 +48,14 @@ import com.youfuns.webserver.interfaces.*;
 
 ```java
 new WebServer(8080)
-.
-
-start();
+        .start();
 ```
 
 ### Using custom `SimpleLogger`
 
 ```java
 new WebServer(8080,new ConsoleLogger(System.out))
-        .
-
-start();
+        .start();
 ```
 
 ### Using custom `InetSocketAddress`

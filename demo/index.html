@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+</head>
+<body>
+<h1>{{welcome}}</h1>
+<p>Hello, {{user}}!</p>
+<img src="{{image}}" alt="Profile Picture">
+<br><br>
+<form method="POST" action="/upload" enctype="multipart/form-data">
+    <label for="file">Upload Image</label>
+    <input type="file" name="file" id="file">
+    <button type="submit">Upload</button>
+</form>
+</body>
+</html>
