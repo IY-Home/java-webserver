@@ -350,6 +350,35 @@ myServer.on("/change", exchange -> {
 webServer.limitUploadSize(int_size_in_bytes)
 ```
 
+### Helper function to save files
+
+There is a function in Exchange to simplify saving uploaded files:
+
+```java
+short getAndSaveAt(String filename, String[] extensions, String savePath) throws IOException
+```
+
+Returns:
+
+- `-1` if request is not `multipart/form-data`
+- `-2` if the file was not found
+- `-3` if the extension does not match the provided extensions (for accepting all extensions, provide this array:
+  `["all"]`)
+- `-4` if path traversal was detected (if using getAndSaveAt with savePath and not Consumer)
+- `0` if the file was successfully saved
+
+Note that savePath is the exact file path, including file name. If you want to do custom operations on a successfully
+fetched file instead of saving it, pass:
+
+```java
+getAndSaveAt(String filename, String[] extensions, FileAction<UploadedFile> fileAction) 
+```
+
+It still returns the codes, but instead of saveFileAt it performs your action.
+Note that `FileAction` is a `FunctionalInterface` that declares throwing `IOException` so you don't have to catch it.
+The action is only executed if the validation is passed (code = 1).
+
+
 ## HTML Form (URL-encoded) 
 
 ### HTML Form
@@ -531,34 +560,6 @@ exchange.isJPEG(file)
 exchange.isPDF(file)
 exchange.isExtension(file, "jpg")
 ```
-
-### Helper function to save files
-
-There is a function in Exchange to simplify saving uploaded files:
-
-```java
-short getAndSaveAt(String filename, String[] extensions, String savePath) throws IOException
-```
-
-Returns:
-
-- `-1` if request is not `multipart/form-data`
-- `-2` if the file was not found
-- `-3` if the extension does not match the provided extensions (for accepting all extensions, provide this array:
-  `["all"]`)
-- `-4` if path traversal was detected (if using getAndSaveAt with savePath and not Consumer)
-- `0` if the file was successfully saved
-
-Note that savePath is the exact file path, including file name. If you want to do custom operations on a successfully
-fetched file instead of saving it, pass:
-
-```java
-getAndSaveAt(String filename, String[] extensions, FileAction<UploadedFile> fileAction) 
-```
-
-It still returns the codes, but instead of saveFileAt it performs your action.
-Note that `FileAction` is a `FunctionalInterface` that declares throwing `IOException` so you don't have to catch it.
-The action is only executed if the validation is passed (code = 1).
 
 ## HTML Templating
 
