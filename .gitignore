@@ -39,11 +39,5 @@ build/
 .DS_Store
 
 public/
-templates/
-uploads/
-/src/main/java/com/youfuns/webserver/demo/
-
-
-https/
-
-src/main/resources/demo/
+fileUploadDemo/uploads/
+# /src/main/java/com/youfuns/webserver/demo/
