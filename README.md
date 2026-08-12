@@ -232,7 +232,7 @@ With index file and directory listing:
 
 ```java
 .serveStatic("/", "./public", true, "index.html")
-// on endpoint "/", serve files from "./public", with directory listing
+// on endpoint "/", serve files from "./public", with directory listing true
 ```
 
 Only serving a single file:
