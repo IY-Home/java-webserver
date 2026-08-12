@@ -2,7 +2,6 @@ package com.youfuns.webserver.interfaces;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.youfuns.logger.SimpleLogger;
 import org.apache.commons.fileupload.FileItem;
@@ -25,11 +24,10 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class Exchange implements AutoCloseable {
-    private final HttpExchange httpExchange;
+    private HttpExchange httpExchange;
     private final String method;
     private final URI requestUri;
     private final String path;
-    private final Headers headers;
     private final String query;
     private final Map<String, String> queryParams;
     private final String protocol;
@@ -54,46 +52,74 @@ public class Exchange implements AutoCloseable {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final SimpleLogger logger;
 
-    public Exchange(HttpExchange exchange, SimpleLogger logger) {
+    // Primary constructor - creates Exchange from parameters
+    public Exchange(String method, URI requestUri, String protocol, InetSocketAddress remoteAddress,
+                    Map<String, List<String>> requestHeaderMap, String body, SimpleLogger logger) {
         this.logger = logger;
-        this.httpExchange = exchange;
+        this.httpExchange = null; // No underlying HttpExchange
 
-        method = exchange.getRequestMethod();
-        requestUri = exchange.getRequestURI();
-        path = requestUri.getPath();
-        query = requestUri.getQuery();
-        queryParams = parseQueryString(query);
-        protocol = exchange.getProtocol();
-        remoteAddress = exchange.getRemoteAddress();
-
-        headers = exchange.getRequestHeaders();
-        requestHeaderMap = Map.copyOf(headers);
-
-        // IMPORTANT: Don't read body for multipart requests
-        String contentType = getRequestHeaderCaseInsensitive("Content-Type");
-        boolean isMultipart = contentType != null && contentType.startsWith("multipart/form-data");
-
-        String requestBody = "";
-        if (!isMultipart) {
-            try (InputStream is = exchange.getRequestBody()) {
-                byte[] bodyBytes = is.readAllBytes();
-                requestBody = new String(bodyBytes, StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                logger.log(Exchange.class, "Failed to read request body: " + e.getMessage(), SimpleLogger.Level.WARN);
-            }
-        } else {
-            requestBody = "[multipart/form-data - stream preserved for parser]";
-        }
-        body = requestBody;
+        this.method = method;
+        this.requestUri = requestUri;
+        this.path = requestUri.getPath();
+        this.query = requestUri.getQuery();
+        this.queryParams = parseQueryString(query);
+        this.protocol = protocol;
+        this.remoteAddress = remoteAddress;
+        this.requestHeaderMap = Map.copyOf(requestHeaderMap);
+        this.body = body;
 
         // ===== LOGGING =====
         String fullAddress = requestUri.toString();
         logger.log(Exchange.class, "Received " + method + " request to " + fullAddress, SimpleLogger.Level.INFO);
         logger.log(Exchange.class, "Request protocol: " + protocol, SimpleLogger.Level.DEBUG);
         logger.log(Exchange.class, "Remote address: " + remoteAddress, SimpleLogger.Level.DEBUG);
-        logger.log(Exchange.class, "Request headers: " + requestHeaderMap, SimpleLogger.Level.DEBUG);
+        logger.log(Exchange.class, "Request requestHeaderMap: " + requestHeaderMap, SimpleLogger.Level.DEBUG);
         logger.log(Exchange.class, "Query parameters: " + queryParams, SimpleLogger.Level.DEBUG);
-        logger.log(Exchange.class, "Request body: " + (isMultipart ? "[multipart/form-data]" : (!body.isEmpty() ? body : "(empty)")), SimpleLogger.Level.DEBUG);
+        logger.log(Exchange.class, "Request body: " + (body != null && !body.isEmpty() ? body : "(empty)"), SimpleLogger.Level.DEBUG);
+    }
+
+    // Constructor from HttpExchange - delegates to primary constructor
+    public Exchange(HttpExchange exchange, SimpleLogger logger) {
+        this(
+                exchange.getRequestMethod(),
+                exchange.getRequestURI(),
+                exchange.getProtocol(),
+                exchange.getRemoteAddress(),
+                exchange.getRequestHeaders(),
+                extractBody(exchange, logger),
+                logger
+        );
+        this.httpExchange = exchange; // Store reference for access to underlying exchange
+    }
+
+    // Helper method to extract body from HttpExchange
+    private static String extractBody(HttpExchange exchange, SimpleLogger logger) {
+        // IMPORTANT: Don't read body for multipart requests
+        String contentType = getRequestHeaderCaseInsensitive(exchange.getRequestHeaders(), "Content-Type");
+        boolean isMultipart = contentType != null && contentType.startsWith("multipart/form-data");
+
+        if (isMultipart) {
+            return "[multipart/form-data - stream preserved for parser]";
+        }
+
+        try (InputStream is = exchange.getRequestBody()) {
+            byte[] bodyBytes = is.readAllBytes();
+            return new String(bodyBytes, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            logger.log(Exchange.class, "Failed to read request body: " + e.getMessage(), SimpleLogger.Level.WARN);
+            return "";
+        }
+    }
+
+    // Static helper method to get header case-insensitively
+    private static String getRequestHeaderCaseInsensitive(Map<String, List<String>> requestHeaderMap, String headerName) {
+        for (Map.Entry<String, List<String>> entry : requestHeaderMap.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(headerName)) {
+                List<String> values = entry.getValue();
+                return values != null && !values.isEmpty() ? values.get(0) : null;
+            }
+        }
+        return null;
     }
 
     // ===== REQUEST GETTERS =====
@@ -203,7 +229,7 @@ public class Exchange implements AutoCloseable {
     }
 
     public Map<String, List<String>> getAllRequestHeaders() {
-        logger.log(Exchange.class, "Getting all request headers: " + requestHeaderMap, SimpleLogger.Level.DEBUG);
+        logger.log(Exchange.class, "Getting all request requestHeaderMap: " + requestHeaderMap, SimpleLogger.Level.DEBUG);
         return requestHeaderMap;
     }
 
@@ -218,14 +244,14 @@ public class Exchange implements AutoCloseable {
     }
 
     public String getRequestHeader(String name) {
-        List<String> values = headers.get(name);
+        List<String> values = requestHeaderMap.get(name);
         String value = values != null && !values.isEmpty() ? values.get(0) : null;
         logger.log(Exchange.class, "Getting request header '" + name + "': " + value, SimpleLogger.Level.DEBUG);
         return value;
     }
 
     public String getRequestHeaderCaseInsensitive(String name) {
-        for (String headerName : headers.keySet()) {
+        for (String headerName : requestHeaderMap.keySet()) {
             if (headerName.equalsIgnoreCase(name)) {
                 String value = getRequestHeader(headerName);
                 logger.log(Exchange.class, "Getting request header (case-insensitive) '" + name + "': " + value, SimpleLogger.Level.DEBUG);
@@ -239,19 +265,19 @@ public class Exchange implements AutoCloseable {
     // ===== AUTHORIZATION / JWT HELPERS =====
 
     public List<String> getRequestHeaders(String name) {
-        List<String> values = headers.get(name);
-        logger.log(Exchange.class, "Getting request headers '" + name + "': " + values, SimpleLogger.Level.DEBUG);
+        List<String> values = requestHeaderMap.get(name);
+        logger.log(Exchange.class, "Getting request requestHeaderMap '" + name + "': " + values, SimpleLogger.Level.DEBUG);
         return values;
     }
 
     public Map<String, List<String>> getRequestHeaderMap() {
-        Map<String, List<String>> headerMap = headers;
+        Map<String, List<String>> headerMap = requestHeaderMap;
         logger.log(Exchange.class, "Getting request header map: " + headerMap, SimpleLogger.Level.DEBUG);
         return headerMap;
     }
 
     public boolean hasRequestHeader(String name) {
-        boolean has = headers.containsKey(name);
+        boolean has = requestHeaderMap.containsKey(name);
         logger.log(Exchange.class, "Checking request header '" + name + "': " + has, SimpleLogger.Level.DEBUG);
         return has;
     }
@@ -259,7 +285,7 @@ public class Exchange implements AutoCloseable {
     // ===== QUERY PARAMETER HELPERS =====
 
     public boolean hasRequestHeaderCaseInsensitive(String name) {
-        for (String headerName : headers.keySet()) {
+        for (String headerName : requestHeaderMap.keySet()) {
             if (headerName.equalsIgnoreCase(name)) {
                 logger.log(Exchange.class, "Checking request header (case-insensitive) '" + name + "': true", SimpleLogger.Level.DEBUG);
                 return true;
@@ -815,7 +841,7 @@ public class Exchange implements AutoCloseable {
             logger.log(Exchange.class, "File is null, cannot save", SimpleLogger.Level.WARN);
             return "";
         }
-        if (saveDir.contains("../")) {
+        if (saveDir.contains("../") || saveDir.contains("..\\")) {
             logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
             this.setAttribute("_path_traversal_", true);
             return "";
@@ -839,7 +865,7 @@ public class Exchange implements AutoCloseable {
             logger.log(Exchange.class, "File is null, cannot save", SimpleLogger.Level.WARN);
             return "";
         }
-        if (saveLocation.contains("../")) {
+        if (saveLocation.contains("../") || saveLocation.contains("..\\")) {
             logger.log(Exchange.class, "Save location contains potential path traversal attempt", SimpleLogger.Level.WARN);
             this.setAttribute("_path_traversal_", true);
             return "";
@@ -871,7 +897,7 @@ public class Exchange implements AutoCloseable {
             return null;
         }
 
-        if (saveDir.contains("../")) {
+        if (saveDir.contains("../") || saveDir.contains("..\\")) {
             logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
             this.setAttribute("_path_traversal_", true);
             return "";
@@ -991,7 +1017,7 @@ public class Exchange implements AutoCloseable {
             this.addResponseHeader("Cache-Control", "max-age=3600");
 
             this.getUnderlyingHttpExchange().sendResponseHeaders(200, Files.size(file));
-            logger.log(Exchange.class, "Response headers sent, writing file content", SimpleLogger.Level.DEBUG);
+            logger.log(Exchange.class, "Response requestHeaderMap sent, writing file content", SimpleLogger.Level.DEBUG);
             try (OutputStream os = this.getUnderlyingHttpExchange().getResponseBody();
                  InputStream is = Files.newInputStream(file)) {
                 byte[] buffer = new byte[8192];
@@ -1207,7 +1233,7 @@ public class Exchange implements AutoCloseable {
             addResponseHeader("Content-Type", "text/plain; charset=UTF-8");
         }
 
-        // Apply all response headers
+        // Apply all response requestHeaderMap
         for (Map.Entry<String, String> entry : responseHeadersMap.entrySet()) {
             httpExchange.getResponseHeaders().set(entry.getKey(), entry.getValue());
             logger.log(Exchange.class, "Response header: " + entry.getKey() + " = " + entry.getValue(), SimpleLogger.Level.DEBUG);

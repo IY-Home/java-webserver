@@ -47,11 +47,19 @@ import com.youfuns.webserver.interfaces.*;
 ## Basic Server
 
 ```java
-class DemoClass {
-  void demo() {
-    server.on("status", "OK");
-  }
-}
+new WebServer(8080)
+.
+
+start();
+```
+
+### Using custom `SimpleLogger`
+
+```java
+new WebServer(8080,new ConsoleLogger(System.out))
+        .
+
+start();
 ```
 
 ### Using custom `InetSocketAddress`
@@ -61,7 +69,7 @@ import java.net.InetSocketAddress;
 
 // Bind ONLY to localhost (127.0.0.1)
 InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8080);
-WebServer myServer = new WebServer(address, your_logger);
+        WebServer myServer = new WebServer(address, your_SimpleLogger);
 ```
 
 ### Server operations
@@ -71,6 +79,58 @@ server.start(); // starts the server
 server.stop(); // stops the server
 server.stop(10); // stops the server with up to 10 seconds to wait until exchanges have finished
 server.restart(); // restarts the server
+```
+
+## `SimpleLogger` class
+
+This framework includes a basic logger through the `SimpleLogger` interface:
+
+```java
+package com.youfuns.logger;
+
+public interface SimpleLogger {
+  enum Level {
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR
+  }
+
+  void log(Class<?> clazz, String message, Level level);
+
+  void log(Class<?> clazz, String message, Level level, Throwable t);
+
+  Level getLogLevel();
+
+  void setLogLevel(Level logLevel);
+}
+```
+
+To use it, import `com.youfuns.logger.*`.
+
+The default implementation is `ConsoleLogger`, which prints to any `java.io.PrintStream`, by default `System.out`.
+To get the provided singleton logger as a SimpleLogger, call
+
+```java
+com.youfuns.logger.LoggerManager.INSTANCE.getLogger()
+```
+
+and to log quickly with the `DEBUG` level, call
+
+```java
+com.youfuns.logger.LoggerManager.quickLog(Object caller_to_get_class, String message)
+```
+
+## `Exchange` class
+
+The `Exchange` class is a wrapper around `HttpExchange` that provides various utility methods.
+You typically receive it in the `FunctionalInterfaces` for your endpoints, hooks/tails, and exception handlers.
+
+To create an `Exchange` manually, use this constructor:
+
+```java
+public Exchange(String method, URI requestUri, String protocol, InetSocketAddress remoteAddress,
+                Map<String, List<String>> requestHeaderMap, String body, SimpleLogger logger)
 ```
 
 ## Defining Basic Endpoints
@@ -220,7 +280,6 @@ myServer.on("/change", exchange -> {
     myServer.stop();
 });
 ```
-
 
 
 ## File Upload

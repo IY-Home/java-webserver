@@ -2,7 +2,7 @@ package com.youfuns.webserver;
 
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import com.youfuns.logger.DummyLogger;
+import com.youfuns.logger.ConsoleLogger;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.interfaces.*;
 
@@ -33,7 +33,7 @@ public class WebServer {
     private ExceptionHandler exceptionHandler;
 
     public WebServer(int port) {
-        this(port, new DummyLogger());
+        this(port, new ConsoleLogger());
     }
 
     public WebServer(int port, SimpleLogger logger) {
@@ -48,7 +48,7 @@ public class WebServer {
     }
 
     public WebServer(InetSocketAddress address) {
-        this(address, new DummyLogger());
+        this(address, new ConsoleLogger());
     }
 
     public WebServer(InetSocketAddress address, SimpleLogger logger) {

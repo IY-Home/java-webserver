@@ -33,6 +33,10 @@ public class ConsoleLogger implements SimpleLogger {
         this.dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     }
 
+    public ConsoleLogger() {
+        this(System.out);
+    }
+
     @Override
     public Level getLogLevel() {
         return logLevel;
