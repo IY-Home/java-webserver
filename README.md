@@ -105,6 +105,24 @@ public interface SimpleLogger {
 To use it, import `com.youfuns.logger.*`.
 
 The default implementation is `ConsoleLogger`, which prints to any `java.io.PrintStream`, by default `System.out`.
+
+```java
+// Log to console
+ConsoleLogger logger = new ConsoleLogger(System.out);
+
+// Log to a file
+ConsoleLogger fileLogger = new ConsoleLogger(new java.io.PrintStream("./logs/app.log"));
+
+// Set config
+logger
+    .setShowTimestamp(true)
+    .setShowClass(true)
+    .setShowLevel(true)
+    .setPrefix("> ")
+    .setLogLevel(Level.DEBUG)
+    .setOutputOn(true);
+```
+
 To get the provided singleton logger as a SimpleLogger, call
 
 ```java

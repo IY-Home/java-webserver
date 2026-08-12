@@ -4,14 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Fixed formatting issues" />
+    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Added logger config" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="59" />
+    <option name="cachedIndexableFilesCount" value="47" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -53,39 +53,39 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.FileUploadTest.executor": "Run",
-    "Application.HotLoadingTest.executor": "Run",
-    "Application.HttpsTest.executor": "Run",
-    "Application.LMStudio.executor": "Run",
-    "Application.Main.executor": "Run",
-    "Application.PasswordStrengthValidator.executor": "Run",
-    "Application.Proxy.executor": "Run",
-    "DefaultHtmlFileTemplate": "HTML File",
-    "HTTP Request.rest-api | #1.executor": "Run",
-    "Maven.WebServer [clean,install,-U].executor": "Run",
-    "Maven.WebServer [clean].executor": "Run",
-    "Maven.WebServer [install].executor": "Run",
-    "Maven.WebServer [package].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/isaac/IdeaProjects/java-webserver/uploads",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Artifacts",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.0",
-    "settings.editor.selected.configurable": "preferences.keymap",
-    "vcs.patch.to.clipboard": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.FileUploadTest.executor&quot;: &quot;Run&quot;,
+    &quot;Application.HotLoadingTest.executor&quot;: &quot;Run&quot;,
+    &quot;Application.HttpsTest.executor&quot;: &quot;Run&quot;,
+    &quot;Application.LMStudio.executor&quot;: &quot;Run&quot;,
+    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
+    &quot;Application.PasswordStrengthValidator.executor&quot;: &quot;Run&quot;,
+    &quot;Application.Proxy.executor&quot;: &quot;Run&quot;,
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;HTTP Request.rest-api | #1.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.WebServer [clean,install,-U].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.WebServer [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.WebServer [install].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.WebServer [package].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/isaac/IdeaProjects/java-webserver/uploads&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Artifacts&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
+    &quot;vcs.patch.to.clipboard&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/uploads" />
@@ -360,7 +360,15 @@
       <option name="project" value="LOCAL" />
       <updated>1786519197791</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="Added logger config">
+      <option name="closed" value="true" />
+      <created>1786520018148</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1786520018148</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -378,7 +386,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Updated framework" />
     <MESSAGE value="Updated .gitignore, README.md, and WebServer.java, to add manual InetSocketAddress passing." />
     <MESSAGE value="Generate a commit message here" />
     <MESSAGE value="Refactor and modernize API for configuration uploads&#10;&#10;This commit introduces several significant updates to the project structure and functionality:&#10;&#10;- Bumped the project version from 1.0-SNAPSHOT to 1.1.0 and updated the group ID.&#10;- Refactored file serving logic in `Exchange.java` to properly throw `IOException` instead of internal logging/handling, ensuring proper exception propagation.&#10;- Replaced the old `/setLogo` endpoint with a robust `/api/setConfig` endpoint to handle multipart file uploads for configuration.&#10;- Added validation to ensure uploaded files are only PNG or JPEG formats, and implemented safe saving for configurations.&#10;- Updated logging behavior in various places for clearer debugging." />
@@ -403,7 +410,8 @@
     <MESSAGE value="Renamed hooks to heads and made tails not return a boolean" />
     <MESSAGE value="Added stuff in README" />
     <MESSAGE value="Fixed formatting issues" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed formatting issues" />
+    <MESSAGE value="Added logger config" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added logger config" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
