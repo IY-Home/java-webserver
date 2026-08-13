@@ -4,42 +4,14 @@
 
 A lightweight web server framework built on Java's built-in HttpServer with a fluent API for defining routes, handling requests, and serving static files.
 
-## Adding to Project
+## Adding to project
 
-Add these dependencies to your `pom.xml`:
-
-```xml
-<dependencies>
-    <dependency>
-        <groupId>commons-fileupload</groupId>
-        <artifactId>commons-fileupload</artifactId>
-        <version>1.5</version>
-    </dependency>
-    <dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>2.15.1</version>
-    </dependency>
-    <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>2.17.1</version>
-    </dependency>
-    <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>4.0.1</version>
-        <scope>provided</scope>
-    </dependency>
-</dependencies>
-```
-
-Clone the source code to your project (no prebuilt `JAR`s are provided).
+Clone the source code to your project (no prebuilt `JAR`s are provided). Run the Maven project from the `pom.xml`.
 
 Then import the WebServer and interfaces:
 
 ```java
-import com.youfuns.webserver.WebServer;
+import com.youfuns.webserver.*;
 import com.youfuns.webserver.interfaces.*;
 ```
 
