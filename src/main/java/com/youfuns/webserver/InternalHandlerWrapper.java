@@ -37,16 +37,22 @@ public class InternalHandlerWrapper implements HttpHandler {
                 }
             }
 
-            // Process the actual handler(
+            // Process the actual handler
             if (headsPassed) handler.handle(exchange);
 
-            // Process tails
-            for (ExchangeHandler tail : headsAndTails.tails) {
-                tail.handle(exchange);
-            }
         } catch (Exception e) {
             exceptionHandler.get().handle(exchange, e);
+        } finally {
+            try {
+                // Process tails
+                for (ExchangeHandler tail : headsAndTails.tails) {
+                    tail.handle(exchange);
+                }
+            } catch (Exception e) {
+                exceptionHandler.get().handle(exchange, e);
+            }
         }
+
     }
 
     public static class HeadsAndTails {
