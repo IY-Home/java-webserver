@@ -1,6 +1,7 @@
 package com.youfuns.webserver.demo;
 
 import com.youfuns.logger.ConsoleLogger;
+import com.youfuns.logger.LoggerManager;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.JwtService;
 import com.youfuns.webserver.TemplateEngine;
@@ -39,8 +40,10 @@ public class UserProfileServer {
 
         WebServer server = new WebServer(8080, logger);
 
+        server.on("/", exchange ->
+                        exchange.redirect("/login"))
         // Login page
-        server.on("/login", exchange -> {
+                .on("/login", exchange -> {
             TemplateEngine engine = TemplateEngine.fromFile("./userServiceDemo/templates/login.html");
             String error = exchange.getQueryParameter("error", null);
             if (error != null) {
@@ -52,10 +55,10 @@ public class UserProfileServer {
             }
             exchange.formatHTML();
             exchange.sendResponse(engine.getTemplate());
-        });
+                })
 
         // Handle login
-        server.on("/login", "POST", exchange -> {
+                .on("/login", "POST", exchange -> {
             String email = exchange.getFormFieldFromUrlEncoded("email");
             String password = exchange.getFormFieldFromUrlEncoded("password");
 
@@ -87,23 +90,23 @@ public class UserProfileServer {
 
             // Redirect to admin page
             exchange.redirect("/admin");
-        });
+                })
 
         // Logout
-        server.on("/logout", exchange -> {
+                .on("/logout", exchange -> {
             exchange.removeCookie("jwt");
             exchange.redirect("/login");
-        });
+                })
 
         // Home page - User registration form
-        server.on("/register", exchange -> {
+                .on("/register", exchange -> {
             TemplateEngine engine = TemplateEngine.fromFile("./userServiceDemo/templates/register.html");
             exchange.formatHTML();
             exchange.sendResponse(engine.getTemplate());
-        });
+                })
 
         // Handle form submission
-        server.on("/register", "POST", exchange -> {
+                .on("/register", "POST", exchange -> {
             if (!exchange.isMultipartRequest()) {
                 exchange.sendBadRequestResponse("Expected multipart/form-data");
                 return;
@@ -161,10 +164,10 @@ public class UserProfileServer {
             users.add(user);
 
             exchange.redirect("/login");
-        });
+                })
 
         // Admin page - Show all users (protected - admin only)
-        server.on("/admin", exchange -> {
+                .on("/admin", exchange -> {
             // Check authentication
             String token = exchange.getCookie("jwt");
             if (token == null || !JwtService.validateToken(token)) {
@@ -205,28 +208,29 @@ public class UserProfileServer {
 
             exchange.formatHTML();
             exchange.sendResponse(engine.getTemplate());
-        });
+                })
 
         // Serve uploaded avatars
-        server.serveStatic("/avatars", UPLOAD_DIR);
+                .serveStatic("/avatars", UPLOAD_DIR)
 
         // 404 handler
-        server.onNotFound(exchange -> {
-            exchange.sendResponse(404, "Page not found");
+                .onNotFound(exchange -> {
+                    exchange.redirect("/login?error=" + Exchange.urlEncode("Page not found: " + exchange.getRequestPath()));
         });
 
         // Exception handler
         server.onException((exchange, exception) -> {
-            exchange.sendErrorResponse("An error occurred: " + exception.getMessage());
+            LoggerManager.INSTANCE.getLogger().log(UserProfileServer.class, "An exception was encountered: ", SimpleLogger.Level.ERROR, exception);
+            exchange.redirect("/login?error=" + Exchange.urlEncode("An error occurred: " + exception.getMessage()));
         });
 
         // Start server
         server.start();
         System.out.println("Server running at http://localhost:8080");
         System.out.println("Login: http://localhost:8080/login");
-        System.out.println("Register: http://localhost:8080 (login required)");
+        System.out.println("Register: http://localhost:8080/register");
         System.out.println("Admin: http://localhost:8080/admin (admin only)");
-        System.out.println("Admin credentials: username=admin, password=admin");
+        System.out.println("Admin credentials: email=admin@system.com, password=admin");
     }
 
     private static String generateUserCard(User user) {

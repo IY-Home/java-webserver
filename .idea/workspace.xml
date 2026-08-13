@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Added demo">
+    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Slight updates">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/InternalHandlerWrapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/InternalHandlerWrapper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -21,8 +22,9 @@
       <list>
         <option value="Interface" />
         <option value="Record" />
-        <option value="Class" />
         <option value="HTML File" />
+        <option value="Enum" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -58,8 +60,10 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.Basic.executor": "Run",
     "Application.FileUploadTest.executor": "Run",
     "Application.HotLoadingTest.executor": "Run",
+    "Application.HtmlParser.executor": "Run",
     "Application.HttpsTest.executor": "Run",
     "Application.LMStudio.executor": "Run",
     "Application.Main.executor": "Run",
@@ -390,7 +394,15 @@
       <option name="project" value="LOCAL" />
       <updated>1786528225317</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="Slight updates">
+      <option name="closed" value="true" />
+      <created>1786528934137</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1786528934137</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -408,7 +420,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Refactor and modernize API for configuration uploads&#10;&#10;This commit introduces several significant updates to the project structure and functionality:&#10;&#10;- Bumped the project version from 1.0-SNAPSHOT to 1.1.0 and updated the group ID.&#10;- Refactored file serving logic in `Exchange.java` to properly throw `IOException` instead of internal logging/handling, ensuring proper exception propagation.&#10;- Replaced the old `/setLogo` endpoint with a robust `/api/setConfig` endpoint to handle multipart file uploads for configuration.&#10;- Added validation to ensure uploaded files are only PNG or JPEG formats, and implemented safe saving for configurations.&#10;- Updated logging behavior in various places for clearer debugging." />
     <MESSAGE value="Updated typo" />
     <MESSAGE value="Patches" />
     <MESSAGE value="Fixed issues with dynamic endpoint with trailing slash not recognize URL without trailing slash" />
@@ -433,10 +444,22 @@
     <MESSAGE value="Added logger config" />
     <MESSAGE value="Made major file changes" />
     <MESSAGE value="Added demo" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added demo" />
+    <MESSAGE value="Slight updates" />
+    <option name="LAST_COMMIT_MESSAGE" value="Slight updates" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/youfuns/html/HtmlParser.java</url>
+          <line>206</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />
