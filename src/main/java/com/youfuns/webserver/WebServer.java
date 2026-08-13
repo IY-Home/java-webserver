@@ -368,4 +368,30 @@ public class WebServer {
             }
         };
     }
+
+    public static void createIfNotExists(String directory) {
+        try {
+            Path dir = Paths.get(directory);
+            if (!Files.exists(dir)) {
+                Files.createDirectories(dir);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("The directory could not be created: " + directory, e);
+        }
+    }
+
+    public WebServer ensureExists(String directory) {
+        try {
+            Path dir = Paths.get(directory);
+            if (!Files.exists(dir)) {
+                Files.createDirectories(dir);
+                logger.log(WebServer.class, "Created directory: " + directory, SimpleLogger.Level.DEBUG);
+            } else {
+                logger.log(WebServer.class, "Directory exists: " + directory, SimpleLogger.Level.DEBUG);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("The directory could not be created: " + directory, e);
+        }
+        return this;
+    }
 }

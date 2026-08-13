@@ -9,6 +9,7 @@ public class FileUploadTest {
     public static void main(String[] args) {
         WebServer webServer = new WebServer(8080, new ConsoleLogger(System.out));
         webServer
+                .ensureExists("./fileUploadDemo/uploads")
                 .on("/", exchange -> {
                     TemplateEngine templateEngine = TemplateEngine.fromFile("./fileUploadDemo/index.html")
                             .replace("title", "Welcome")

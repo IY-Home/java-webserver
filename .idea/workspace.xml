@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Added demo">
+    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Removed pom.xml section from README.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/FileUploadTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/FileUploadTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -35,12 +38,12 @@
     &quot;assignee&quot;: &quot;IY-Home&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/IY-Home/java-webserver.git&quot;,
-    &quot;accountId&quot;: &quot;e659c8e1-b8ee-4052-98cc-56cbdcb39714&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/IY-Home/java-webserver.git",
+    "accountId": "d22800d6-26c6-45a8-b9a6-6648c895d4e4"
   }
-}</component>
+}]]></component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -162,7 +165,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.33813.55" />
+        <option value="bundled-jdk-30f59d01ecdd-34e2839f716b-intellij.indexing.shared.core-IU-262.9437.185" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.9437.185" />
       </set>
     </attachedChunks>
   </component>
@@ -408,7 +412,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Refactor and modernize API for configuration uploads&#10;&#10;This commit introduces several significant updates to the project structure and functionality:&#10;&#10;- Bumped the project version from 1.0-SNAPSHOT to 1.1.0 and updated the group ID.&#10;- Refactored file serving logic in `Exchange.java` to properly throw `IOException` instead of internal logging/handling, ensuring proper exception propagation.&#10;- Replaced the old `/setLogo` endpoint with a robust `/api/setConfig` endpoint to handle multipart file uploads for configuration.&#10;- Added validation to ensure uploaded files are only PNG or JPEG formats, and implemented safe saving for configurations.&#10;- Updated logging behavior in various places for clearer debugging." />
     <MESSAGE value="Updated typo" />
     <MESSAGE value="Patches" />
     <MESSAGE value="Fixed issues with dynamic endpoint with trailing slash not recognize URL without trailing slash" />
@@ -433,7 +436,8 @@
     <MESSAGE value="Added logger config" />
     <MESSAGE value="Made major file changes" />
     <MESSAGE value="Added demo" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added demo" />
+    <MESSAGE value="Removed pom.xml section from README." />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed pom.xml section from README." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />

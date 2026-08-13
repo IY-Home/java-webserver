@@ -37,10 +37,11 @@ public class UserProfileServer {
         ConsoleLogger logger = new ConsoleLogger();
         logger.setLogLevel(SimpleLogger.Level.DEBUG);
 
-        WebServer server = new WebServer(8080, logger);
+        WebServer server = new WebServer(8080, logger)
 
+                .ensureExists(UPLOAD_DIR)
         // Login page
-        server.on("/login", exchange -> {
+                .on("/login", exchange -> {
             TemplateEngine engine = TemplateEngine.fromFile("./userServiceDemo/templates/login.html");
             String error = exchange.getQueryParameter("error", null);
             if (error != null) {

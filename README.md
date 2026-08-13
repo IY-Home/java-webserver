@@ -558,6 +558,18 @@ long size = file.getSize();
 boolean empty = file.isEmpty();
 ```
 
+### Create directory if not existent
+
+```java
+yourWebServer.ensureExists("./myDir");
+// or static method (without logging)
+WebServer.
+
+createIfNotExists("./myDir");
+```
+
+Throws `RuntimeException("The directory could not be created: {directory}", IOException)` if directory creation failed.
+
 ## HTML Templating
 
 ***Note:** This feature is very basic and for convenience only. Using Thymeleaf for complex templating is recommended.*
