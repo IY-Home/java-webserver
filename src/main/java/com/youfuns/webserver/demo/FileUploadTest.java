@@ -1,13 +1,15 @@
 package com.youfuns.webserver.demo;
 
-import com.youfuns.logger.ConsoleLogger;
 import com.youfuns.logger.LoggerManager;
 import com.youfuns.webserver.TemplateEngine;
 import com.youfuns.webserver.WebServer;
+import com.youfuns.webserver.servers.WebServerType;
+
+import java.net.InetSocketAddress;
 
 public class FileUploadTest {
     public static void main(String[] args) {
-        WebServer webServer = new WebServer(8080, new ConsoleLogger(System.out));
+        var webServer = WebServer.create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(8080), LoggerManager.INSTANCE.getLogger());
         webServer
                 .ensureExists("./fileUploadDemo/uploads")
                 .on("/", exchange -> {

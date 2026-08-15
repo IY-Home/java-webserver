@@ -2,8 +2,8 @@ package com.youfuns.webserver.interfaces;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.net.httpserver.HttpExchange;
 import com.youfuns.logger.SimpleLogger;
+import com.youfuns.webserver.servers.ExchangeHandlerInterface;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -12,19 +12,17 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class Exchange implements AutoCloseable {
-    private HttpExchange httpExchange;
+public class Exchange<IExchange> implements AutoCloseable {
+    private ExchangeHandlerInterface<IExchange> iExchangeHandler;
+    private IExchange iExchange;
     private final String method;
     private final URI requestUri;
     private final String path;
@@ -38,7 +36,6 @@ public class Exchange implements AutoCloseable {
     private int responseStatusCode = 200;
     private String responseBodyContent = "";
     private final Map<String, String> responseHeadersMap = new HashMap<>();
-    private boolean responseAlreadySent = false;
 
     // File upload fields
     private final Map<String, UploadedFile> uploadedFiles = new HashMap<>();
@@ -52,11 +49,14 @@ public class Exchange implements AutoCloseable {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final SimpleLogger logger;
 
-    // Primary constructor - creates Exchange from parameters
+    private boolean responseSent = false;
+
+    // Primary constructor - creates Exchange<IExchange> from parameters
     public Exchange(String method, URI requestUri, String protocol, InetSocketAddress remoteAddress,
-                    Map<String, List<String>> requestHeaderMap, String body, SimpleLogger logger) {
+                    Map<String, List<String>> requestHeaderMap, SimpleLogger logger, ExchangeHandlerInterface<IExchange> iExchangeHandler, IExchange exchange) {
         this.logger = logger;
-        this.httpExchange = null; // No underlying HttpExchange
+        this.iExchangeHandler = iExchangeHandler;
+        this.iExchange = exchange;
 
         this.method = method;
         this.requestUri = requestUri;
@@ -66,7 +66,7 @@ public class Exchange implements AutoCloseable {
         this.protocol = protocol;
         this.remoteAddress = remoteAddress;
         this.requestHeaderMap = Map.copyOf(requestHeaderMap);
-        this.body = body;
+        this.body = iExchangeHandler.extractBody(iExchange);
 
         // ===== LOGGING =====
         String fullAddress = requestUri.toString();
@@ -78,41 +78,8 @@ public class Exchange implements AutoCloseable {
         logger.log(Exchange.class, "Request body: " + (body != null && !body.isEmpty() ? body : "(empty)"), SimpleLogger.Level.DEBUG);
     }
 
-    // Constructor from HttpExchange - delegates to primary constructor
-    public Exchange(HttpExchange exchange, SimpleLogger logger) {
-        this(
-                exchange.getRequestMethod(),
-                exchange.getRequestURI(),
-                exchange.getProtocol(),
-                exchange.getRemoteAddress(),
-                exchange.getRequestHeaders(),
-                extractBody(exchange, logger),
-                logger
-        );
-        this.httpExchange = exchange; // Store reference for access to underlying exchange
-    }
-
-    // Helper method to extract body from HttpExchange
-    private static String extractBody(HttpExchange exchange, SimpleLogger logger) {
-        // IMPORTANT: Don't read body for multipart requests
-        String contentType = getRequestHeaderCaseInsensitive(exchange.getRequestHeaders(), "Content-Type");
-        boolean isMultipart = contentType != null && contentType.startsWith("multipart/form-data");
-
-        if (isMultipart) {
-            return "[multipart/form-data - stream preserved for parser]";
-        }
-
-        try (InputStream is = exchange.getRequestBody()) {
-            byte[] bodyBytes = is.readAllBytes();
-            return new String(bodyBytes, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            logger.log(Exchange.class, "Failed to read request body: " + e.getMessage(), SimpleLogger.Level.WARN);
-            return "";
-        }
-    }
-
     // Static helper method to get header case-insensitively
-    private static String getRequestHeaderCaseInsensitive(Map<String, List<String>> requestHeaderMap, String headerName) {
+    public static String getRequestHeaderCaseInsensitive(Map<String, List<String>> requestHeaderMap, String headerName) {
         for (Map.Entry<String, List<String>> entry : requestHeaderMap.entrySet()) {
             if (entry.getKey().equalsIgnoreCase(headerName)) {
                 List<String> values = entry.getValue();
@@ -238,9 +205,9 @@ public class Exchange implements AutoCloseable {
         return body;
     }
 
-    public HttpExchange getUnderlyingHttpExchange() {
-        logger.log(Exchange.class, "Getting underlying HttpExchange", SimpleLogger.Level.DEBUG);
-        return httpExchange;
+    public IExchange getUnderlyingExchange() {
+        logger.log(Exchange.class, "Getting underlying IExchange", SimpleLogger.Level.DEBUG);
+        return iExchange;
     }
 
     public String getRequestHeader(String name) {
@@ -679,8 +646,8 @@ public class Exchange implements AutoCloseable {
         upload.setSizeMax(MAX_FILE_SIZE);
 
         try {
-            // Use the custom ApacheHttpExchangeContext to bridge HttpExchange to Commons FileUpload
-            List<FileItem> items = upload.parseRequest(new ApacheHttpExchangeContext(httpExchange));
+            // Use the custom ApacheIExchangeContext to bridge IExchange to Commons FileUpload
+            List<FileItem> items = upload.parseRequest(iExchangeHandler.createFileUploadRequestContext(iExchange));
             logger.log(Exchange.class, "Multipart parse complete, found " + items.size() + " items", SimpleLogger.Level.DEBUG);
 
             for (FileItem item : items) {
@@ -993,6 +960,10 @@ public class Exchange implements AutoCloseable {
     }
 
     public void serveFile(String filePath) throws IOException {
+        if (responseSent) {
+            logger.log(Exchange.class, "Response already sent, returning", SimpleLogger.Level.WARN);
+            return;
+        }
         logger.log(Exchange.class, "Serving file: " + filePath, SimpleLogger.Level.INFO);
         if (filePath.contains("../")) {
             logger.log(Exchange.class, "File path contains potential path traversal attempt", SimpleLogger.Level.WARN);
@@ -1004,25 +975,18 @@ public class Exchange implements AutoCloseable {
             throw new IllegalArgumentException("File does not exist: " + filePath);
         }
         try {
-            String mimeType = URLConnection.getFileNameMap().getContentTypeFor(file.toString());
-            if (mimeType == null) mimeType = "application/octet-stream";
-            logger.log(Exchange.class, "Serving file with MIME type: " + mimeType, SimpleLogger.Level.DEBUG);
+            iExchangeHandler.serveFile(iExchange, responseStatusCode, responseHeadersMap, file);
+            responseSent = true;
+        } catch (IOException e) {
+            logger.log(Exchange.class, "Failed to serve file: " + e.getMessage(), SimpleLogger.Level.ERROR);
+            throw e;
+        }
+    }
 
-            this.addResponseHeader("Content-Type", mimeType);
-            this.addResponseHeader("Content-Length", String.valueOf(Files.size(file)));
-            this.addResponseHeader("Cache-Control", "max-age=3600");
-
-            this.getUnderlyingHttpExchange().sendResponseHeaders(200, Files.size(file));
-            logger.log(Exchange.class, "Response requestHeaderMap sent, writing file content", SimpleLogger.Level.DEBUG);
-            try (OutputStream os = this.getUnderlyingHttpExchange().getResponseBody();
-                 InputStream is = Files.newInputStream(file)) {
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    os.write(buffer, 0, bytesRead);
-                }
-            }
-            logger.log(Exchange.class, "File served successfully: " + filePath, SimpleLogger.Level.INFO);
+    public void serveFile(byte[] fileBytes) throws IOException {
+        try {
+            iExchangeHandler.serveFile(iExchange, responseStatusCode, responseHeadersMap, fileBytes);
+            responseSent = true;
         } catch (IOException e) {
             logger.log(Exchange.class, "Failed to serve file: " + e.getMessage(), SimpleLogger.Level.ERROR);
             throw e;
@@ -1031,19 +995,19 @@ public class Exchange implements AutoCloseable {
 
     // ===== RESPONSE BUILDERS =====
 
-    public Exchange setResponseStatusCode(int statusCode) {
+    public Exchange<IExchange> setResponseStatusCode(int statusCode) {
         logger.log(Exchange.class, "Setting response status code to: " + statusCode, SimpleLogger.Level.DEBUG);
         this.responseStatusCode = statusCode;
         return this;
     }
 
-    public Exchange setResponseBody(String body) {
+    public Exchange<IExchange> setResponseBody(String body) {
         logger.log(Exchange.class, "Setting response body to: " + (body != null ? body.length() + " chars" : "null"), SimpleLogger.Level.DEBUG);
         this.responseBodyContent = body;
         return this;
     }
 
-    public Exchange setResponseBodyAsJson(Object object) {
+    public Exchange<IExchange> setResponseBodyAsJson(Object object) {
         logger.log(Exchange.class, "Setting response body as JSON from object: " + object, SimpleLogger.Level.DEBUG);
         try {
             this.responseBodyContent = objectMapper.writeValueAsString(object);
@@ -1058,13 +1022,13 @@ public class Exchange implements AutoCloseable {
         return this;
     }
 
-    public Exchange addResponseHeader(String name, String value) {
+    public Exchange<IExchange> addResponseHeader(String name, String value) {
         logger.log(Exchange.class, "Adding response header: " + name + " = " + value, SimpleLogger.Level.DEBUG);
         responseHeadersMap.put(name, value);
         return this;
     }
 
-    public Exchange allowMethods(String... methods) {
+    public Exchange<IExchange> allowMethods(String... methods) {
         StringBuilder allowed = new StringBuilder();
         for (String m : methods) {
             allowed.append(m).append(", ");
@@ -1078,12 +1042,12 @@ public class Exchange implements AutoCloseable {
         return this;
     }
 
-    public Exchange enableCors() {
+    public Exchange<IExchange> enableCors() {
         logger.log(Exchange.class, "Enabling CORS with default origin '*'", SimpleLogger.Level.DEBUG);
         return enableCors("*");
     }
 
-    public Exchange enableCors(String allowedOrigin) {
+    public Exchange<IExchange> enableCors(String allowedOrigin) {
         logger.log(Exchange.class, "Enabling CORS with origin: " + allowedOrigin, SimpleLogger.Level.DEBUG);
         addResponseHeader("Access-Control-Allow-Origin", allowedOrigin);
         addResponseHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
@@ -1092,7 +1056,7 @@ public class Exchange implements AutoCloseable {
         return this;
     }
 
-    public Exchange setJwtResponseToken(String token) {
+    public Exchange<IExchange> setJwtResponseToken(String token) {
         logger.log(Exchange.class, "Setting JWT response token: " + (token != null ? token.substring(0, Math.min(token.length(), 20)) + "..." : "null"), SimpleLogger.Level.DEBUG);
         addResponseHeader("Authorization", "Bearer " + token);
         return this;
@@ -1149,7 +1113,7 @@ public class Exchange implements AutoCloseable {
     /**
      * Removes a cookie by setting its max age to 0.
      */
-    public Exchange removeCookie(String name) {
+    public Exchange<IExchange> removeCookie(String name) {
         logger.log(Exchange.class, "Removing cookie: " + name, SimpleLogger.Level.DEBUG);
         addResponseHeader("Set-Cookie", name + "=; Max-Age=0; HttpOnly; SameSite=Strict");
         return this;
@@ -1158,44 +1122,44 @@ public class Exchange implements AutoCloseable {
     /**
      * Removes a cookie by setting its max age to 0 for a specific path.
      */
-    public Exchange removeCookie(String name, String path) {
+    public Exchange<IExchange> removeCookie(String name, String path) {
         logger.log(Exchange.class, "Removing cookie: " + name + " with path: " + path, SimpleLogger.Level.DEBUG);
         addResponseHeader("Set-Cookie", name + "=; Max-Age=0; Path=" + path + "; HttpOnly; SameSite=Strict");
         return this;
     }
 
-    public Exchange addCookie(String name, String value) {
+    public Exchange<IExchange> addCookie(String name, String value) {
         logger.log(Exchange.class, "Adding cookie: " + name + " = " + value, SimpleLogger.Level.DEBUG);
         addResponseHeader("Set-Cookie", name + "=" + value + "; HttpOnly; Path=/; SameSite=Strict");
         return this;
     }
 
-    public Exchange addCookie(String name, String value, int maxAgeSeconds) {
+    public Exchange<IExchange> addCookie(String name, String value, int maxAgeSeconds) {
         logger.log(Exchange.class, "Adding cookie: " + name + " = " + value + ", maxAge: " + maxAgeSeconds + " seconds", SimpleLogger.Level.DEBUG);
         addResponseHeader("Set-Cookie", name + "=" + value + "; HttpOnly; Path=/; SameSite=Strict; Max-Age=" + maxAgeSeconds);
         return this;
     }
 
-    public Exchange addCookie(String name, String value, int maxAgeSeconds, String path) {
+    public Exchange<IExchange> addCookie(String name, String value, int maxAgeSeconds, String path) {
         logger.log(Exchange.class, "Adding cookie: " + name + " = " + value + ", maxAge: " + maxAgeSeconds + " seconds, path: " + path, SimpleLogger.Level.DEBUG);
         addResponseHeader("Set-Cookie", name + "=" + value + "; HttpOnly; Path=" + path + "; SameSite=Strict; Max-Age=" + maxAgeSeconds);
         return this;
     }
 
-    public Exchange setCacheControlMaxAge(long seconds) {
+    public Exchange<IExchange> setCacheControlMaxAge(long seconds) {
         logger.log(Exchange.class, "Setting Cache-Control max-age: " + seconds, SimpleLogger.Level.DEBUG);
         addResponseHeader("Cache-Control", "max-age=" + seconds);
         return this;
     }
 
-    public Exchange disableCache() {
+    public Exchange<IExchange> disableCache() {
         logger.log(Exchange.class, "Disabling cache", SimpleLogger.Level.DEBUG);
         addResponseHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
         addResponseHeader("Pragma", "no-cache");
         return this;
     }
 
-    public Exchange setAttribute(String key, Object value) {
+    public Exchange<IExchange> setAttribute(String key, Object value) {
         logger.log(Exchange.class, "Setting attribute: " + key + " = " + value, SimpleLogger.Level.DEBUG);
         attributes.put(key, value);
         return this;
@@ -1219,45 +1183,15 @@ public class Exchange implements AutoCloseable {
     }
 
     // ===== SEND RESPONSE =====
-
     public void sendResponse() throws IOException {
-        if (responseAlreadySent) {
-            logger.log(Exchange.class, "Response already sent, returning", SimpleLogger.Level.DEBUG);
+        if (responseSent) {
+            logger.log(Exchange.class, "Response already sent, returning", SimpleLogger.Level.WARN);
             return;
         }
-
-        // Set default Content-Type for non-redirects
-        if (!(responseStatusCode >= 300 && responseStatusCode < 400) &&
-                !responseHeadersMap.containsKey("Content-Type") &&
-                !responseBodyContent.isEmpty()) {
-            addResponseHeader("Content-Type", "text/plain; charset=UTF-8");
-        }
-
-        // Apply all response requestHeaderMap
-        for (Map.Entry<String, String> entry : responseHeadersMap.entrySet()) {
-            httpExchange.getResponseHeaders().set(entry.getKey(), entry.getValue());
-            logger.log(Exchange.class, "Response header: " + entry.getKey() + " = " + entry.getValue(), SimpleLogger.Level.DEBUG);
-        }
-
-        // Send response
-        if (responseStatusCode >= 300 && responseStatusCode < 400) {
-            logger.log(Exchange.class, "Sending redirect: " + responseStatusCode + " with no body", SimpleLogger.Level.INFO);
-            httpExchange.sendResponseHeaders(responseStatusCode, -1);
-        } else {
-            byte[] responseBytes = responseBodyContent.getBytes(StandardCharsets.UTF_8);
-            String preview = responseBodyContent.length() > 32
-                    ? responseBodyContent.substring(0, 32) + "..."
-                    : responseBodyContent;
-
-            logger.log(Exchange.class, "Sending response: " + responseStatusCode + " with " + responseBytes.length + " bytes. First 32 chars: " + preview, SimpleLogger.Level.INFO);
-            httpExchange.sendResponseHeaders(responseStatusCode, responseBytes.length);
-            try (OutputStream os = httpExchange.getResponseBody()) {
-                os.write(responseBytes);
-            }
-        }
-        responseAlreadySent = true;
-        logger.log(Exchange.class, "Response sent successfully", SimpleLogger.Level.DEBUG);
+        iExchangeHandler.sendResponse(iExchange, responseStatusCode, responseHeadersMap, responseBodyContent);
+        responseSent = true;
     }
+
 
     public void sendResponse(String body) throws IOException {
         logger.log(Exchange.class, "Sending response with body: " + (body != null ? body.length() + " chars" : "null"), SimpleLogger.Level.DEBUG);
@@ -1344,25 +1278,25 @@ public class Exchange implements AutoCloseable {
         sendResponse(204, "");
     }
 
-    public Exchange formatHTML() {
+    public Exchange<IExchange> formatHTML() {
         logger.log(Exchange.class, "Formatting response as HTML", SimpleLogger.Level.DEBUG);
         addResponseHeader("Content-Type", "text/html; charset=UTF-8");
         return this;
     }
 
-    public Exchange formatJSON() {
+    public Exchange<IExchange> formatJSON() {
         logger.log(Exchange.class, "Formatting response as JSON", SimpleLogger.Level.DEBUG);
         addResponseHeader("Content-Type", "application/json; charset=UTF-8");
         return this;
     }
 
-    public Exchange formatXML() {
+    public Exchange<IExchange> formatXML() {
         logger.log(Exchange.class, "Formatting response as XML", SimpleLogger.Level.DEBUG);
         addResponseHeader("Content-Type", "text/xml; charset=UTF-8");
         return this;
     }
 
-    public Exchange formatPlainText() {
+    public Exchange<IExchange> formatPlainText() {
         logger.log(Exchange.class, "Formatting response as plain text", SimpleLogger.Level.DEBUG);
         addResponseHeader("Content-Type", "text/plain; charset=UTF-8");
         return this;
@@ -1667,66 +1601,13 @@ public class Exchange implements AutoCloseable {
         }
     }
 
-    // =============================================
-    // ===== APACHE HTTP EXCHANGE CONTEXT =====
-    // =============================================
-
-    /**
-     * Bridges HttpExchange to Apache Commons FileUpload RequestContext.
-     * This is the critical piece that makes file uploads work!
-     */
-    private static class ApacheHttpExchangeContext implements org.apache.commons.fileupload.RequestContext {
-        private final HttpExchange exchange;
-
-        public ApacheHttpExchangeContext(HttpExchange exchange) {
-            this.exchange = exchange;
-        }
-
-        @Override
-        public String getCharacterEncoding() {
-            String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
-            if (contentType != null) {
-                for (String part : contentType.split(";")) {
-                    String trimmed = part.trim();
-                    if (trimmed.startsWith("charset=")) {
-                        return trimmed.substring("charset=".length()).replace("\"", "");
-                    }
-                }
-            }
-            return StandardCharsets.UTF_8.name();
-        }
-
-        @Override
-        public String getContentType() {
-            return exchange.getRequestHeaders().getFirst("Content-Type");
-        }
-
-        @Override
-        public int getContentLength() {
-            String length = exchange.getRequestHeaders().getFirst("Content-Length");
-            if (length != null) {
-                try {
-                    return Integer.parseInt(length);
-                } catch (NumberFormatException e) {
-                    // Ignore
-                }
-            }
-            return -1;
-        }
-
-        @Override
-        public InputStream getInputStream() throws IOException {
-            // Returns the raw request body stream - this is why we don't read it in the constructor!
-            return exchange.getRequestBody();
-        }
-    }
 
     // ===== CLEANUP =====
 
     @Override
     public void close() {
-        logger.log(Exchange.class, "Closing HttpExchange", SimpleLogger.Level.DEBUG);
-        httpExchange.close();
+        logger.log(Exchange.class, "Closing IExchange", SimpleLogger.Level.DEBUG);
+        iExchangeHandler.closeExchange(iExchange);
     }
 
     public static void setFileUploadLimit(int fileUploadLimit) {

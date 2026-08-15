@@ -7,7 +7,9 @@ import com.youfuns.webserver.JwtService;
 import com.youfuns.webserver.TemplateEngine;
 import com.youfuns.webserver.WebServer;
 import com.youfuns.webserver.interfaces.Exchange;
+import com.youfuns.webserver.servers.WebServerType;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,9 +40,9 @@ public class UserProfileServer {
         ConsoleLogger logger = new ConsoleLogger();
         logger.setLogLevel(SimpleLogger.Level.DEBUG);
 
-        WebServer server = new WebServer(8080, logger)
+        var server = WebServer.create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(8080), LoggerManager.INSTANCE.getLogger());
 
-        .ensureExists(UPLOAD_DIR)
+        server.ensureExists(UPLOAD_DIR)
         .on("/", exchange ->
                         exchange.redirect("/login"))
         // Login page
@@ -225,7 +227,7 @@ public class UserProfileServer {
             exchange.redirect("/login?error=" + Exchange.urlEncode("An error occurred: " + exception.getMessage()));
         })
 
-        // Start server
+                // Start serverInterface
         .start();
         System.out.println("Server running at http://localhost:8080");
         System.out.println("Login: http://localhost:8080/login");

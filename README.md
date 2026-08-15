@@ -2,7 +2,8 @@
 
 ## Overview
 
-A lightweight web server framework built on Java's built-in HttpServer with a fluent API for defining routes, handling requests, and serving static files.
+A lightweight web serverInterface framework built on Java's built-in HttpServer with a fluent API for defining routes,
+handling requests, and serving static files.
 
 ## Adding to project
 
@@ -43,10 +44,16 @@ InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8080);
 ### Server operations
 
 ```java
-server.start(); // starts the server
-server.stop(); // stops the server
-server.stop(10); // stops the server with up to 10 seconds to wait until exchanges have finished
-server.restart(); // restarts the server
+serverInterface.start(); // starts the serverInterface
+serverInterface.
+
+stop(); // stops the serverInterface
+serverInterface.
+
+stop(10); // stops the serverInterface with up to 10 seconds to wait until exchanges have finished
+serverInterface.
+
+restart(); // restarts the serverInterface
 ```
 
 ## `SimpleLogger` class
@@ -709,7 +716,7 @@ import com.youfuns.webserver.WebServerSecure;
 // Generate a self-signed certificate (for development)
 WebServerSecure.generateSelfSigned("myapp", "./https/keystore.p12", "changeit", "CN=localhost, OU=Dev, O=MyCompany, L=NYC, ST=NY, C=US");
 
-// Create and start HTTPS server
+// Create and start HTTPS serverInterface
 new WebServerSecure(8443)
     .setupHttps("changeit", "./https/keystore.p12")
     .on("/status", "Running with HTTPS")
@@ -886,7 +893,7 @@ Or from IntelliJ: Run the Main class directly.
 
 See `com.youfuns.webserver.demo` for full demonstrations:
 
-- `Basic` for a basic server
+- `Basic` for a basic serverInterface
 - `FileUploadTest` for a file upload demo
 - `HttpsTest` for HTTPS
 - `UserProfileServer` for a user registration and admin system

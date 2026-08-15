@@ -1,14 +1,14 @@
 package com.youfuns.webserver;
 
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
 import com.youfuns.logger.ConsoleLogger;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.interfaces.*;
+import com.youfuns.webserver.servers.ExchangeHandlerInterface;
+import com.youfuns.webserver.servers.WebServerInterface;
+import com.youfuns.webserver.servers.WebServerType;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URLConnection;
 import java.nio.file.Files;
@@ -19,24 +19,28 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class WebServer {
-    protected final HttpServer server;
+public class WebServer<S, I, H> {
+    protected final WebServerInterface<S, I, H> serverInterface;
+
+    protected final S server;
+
+    protected final ExchangeHandlerInterface<I> exchangeInterface;
 
     protected SimpleLogger logger;
 
-    private final Map<String, InternalDynamicHandler> dynamicHandlers;
+    private final Map<String, InternalDynamicHandler<I>> dynamicHandlers;
 
-    private final InternalHomeHandler homeHandler;
+    private final InternalHomeHandler<I> homeHandler;
 
-    private final InternalHandlerWrapper.HeadsAndTails headsAndTails;
+    private final HeadsAndTails<I> headsAndTails;
 
-    private ExceptionHandler exceptionHandler;
+    private ExceptionHandler<I> exceptionHandler;
 
-    public WebServer(int port) {
-        this(port, new ConsoleLogger());
+    public WebServer(WebServerInterface<S, I, H> serverInterface, int port) {
+        this(serverInterface, port, new ConsoleLogger());
     }
 
-    public WebServer(int port, SimpleLogger logger) {
+    public WebServer(WebServerInterface<S, I, H> serverInterface, int port, SimpleLogger logger) {
         this.logger = logger;
 
         if (port < 0 || port > 65535) {
@@ -44,41 +48,68 @@ public class WebServer {
             throw new IllegalArgumentException(String.format("Invalid port number: %d", port));
         }
 
-        this(new InetSocketAddress(port), logger);
+        this(serverInterface, new InetSocketAddress(port), logger);
     }
 
-    public WebServer(InetSocketAddress address) {
-        this(address, new ConsoleLogger());
+    public WebServer(WebServerInterface<S, I, H> serverInterface, InetSocketAddress address) {
+        this(serverInterface, address, new ConsoleLogger());
     }
 
-    public WebServer(InetSocketAddress address, SimpleLogger logger) {
+    public WebServer(WebServerInterface<S, I, H> serverInterface, InetSocketAddress address, SimpleLogger logger) {
         this.logger = logger;
 
-        logger.log(WebServer.class, "Starting HttpServer...", SimpleLogger.Level.INFO);
+        this.serverInterface = serverInterface;
+        this.server = serverInterface.createServer(address, 0);
 
-        this.server = createServer(address, 0);
+        logger.log(WebServer.class, "Starting Web Server...", SimpleLogger.Level.INFO);
 
-        logger.log(WebServer.class, "Created HttpServer at port " + address.getPort(), SimpleLogger.Level.INFO);
+        logger.log(WebServer.class, "Created Web Server at port " + address.getPort(), SimpleLogger.Level.INFO);
 
-        this.headsAndTails = new InternalHandlerWrapper.HeadsAndTails();
+        this.headsAndTails = new HeadsAndTails<>();
 
         this.exceptionHandler = (exchange, exception) -> { exception.printStackTrace(); };
 
+        this.exchangeInterface = serverInterface.getExchangeHandlerAdapters();
+
         dynamicHandlers = new HashMap<>();
-        homeHandler = new InternalHomeHandler();
-        createContextSafe("/", new InternalHandlerWrapper(homeHandler, headsAndTails, () -> exceptionHandler, logger));
+        homeHandler = new InternalHomeHandler<>();
+        serverInterface.createContext(server, "/", getInternalHandler(homeHandler));
     }
 
-    protected HttpServer createServer(InetSocketAddress address, int backlog) {
-        try {
-            return HttpServer.create(address, backlog);
-        } catch (IOException e) {
-            logger.log(WebServer.class, "HttpServer start failed. Encountered " + e.getClass().getSimpleName() + ": " + e.getMessage(), SimpleLogger.Level.ERROR);
-            throw new RuntimeException("Failed to create HttpServer", e);
-        }
+    @SuppressWarnings("unchecked")
+    public static <S, I, H> WebServer<S, I, H> create(WebServerType serverType, InetSocketAddress address, SimpleLogger logger) {
+        return new WebServer<S, I, H>((WebServerInterface<S, I, H>) serverType.getServerInterface(logger), address, logger);
     }
 
-    public WebServer endpoint(String endpoint, String method, ExchangeHandler action) {
+    public static <S, I, H> WebServer<S, I, H> create(WebServerType serverType, InetSocketAddress address) {
+        return create(serverType, address, new ConsoleLogger());
+    }
+
+    public static <S, I, H> WebServer<S, I, H> create(WebServerType serverType, int address, SimpleLogger logger) {
+        return create(serverType, new InetSocketAddress(address), logger);
+    }
+
+    public static <S, I, H> WebServer<S, I, H> create(WebServerType serverType, int address) {
+        return create(serverType, new InetSocketAddress(address), new ConsoleLogger());
+    }
+
+    public static <S, I, H> WebServer<S, I, H> create(InetSocketAddress address, SimpleLogger logger) {
+        return create(WebServerType.SUN_NET_HTTPSERVER, address, logger);
+    }
+
+    public static <S, I, H> WebServer<S, I, H> create(InetSocketAddress address) {
+        return create(WebServerType.SUN_NET_HTTPSERVER, address, new ConsoleLogger());
+    }
+
+    public static <S, I, H> WebServer<S, I, H> create(int address, SimpleLogger logger) {
+        return create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(address), logger);
+    }
+
+    public static <S, I, H> WebServer<S, I, H> create(int address) {
+        return create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(address), new ConsoleLogger());
+    }
+
+    public WebServer<S, I, H> endpoint(String endpoint, String method, ExchangeHandler<I> action) {
         if (endpoint.isEmpty() || endpoint.equals("/")) {
             homeHandler.setRoot(method, action);
             logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
@@ -88,84 +119,84 @@ public class WebServer {
             endpoint = endpoint.substring(0, endpoint.length() - 1);
         }
         boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
-        dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler().setOnNotFound(homeHandler.getNotFound()));
-        InternalDynamicHandler dynamicHandler = dynamicHandlers.get(endpoint);
+        dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler<I>().setOnNotFound(homeHandler.getNotFound()));
+        InternalDynamicHandler<I> dynamicHandler = dynamicHandlers.get(endpoint);
         dynamicHandler.addPath(endpoint, method, action);
         if (!alreadyExists)
-            createContextSafe(endpoint, new InternalHandlerWrapper(dynamicHandler, headsAndTails, () -> exceptionHandler, logger));
+            createContextSafe(endpoint, dynamicHandler);
         logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer endpoint(String endpoint, ExchangeHandler action) {
+    public WebServer<S, I, H> endpoint(String endpoint, ExchangeHandler<I> action) {
         return endpoint(endpoint, "DEFAULT", action);
     }
 
 
-    public WebServer removeEndpoint(String endpoint) {
-        server.removeContext(endpoint);
+    public WebServer<S, I, H> removeEndpoint(String endpoint) {
+        serverInterface.removeContext(server, endpoint);
         logger.log(WebServer.class, "Removed endpoint: " + endpoint, SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer dynamicEndpoint(String template, String method, DynamicExchangeHandler action) {
+    public WebServer<S, I, H> dynamicEndpoint(String template, String method, DynamicExchangeHandler<I> action) {
         int index = template.indexOf('$');
         String endpoint = index == -1 ? template : template.substring(0, index);
         if (endpoint.endsWith("/")) {
             endpoint = endpoint.substring(0, endpoint.length() - 1);
         }
         boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
-        dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler().setOnNotFound(homeHandler.getNotFound()));
-        InternalDynamicHandler dynamicHandler = dynamicHandlers.get(endpoint);
+        dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler<I>().setOnNotFound(homeHandler.getNotFound()));
+        InternalDynamicHandler<I> dynamicHandler = dynamicHandlers.get(endpoint);
         dynamicHandler.addPath(template, method, action);
         if (!alreadyExists)
-            createContextSafe(endpoint, new InternalHandlerWrapper(dynamicHandler, headsAndTails, () -> exceptionHandler, logger));
+            createContextSafe(endpoint, dynamicHandler);
         logger.log(WebServer.class, "Created dynamic endpoint: " + template, SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer dynamicEndpoint(String template, DynamicExchangeHandler action) {
+    public WebServer<S, I, H> dynamicEndpoint(String template, DynamicExchangeHandler<I> action) {
         return dynamicEndpoint(template, "DEFAULT", action);
     }
 
-    public WebServer on(String endpoint, String method, ExchangeHandler action) {
+    public WebServer<S, I, H> on(String endpoint, String method, ExchangeHandler<I> action) {
         return endpoint(endpoint, method, action);
     }
 
-    public WebServer on(String template, String method, DynamicExchangeHandler action) {
+    public WebServer<S, I, H> on(String template, String method, DynamicExchangeHandler<I> action) {
         return dynamicEndpoint(template, method, action);
     }
 
-    public WebServer on(String endpoint, ExchangeHandler action) {
+    public WebServer<S, I, H> on(String endpoint, ExchangeHandler<I> action) {
         return on(endpoint, "DEFAULT", action);
     }
 
-    public WebServer on(String template, DynamicExchangeHandler action) {
+    public WebServer<S, I, H> on(String template, DynamicExchangeHandler<I> action) {
         return on(template, "DEFAULT", action);
     }
 
-    public WebServer on(String endpoint, String method, String response) {
+    public WebServer<S, I, H> on(String endpoint, String method, String response) {
         return on(endpoint, method, exchange -> exchange.sendResponse(response));
     }
 
-    public WebServer on(String endpoint, String response) {
+    public WebServer<S, I, H> on(String endpoint, String response) {
         return on(endpoint, "DEFAULT", response);
     }
 
-    public WebServer onNotFound(ExchangeHandler action) {
+    public WebServer<S, I, H> onNotFound(ExchangeHandler<I> action) {
         homeHandler.setNotFound(action);
-        for (InternalDynamicHandler dynamicHandler : dynamicHandlers.values()) {
+        for (InternalDynamicHandler<I> dynamicHandler : dynamicHandlers.values()) {
             dynamicHandler.setOnNotFound(action);
         }
         logger.log(WebServer.class, "Created not found endpoint", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer serveStatic(String path, String directory) {
+    public WebServer<S, I, H> serveStatic(String path, String directory) {
         return serveStatic(path, directory, false, null);
     }
 
-    public WebServer serveStatic(String path, String directory, boolean directoryListing, String indexFile) {
+    public WebServer<S, I, H> serveStatic(String path, String directory, boolean directoryListing, String indexFile) {
         // Ensure path starts with /
         String normalizedPath = path.startsWith("/") ? path : "/" + path;
         // Ensure path doesn't end with /
@@ -176,7 +207,7 @@ public class WebServer {
         // Expand user home (~) if present
         String expandedDir = directory.replace("~", System.getProperty("user.home"));
 
-        StaticFileHandler handler = new StaticFileHandler(expandedDir, normalizedPath, logger, directoryListing, indexFile);
+        StaticFileHandler<I> handler = new StaticFileHandler<>(exchangeInterface, expandedDir, normalizedPath, logger, directoryListing, indexFile);
 
         // Also serve the root of the static path
         if (!normalizedPath.equals("/")) {
@@ -186,163 +217,125 @@ public class WebServer {
         }
 
         if (normalizedPath.equals("/")) {
-            homeHandler.setRoot("DEFAULT", ex -> handler.handle(ex.getUnderlyingHttpExchange()));
+            homeHandler.setRoot("DEFAULT", handler);
         }
 
         logger.log(WebServer.class, "Serving static files from " + directory + " at " + normalizedPath, SimpleLogger.Level.INFO);
         return this;
     }
 
-
-    public WebServer serveFile(String path, String filePath) {
+    public WebServer<S, I, H> serveFile(String path, String filePath) {
         if (path.isEmpty() || path.equals("/")) {
-            homeHandler.setRoot("DEFAULT", serveFileHandler(filePath));
+            homeHandler.setRoot("DEFAULT", exchange -> exchange.serveFile(filePath));
+        } else {
+            createContextSafe(path, exchange -> exchange.serveFile(filePath));
         }
-        createContextSafe(path, new InternalHandlerWrapper(serveFileHandler(filePath), headsAndTails, () -> exceptionHandler, logger));
 
         logger.log(WebServer.class, "Serving file " + filePath + " at " + path, SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer serveFileResource(String path, String resourcePath) {
-        createContextSafe(path, new InternalHandlerWrapper(serveFileResourceHandler(resourcePath), headsAndTails, () -> exceptionHandler, logger));
+    public WebServer<S, I, H> serveFileResource(String path, String resourcePath) {
+        if (path.isEmpty() || path.equals("/")) {
+            homeHandler.setRoot("DEFAULT", serveFileResourceHandler(resourcePath));
+        } else {
+            createContextSafe(path, serveFileResourceHandler(resourcePath));
+        }
 
-        logger.log(WebServer.class, "Serving file from resource " + resourcePath + " at " + path, SimpleLogger.Level.INFO);
+        logger.log(WebServer.class, "Serving file " + resourcePath + " at " + path, SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer onNotFoundServe(String filePath) {
-        homeHandler.setNotFound(serveFileHandler(filePath));
-        for (InternalDynamicHandler dynamicHandler : dynamicHandlers.values()) {
-            dynamicHandler.setOnNotFound(serveFileHandler(filePath));
+    public WebServer<S, I, H> onNotFoundServe(String filePath) {
+        homeHandler.setNotFound(exchange -> exchange.serveFile(filePath));
+        for (InternalDynamicHandler<I> dynamicHandler : dynamicHandlers.values()) {
+            dynamicHandler.setOnNotFound(exchange -> exchange.serveFile(filePath));
         }
         logger.log(WebServer.class, "Serving file " + filePath + " on not found", SimpleLogger.Level.ERROR);
         return this;
     }
 
-    public WebServer head(HeadHandler action) {
+    public WebServer<S, I, H> head(HeadHandler<I> action) {
         headsAndTails.addHead(action);
         logger.log(WebServer.class, "Set request head", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer removeHead(HeadHandler action) {
+    public WebServer<S, I, H> removeHead(HeadHandler<I> action) {
         headsAndTails.removeHead(action);
         logger.log(WebServer.class, "Removed request head", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer removeAllHeads() {
+    public WebServer<S, I, H> removeAllHeads() {
         headsAndTails.clearHeads();
         logger.log(WebServer.class, "Removed all heads", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer tail(ExchangeHandler action) {
+    public WebServer<S, I, H> tail(ExchangeHandler<I> action) {
         headsAndTails.addTail(action);
         logger.log(WebServer.class, "Set request tail", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer removeTail(ExchangeHandler action) {
+    public WebServer<S, I, H> removeTail(ExchangeHandler<I> action) {
         headsAndTails.removeTail(action);
         logger.log(WebServer.class, "Removed request tail", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer removeAllTails() {
+    public WebServer<S, I, H> removeAllTails() {
         headsAndTails.clearTails();
         logger.log(WebServer.class, "Removed all tails", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer limitUploadSize(int fileSize) {
+    public WebServer<S, I, H> limitUploadSize(int fileSize) {
         Exchange.setFileUploadLimit(fileSize);
         return this;
     }
 
-    public WebServer onException(ExceptionHandler exceptionHandler) {
+    public WebServer<S, I, H> onException(ExceptionHandler<I> exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
         return this;
     }
 
-    public WebServer start() {
-        logger.log(WebServer.class, "Starting HttpServer...", SimpleLogger.Level.INFO);
+    public WebServer<S, I, H> start() {
+        logger.log(WebServer.class, "Starting Web Server...", SimpleLogger.Level.INFO);
 
         // Virtual threads for better scalability
         ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-        server.setExecutor(executor);
+        serverInterface.setExecutor(server, executor);
 
-        server.start();
-        logger.log(WebServer.class, "Started HttpServer", SimpleLogger.Level.INFO);
+        serverInterface.start(server);
+        logger.log(WebServer.class, "Started Web Server", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer stop() {
-        logger.log(WebServer.class, "Stopping HttpServer...", SimpleLogger.Level.INFO);
-        server.stop(0);
-        logger.log(WebServer.class, "Stopped HttpServer", SimpleLogger.Level.INFO);
+    public WebServer<S, I, H> stop() {
+        logger.log(WebServer.class, "Stopping Web Server...", SimpleLogger.Level.INFO);
+        serverInterface.stop(server, 0);
+        logger.log(WebServer.class, "Stopped Web Server", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer stop(int delay) {
-        logger.log(WebServer.class, "Stopping HttpServer...", SimpleLogger.Level.INFO);
-        server.stop(delay);
-        logger.log(WebServer.class, "Stopped HttpServer", SimpleLogger.Level.INFO);
+    public WebServer<S, I, H> stop(int delay) {
+        logger.log(WebServer.class, "Stopping Web Server...", SimpleLogger.Level.INFO);
+        serverInterface.stop(server, delay);
+        logger.log(WebServer.class, "Stopped Web Server", SimpleLogger.Level.INFO);
         return this;
     }
 
-    public WebServer restart() {
-        logger.log(WebServer.class, "Restarting HttpServer...", SimpleLogger.Level.INFO);
-        server.stop(0);
-        server.start();
-        logger.log(WebServer.class, "Restarted HttpServer", SimpleLogger.Level.INFO);
+    public WebServer<S, I, H> restart() {
+        logger.log(WebServer.class, "Restarting Web Server...", SimpleLogger.Level.INFO);
+        serverInterface.stop(server, 0);
+        serverInterface.start(server);
+        logger.log(WebServer.class, "Restarted Web Server", SimpleLogger.Level.INFO);
         return this;
     }
 
-    private void createContextSafe(String endpoint, HttpHandler handler) {
-        try {
-            server.createContext(endpoint, handler);
-        } catch (IllegalArgumentException e) {
-            logger.log(WebServer.class, "Endpoint already exists: " + endpoint + ", removing and recreating", SimpleLogger.Level.WARN);
-            server.removeContext(endpoint);
-            server.createContext(endpoint, handler);
-        }
-
-    }
-
-    private ExchangeHandler serveFileHandler(String filePath) {
-        String expandedPath = filePath.replace("~", System.getProperty("user.home"));
-        Path file = Paths.get(expandedPath);
-        if (!Files.exists(file) || Files.isDirectory(file)) {
-            logger.log(WebServer.class, "File does not exist: " + filePath, SimpleLogger.Level.ERROR);
-            throw new IllegalArgumentException("File does not exist: " + filePath);
-        }
-        return req -> {
-            try {
-                String mimeType = URLConnection.getFileNameMap().getContentTypeFor(file.toString());
-                if (mimeType == null) mimeType = "application/octet-stream";
-
-                req.addResponseHeader("Content-Type", mimeType);
-                req.addResponseHeader("Content-Length", String.valueOf(Files.size(file)));
-                req.addResponseHeader("Cache-Control", "max-age=3600");
-
-                req.getUnderlyingHttpExchange().sendResponseHeaders(200, Files.size(file));
-                try (OutputStream os = req.getUnderlyingHttpExchange().getResponseBody();
-                     InputStream is = Files.newInputStream(file)) {
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    while ((bytesRead = is.read(buffer)) != -1) {
-                        os.write(buffer, 0, bytesRead);
-                    }
-                }
-            } catch (IOException e) {
-                logger.log(WebServer.class, "Failed to serve file: " + e.getMessage(),  SimpleLogger.Level.ERROR);
-                req.sendErrorResponse(e.getMessage());
-            }};
-    }
-
-    private ExchangeHandler serveFileResourceHandler(String resourcePath) {
+    private ExchangeHandler<I> serveFileResourceHandler(String resourcePath) {
         return exchange -> {
             try (InputStream is = getClass().getClassLoader()
                     .getResourceAsStream(resourcePath)) {
@@ -358,10 +351,7 @@ public class WebServer {
 
                 exchange.addResponseHeader("Content-Type", mimeType);
                 exchange.addResponseHeader("Content-Length", String.valueOf(data.length));
-                exchange.getUnderlyingHttpExchange().sendResponseHeaders(200, data.length);
-                try (OutputStream os = exchange.getUnderlyingHttpExchange().getResponseBody()) {
-                    os.write(data);
-                }
+                exchange.serveFile(data);
             } catch (IOException e) {
                 logger.log(WebServer.class, "Failed to serve file from resource: " + e.getMessage(), SimpleLogger.Level.ERROR);
                 exchange.sendErrorResponse(e.getMessage());
@@ -380,7 +370,7 @@ public class WebServer {
         }
     }
 
-    public WebServer ensureExists(String directory) {
+    public WebServer<S, I, H> ensureExists(String directory) {
         try {
             Path dir = Paths.get(directory);
             if (!Files.exists(dir)) {
@@ -393,5 +383,16 @@ public class WebServer {
             throw new RuntimeException("The directory could not be created: " + directory, e);
         }
         return this;
+    }
+
+    private void createContextSafe(String endpoint, ExchangeHandler<I> handler) {
+        serverInterface.createContext(server, endpoint, getInternalHandler(handler));
+    }
+
+    private H getInternalHandler(ExchangeHandler<I> handler) {
+        return serverInterface.createInternalHandler((I iExchange) -> {
+                    exchangeInterface.handleExchange(exchangeInterface.createExchange(iExchange), headsAndTails, handler, exceptionHandler);
+                }
+        );
     }
 }

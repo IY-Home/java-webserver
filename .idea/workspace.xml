@@ -5,11 +5,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Removed pom.xml section from README.">
+      <change afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/HeadsAndTails.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/ExchangeHandlerInterface.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/NetHttpServer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/WebServerInterface.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/WebServerType.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/InternalDynamicHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/InternalDynamicHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/InternalHandlerWrapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/InternalHomeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/InternalHomeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/StaticFileHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/StaticFileHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/TemplateMatcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/TemplateMatcher.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServerSecure.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Basic.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Basic.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/FileUploadTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/FileUploadTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/HttpsTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Proxy.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Proxy.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/DynamicExchangeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/DynamicExchangeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/ExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/ExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/Exchange.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/Exchange.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/ExchangeHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/ExchangeHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/HeadHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/HeadHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/InternalHandler.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,10 +43,11 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Interface" />
         <option value="Record" />
-        <option value="Class" />
         <option value="HTML File" />
+        <option value="Interface" />
+        <option value="Class" />
+        <option value="Enum" />
       </list>
     </option>
   </component>
@@ -38,12 +60,12 @@
     &quot;assignee&quot;: &quot;IY-Home&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/IY-Home/java-webserver.git",
-    "accountId": "d22800d6-26c6-45a8-b9a6-6648c895d4e4"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/IY-Home/java-webserver.git&quot;,
+    &quot;accountId&quot;: &quot;d22800d6-26c6-45a8-b9a6-6648c895d4e4&quot;
   }
-}]]></component>
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
@@ -59,40 +81,43 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.FileUploadTest.executor&quot;: &quot;Run&quot;,
-    &quot;Application.HotLoadingTest.executor&quot;: &quot;Run&quot;,
-    &quot;Application.HttpsTest.executor&quot;: &quot;Run&quot;,
-    &quot;Application.LMStudio.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
-    &quot;Application.PasswordStrengthValidator.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Proxy.executor&quot;: &quot;Run&quot;,
-    &quot;Application.UserProfileServer.executor&quot;: &quot;Run&quot;,
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;HTTP Request.rest-api | #1.executor&quot;: &quot;Run&quot;,
-    &quot;Maven.WebServer [clean,install,-U].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.WebServer [clean].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.WebServer [install].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.WebServer [package].executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/isaac/IdeaProjects/java-webserver/src/main/java/com/youfuns/webserver&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Artifacts&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
-    &quot;vcs.patch.to.clipboard&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Basic.executor": "Run",
+    "Application.FileUploadTest.executor": "Run",
+    "Application.HotLoadingTest.executor": "Run",
+    "Application.HttpsTest.executor": "Run",
+    "Application.LMStudio.executor": "Run",
+    "Application.Main.executor": "Run",
+    "Application.PasswordStrengthValidator.executor": "Run",
+    "Application.Proxy.executor": "Run",
+    "Application.UserProfileServer.executor": "Run",
+    "Application.WebSocketDemo.executor": "Run",
+    "Application.WebSocketServer.executor": "Run",
+    "DefaultHtmlFileTemplate": "HTML File",
+    "HTTP Request.rest-api | #1.executor": "Run",
+    "Maven.WebServer [clean,install,-U].executor": "Run",
+    "Maven.WebServer [clean].executor": "Run",
+    "Maven.WebServer [install].executor": "Run",
+    "Maven.WebServer [package].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/isaac/IdeaProjects/java-webserver/src/main/java/com/youfuns/webserver",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Artifacts",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "preferences.keymap",
+    "vcs.patch.to.clipboard": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/main/java/com/youfuns/webserver" />
@@ -110,6 +135,9 @@
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="com.youfuns.logger" />
     </key>
+    <key name="MoveInnerDialog.RECENTS_KEY">
+      <recent name="com.youfuns.webserver" />
+    </key>
   </component>
   <component name="RunAnythingCache">
     <option name="myCommands">
@@ -117,6 +145,15 @@
     </option>
   </component>
   <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -150,15 +187,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="RUN_TOOL" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="JetRunConfigurationType">
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
-      <option name="filePath" />
       <method v="2" />
     </configuration>
   </component>

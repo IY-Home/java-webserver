@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.youfuns.logger.LoggerManager;
 import com.youfuns.webserver.WebServer;
 import com.youfuns.webserver.interfaces.Exchange;
+import com.youfuns.webserver.servers.WebServerType;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -22,7 +24,7 @@ public class Proxy {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) {
-        WebServer proxy = new WebServer(PROXY_PORT, LoggerManager.INSTANCE.getLogger());
+        var proxy = WebServer.create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(PROXY_PORT), LoggerManager.INSTANCE.getLogger());
 
         // Use head to log ALL requests
         proxy.head(exchange -> {

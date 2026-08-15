@@ -1,15 +1,18 @@
 package com.youfuns.webserver;
 
+import com.youfuns.webserver.interfaces.DynamicExchangeHandler;
+import com.youfuns.webserver.interfaces.Exchange;
+import com.youfuns.webserver.interfaces.ExchangeHandler;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import com.youfuns.webserver.interfaces.*;
 
-public class InternalDynamicHandler implements InternalHandler {
+public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
     private final TemplateMatcher templateMatcher;
-    private final Map<Map.Entry<String, String>, DynamicExchangeHandler> dynamicPaths;
-    private final Map<Map.Entry<String, String>, ExchangeHandler> paths;
-    private ExchangeHandler onNotFound;
+    private final Map<Map.Entry<String, String>, DynamicExchangeHandler<I>> dynamicPaths;
+    private final Map<Map.Entry<String, String>, ExchangeHandler<I>> paths;
+    private ExchangeHandler<I> onNotFound;
 
     public InternalDynamicHandler() {
         super();
@@ -18,34 +21,34 @@ public class InternalDynamicHandler implements InternalHandler {
         this.templateMatcher = new TemplateMatcher('$');
     }
 
-    public void addPath(String template, DynamicExchangeHandler dynamicExchangeHandler) {
+    public void addPath(String template, DynamicExchangeHandler<I> dynamicExchangeHandler) {
         dynamicPaths.put(Map.entry(template, "DEFAULT"), dynamicExchangeHandler);
     }
 
-    public void addPath(String template, ExchangeHandler exchangeHandler) {
+    public void addPath(String template, ExchangeHandler<I> exchangeHandler) {
         paths.put(Map.entry(template, "DEFAULT"), exchangeHandler);
     }
 
-    public void addPath(String template, String method, DynamicExchangeHandler dynamicExchangeHandler) {
+    public void addPath(String template, String method, DynamicExchangeHandler<I> dynamicExchangeHandler) {
         dynamicPaths.put(Map.entry(template, method), dynamicExchangeHandler);
     }
 
-    public void addPath(String template, String method, ExchangeHandler exchangeHandler) {
+    public void addPath(String template, String method, ExchangeHandler<I> exchangeHandler) {
         paths.put(Map.entry(template, method), exchangeHandler);
     }
 
-    public InternalDynamicHandler setOnNotFound(ExchangeHandler exchangeHandler) {
+    public InternalDynamicHandler<I> setOnNotFound(ExchangeHandler<I> exchangeHandler) {
         onNotFound = exchangeHandler;
         return this;
     }
 
     @Override
-    public void handle(Exchange exchange) throws IOException {
+    public void handle(Exchange<I> exchange) throws IOException {
         String address = exchange.getRequestPath();
         String matchableAddress = address.endsWith("/") ? address : address + "/";
 
-        Map<String, DynamicExchangeHandler> defaultTemplateHandlers = new HashMap<>();
-        for (Map.Entry<Map.Entry<String, String>, DynamicExchangeHandler> entry : dynamicPaths.entrySet()) {
+        Map<String, DynamicExchangeHandler<I>> defaultTemplateHandlers = new HashMap<>();
+        for (Map.Entry<Map.Entry<String, String>, DynamicExchangeHandler<I>> entry : dynamicPaths.entrySet()) {
             Map.Entry<String, String> key = entry.getKey();
             String requiredMethod = key.getValue().toLowerCase();
             String template = key.getKey();
@@ -64,7 +67,7 @@ public class InternalDynamicHandler implements InternalHandler {
             }
         }
 
-        for (Map.Entry<String, DynamicExchangeHandler> entry : defaultTemplateHandlers.entrySet()) {
+        for (Map.Entry<String, DynamicExchangeHandler<I>> entry : defaultTemplateHandlers.entrySet()) {
             String template = entry.getKey();
             String[] extracted = templateMatcher.extractValues(template, address);
             String[] extracted2 = extracted != null && extracted.length > 0 ? extracted : templateMatcher.extractValues(template, matchableAddress);
@@ -75,9 +78,9 @@ public class InternalDynamicHandler implements InternalHandler {
         }
 
 
-        Map<String, ExchangeHandler> defaultPathHandlers = new HashMap<>();
+        Map<String, ExchangeHandler<I>> defaultPathHandlers = new HashMap<>();
         String normalizedAddress = address.endsWith("/") ? address.substring(0, address.length() - 1) : address;
-        for (Map.Entry<Map.Entry<String, String>, ExchangeHandler> entry : paths.entrySet()) {
+        for (Map.Entry<Map.Entry<String, String>, ExchangeHandler<I>> entry : paths.entrySet()) {
             Map.Entry<String, String> key = entry.getKey();
             String requiredMethod = key.getValue().toLowerCase();
             String path = key.getKey();
@@ -97,7 +100,7 @@ public class InternalDynamicHandler implements InternalHandler {
             }
         }
 
-        for (Map.Entry<String, ExchangeHandler> entry : defaultPathHandlers.entrySet()) {
+        for (Map.Entry<String, ExchangeHandler<I>> entry : defaultPathHandlers.entrySet()) {
             String path = entry.getKey();
             String normalizedPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
 

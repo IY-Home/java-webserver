@@ -1,13 +1,11 @@
 package com.youfuns.webserver;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.interfaces.Exchange;
+import com.youfuns.webserver.interfaces.ExchangeHandler;
+import com.youfuns.webserver.servers.ExchangeHandlerInterface;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URLConnection;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -16,24 +14,26 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class StaticFileHandler implements HttpHandler {
+public class StaticFileHandler<I> implements ExchangeHandler<I> {
     private final Path baseDirectory;
     private final String basePath;
     private final Map<String, String> mimeTypes = new ConcurrentHashMap<>();
     private final SimpleLogger logger;
     private final boolean directoryListing;
     private final String indexPath;
+    private final ExchangeHandlerInterface<I> adapter;
 
-    public StaticFileHandler(String directory, String basePath, SimpleLogger logger) {
-        this(directory, basePath, logger, false, null);
+    public StaticFileHandler(ExchangeHandlerInterface<I> adapter, String directory, String basePath, SimpleLogger logger) {
+        this(adapter, directory, basePath, logger, false, null);
     }
 
-    public StaticFileHandler(String directory, String basePath, SimpleLogger logger, boolean directoryListing, String indexPath) {
+    public StaticFileHandler(ExchangeHandlerInterface<I> adapter, String directory, String basePath, SimpleLogger logger, boolean directoryListing, String indexPath) {
         this.logger = logger;
         this.baseDirectory = Paths.get(directory).toAbsolutePath().normalize();
         this.basePath = basePath;
         this.directoryListing = directoryListing;
         this.indexPath = indexPath;
+        this.adapter = adapter;
 
         // Verify directory exists
         if (!Files.exists(baseDirectory) || !Files.isDirectory(baseDirectory)) {
@@ -48,8 +48,7 @@ public class StaticFileHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        Exchange req = new Exchange(exchange, logger);
+    public void handle(Exchange<I> req) throws IOException {
         String path = req.getRequestPath();
 
         // Remove base path prefix if present
@@ -93,37 +92,10 @@ public class StaticFileHandler implements HttpHandler {
         }
 
         // Serve the file
-        serveFile(req, filePath);
+        req.serveFile(filePath.toString());
     }
 
-    private void serveFile(Exchange req, Path filePath) throws IOException {
-        try {
-            String mimeType = getMimeType(filePath);
-
-            // Set cache control for static files (1 hour)
-            req.addResponseHeader("Cache-Control", "max-age=3600");
-            req.addResponseHeader("Content-Type", mimeType);
-            req.addResponseHeader("Content-Length", String.valueOf(Files.size(filePath)));
-
-            // Send headers
-            req.getUnderlyingHttpExchange().sendResponseHeaders(200, Files.size(filePath));
-
-            // Write file
-            try (OutputStream os = req.getUnderlyingHttpExchange().getResponseBody();
-                 InputStream is = Files.newInputStream(filePath)) {
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    os.write(buffer, 0, bytesRead);
-                }
-            }
-        } catch (IOException e) {
-            req.sendErrorResponse("Failed to serve file: " + e.getMessage());
-            logger.log(StaticFileHandler.class, "Failed to serve file: " + filePath + " - " + e.getMessage(),  SimpleLogger.Level.ERROR);
-        }
-    }
-
-    private void sendDirectoryListing(Exchange req, Path dirPath) throws IOException {
+    private void sendDirectoryListing(Exchange<I> req, Path dirPath) throws IOException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
             StringBuilder html = new StringBuilder();
             html.append("<!DOCTYPE html>");

@@ -49,7 +49,7 @@ public class TemplateMatcher {
 
             if (c == placeholder) {
                 // Found a placeholder
-                if (currentLiteral.length() > 0) {
+                if (!currentLiteral.isEmpty()) {
                     literalParts.add(currentLiteral.toString());
                     currentLiteral = new StringBuilder();
                 }
@@ -73,7 +73,7 @@ public class TemplateMatcher {
             currentLiteral.append('\\');
         }
 
-        if (currentLiteral.length() > 0) {
+        if (!currentLiteral.isEmpty()) {
             literalParts.add(currentLiteral.toString());
         }
 

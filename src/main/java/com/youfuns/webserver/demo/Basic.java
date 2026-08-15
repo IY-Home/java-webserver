@@ -1,14 +1,19 @@
 package com.youfuns.webserver.demo;
 
 import com.youfuns.logger.LoggerManager;
+import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.WebServer;
+import com.youfuns.webserver.servers.WebServerType;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
 
 public class Basic {
     public static void main(String[] args) {
-        // Create server on port 8080
-        WebServer server = new WebServer(8080, LoggerManager.INSTANCE.getLogger());
+        // Create serverInterface on port 8080
+        var server = WebServer.create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(8080), LoggerManager.INSTANCE.getLogger());
+
+        LoggerManager.INSTANCE.getLogger().setLogLevel(SimpleLogger.Level.DEBUG);
 
         // Simple text response
         server.on("/hello", "Hello, World!");
@@ -30,7 +35,7 @@ public class Basic {
             exchange.sendResponse(404, "Custom 404, page not found: " + exchange.getRequestPath());
         });
 
-        // Start the server
+        // Start the serverInterface
         server.start();
     }
 }

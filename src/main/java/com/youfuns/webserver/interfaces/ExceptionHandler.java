@@ -3,6 +3,6 @@ package com.youfuns.webserver.interfaces;
 import java.io.IOException;
 
 @FunctionalInterface
-public interface ExceptionHandler {
-    void handle(Exchange exchange, Exception exception) throws IOException;
+public interface ExceptionHandler<InternalExchange> {
+    void handle(Exchange<InternalExchange> exchange, Exception exception) throws IOException;
 }
