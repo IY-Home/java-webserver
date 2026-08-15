@@ -261,7 +261,7 @@ or
 ## Adding, modifying, or destroying endpoints after WebServer start
 
 ```java
-varmyServer = WebServer.create(8080);
+var myServer = WebServer.create(8080);
 myServer.start();
 if ("hello".equals("hello")) {
     myServer.on("/hello", "Hello");
@@ -770,12 +770,8 @@ new WebServerSecure(443)
 import com.youfuns.webserver.JwtService;
 
 JwtService.setSecretKey(String key);
-JwtService.
-
-setExpiration(long seconds);
-JwtService.
-
-generateToken(String subject);
+JwtService.setExpiration(long seconds);
+JwtService.generateToken(String subject);
 
 boolean isValid = JwtService.validateToken(String token);
 String subject = JwtService.extractSubject(String token); // null if invalid
@@ -786,7 +782,7 @@ String subject = JwtService.extractSubject(String token); // null if invalid
 ```java
 public class Main {
     public static void main(String[] args) throws Exception {
-        varmyServer = WebServer.create(8080);
+        var myServer = WebServer.create(8080);
         myServer
             .on("/api/users", "GET", exchange -> {
                 exchange.sendJsonResponse(Map.of("users", "list"));
