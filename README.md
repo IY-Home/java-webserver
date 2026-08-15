@@ -20,14 +20,18 @@ import com.youfuns.webserver.interfaces.*;
 ## Basic Server
 
 ```java
+// Helper function
 WebServer.create(8080)
+        .start();
+// Note: the WebServer uses a Builder pattern
+WebServer.builder().port(8080).build()
         .start();
 ```
 
 ### Using custom `SimpleLogger`
 
 ```java
-WebServer.create(8080, new ConsoleLogger(System.out))
+WebServer.builder().port(8080).logger(new ConsoleLogger(System.out)).build()
         .start();
 ```
 
@@ -38,8 +42,9 @@ import java.net.InetSocketAddress;
 
 // Bind ONLY to localhost (127.0.0.1)
 InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8080);
-        var myServer = WebServer.create(address, your_SimpleLogger);
-// Note: use 'var' during assignments, as the WebServer class has variable generic parameters
+        var myServer = WebServer.builder().port(address);
+// Note: use 'var' during assignments of WebServer, as the WebServer class has variable generic parameters,
+// WebServer<InternalServer, InternalExchange, InternalHandler>
 ```
 
 ### Server operations
@@ -118,26 +123,24 @@ com.youfuns.logger.LoggerManager.quickLog(Object caller_to_get_class, String mes
 
 ## `Exchange` class
 
-The `Exchange` class is a wrapper around `HttpExchange` that provides various utility methods.
+The `Exchange` class is a wrapper around `HttpExchange` (or any internal exchange class) that provides various utility methods.
 You typically receive it in the `FunctionalInterfaces` for your endpoints, hooks/tails, and exception handlers.
 
-To create an `Exchange` manually, use this constructor:
+To create an `Exchange` manually, and leave the generic parameter for internal Exchange classes as blank, use this constructor:
 
 ```java
-public Exchange(String method, URI requestUri, String protocol, InetSocketAddress remoteAddress,
-                Map<String, List<String>> requestHeaderMap, String body, SimpleLogger logger)
+Exchange<IExchange> exchange = new Exchange(String method, URI requestUri, String protocol, InetSocketAddress remoteAddress,
+                Map<String, List<String>> requestHeaderMap, SimpleLogger logger, ExchangeHandlerInterface<IExchange> exchangeInterface_nullable, IExchange wrappedExchange_nullable)
 ```
+
+and put `Object` as the `IExchange`.
 
 The `Exchange` also lets you store attributes for use between heads, tails, and handlers. Simply use:
 
 ```java
 exchange.setAttribute("key",value_of_any_type);
-exchange.
-
-getAttribute("key",Type_Of_Value .class); // returns null if not instance
-exchange.
-
-getAttribute("key",String .class, "default");
+exchange.getAttribute("key",Type_Of_Value .class); // returns null if not instance
+exchange.getAttribute("key",String .class, "default");
 ```
 
 ## Defining Basic Endpoints
@@ -253,12 +256,16 @@ or
 
 ```java
 .onException((exchange, exception) -> {
-    Logger.log("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
+    LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
     exchange.sendErrorResponse("An error occurred.");
 })
 ```
 
 ## Adding, modifying, or destroying endpoints after WebServer start
+
+***Note:** This feature may not be supported by some web servers. If this feature is unsupported, an `UnsupportedOperationException` is thrown.
+The default `com.sun.net.HttpServer` supports this feature.
+If you need this feature on an unsupported web server, you are recommended to use dynamic endpoints (those with `$` parameters).*
 
 ```java
 var myServer = WebServer.create(8080);
@@ -405,20 +412,16 @@ The action is only executed if the validation is passed (code = 1).
 ### Pre-Request Head
 
 ```java
-.head(exchange ->{
+.head(exchange -> {
     System.out.println("Request: " + exchange.getRequestPath());
     return true; // Continue processing
 })
 // Start timing in head
-        .
-
-head(exchange ->{
+.head(exchange -> {
     exchange.setAttribute("startTime", System.nanoTime());
     return true;
 })
-        .
-
-head(exchange ->{
+.head(exchange -> {
     String jwt = exchange.getBearerToken();
     return jwtService.
 
@@ -698,7 +701,13 @@ exchange.removeCookie("jwt");
 exchange.removeCookie("jwt", "/");
 ```
 
-## HTTPS Support *(exclusive for `com.sun.net.HttpServer`)*
+## HTTPS Support *(Not available)*
+
+***Note:** Following our refactoring of WebServer to be generic, HTTPS support, which was bound to `com.sun.net.HttpsServer`, was temporarily removed.
+If you need it, please manually implement it or pull from commit `ab0fbbd4`, the last commit before refactoring.
+Below is the documentation for the previous version.*
+
+---
 
 ***Note:** This feature is very basic and for development or prototyping only. Do not use this in commercial HTTPS
 servers.*
@@ -845,7 +854,7 @@ public class Main {
                 System.out.println("Finished handling response");
             })
             .onException((exchange, exception) -> {
-                Logger.log("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
+                LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
                 if (exception instanceof IllegalArgumentException) {
                     exchange.sendBadRequestResponse("Bad request: " + exception.getMessage());
                 } else {
@@ -886,6 +895,23 @@ See `com.youfuns.webserver.demo` for full demonstrations:
 
 - `Basic` for a basic server
 - `FileUploadTest` for a file upload demo
-- `HttpsTest` for HTTPS
+- ***(Not available currently)*** `HttpsTest` for HTTPS
 - `UserProfileServer` for a full user registration and admin system with JWT
 - `Proxy` for an advanced proxy program
+
+
+## Using other web servers
+
+Currently, the framework natively supports `com.sun.net.HttpServer`, 
+but if you want to plug in your own web server, e.g. Undertow, 
+
+please reference `com.youfuns.webserver.servers` and implement the `WebServerInterface<Server, InternalExchange, InternalHandler>` interface.
+
+Then, in the builder, pass
+```java
+.server(WebServerInterface<?, ?, ?> serverInterface)
+```
+e.g.
+```java
+var myUndertowServer = WebServer.builder().port(8080).server(new UndertowServer()).build();
+```

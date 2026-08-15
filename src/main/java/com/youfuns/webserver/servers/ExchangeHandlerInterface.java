@@ -1,5 +1,6 @@
 package com.youfuns.webserver.servers;
 
+import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.HeadsAndTails;
 import com.youfuns.webserver.interfaces.ExceptionHandler;
 import com.youfuns.webserver.interfaces.Exchange;
@@ -11,6 +12,8 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public interface ExchangeHandlerInterface<InternalExchange> {
+    void setLogger(SimpleLogger logger); // Marker: should have a logger
+
     Exchange<InternalExchange> createExchange(InternalExchange internalExchange);
 
     void serveFile(InternalExchange internalExchange, int statusCode, Map<String, String> headers, Path file) throws IOException;

@@ -36,26 +36,9 @@ public class WebServer<S, I, H> {
 
     private ExceptionHandler<I> exceptionHandler;
 
-    public WebServer(WebServerInterface<S, I, H> serverInterface, int port) {
-        this(serverInterface, port, new ConsoleLogger());
-    }
+    private boolean started;
 
-    public WebServer(WebServerInterface<S, I, H> serverInterface, int port, SimpleLogger logger) {
-        this.logger = logger;
-
-        if (port < 0 || port > 65535) {
-            logger.log(WebServer.class, "Invalid port number: " + port, SimpleLogger.Level.ERROR);
-            throw new IllegalArgumentException(String.format("Invalid port number: %d", port));
-        }
-
-        this(serverInterface, new InetSocketAddress(port), logger);
-    }
-
-    public WebServer(WebServerInterface<S, I, H> serverInterface, InetSocketAddress address) {
-        this(serverInterface, address, new ConsoleLogger());
-    }
-
-    public WebServer(WebServerInterface<S, I, H> serverInterface, InetSocketAddress address, SimpleLogger logger) {
+    private WebServer(WebServerInterface<S, I, H> serverInterface, InetSocketAddress address, SimpleLogger logger) {
         this.logger = logger;
 
         this.serverInterface = serverInterface;
@@ -76,40 +59,12 @@ public class WebServer<S, I, H> {
         serverInterface.createContext(server, "/", getInternalHandler(homeHandler));
     }
 
-    @SuppressWarnings("unchecked")
-    public static <S, I, H> WebServer<S, I, H> create(WebServerType serverType, InetSocketAddress address, SimpleLogger logger) {
-        return new WebServer<S, I, H>((WebServerInterface<S, I, H>) serverType.getServerInterface(logger), address, logger);
-    }
-
-    public static <S, I, H> WebServer<S, I, H> create(WebServerType serverType, InetSocketAddress address) {
-        return create(serverType, address, new ConsoleLogger());
-    }
-
-    public static <S, I, H> WebServer<S, I, H> create(WebServerType serverType, int address, SimpleLogger logger) {
-        return create(serverType, new InetSocketAddress(address), logger);
-    }
-
-    public static <S, I, H> WebServer<S, I, H> create(WebServerType serverType, int address) {
-        return create(serverType, new InetSocketAddress(address), new ConsoleLogger());
-    }
-
-    public static <S, I, H> WebServer<S, I, H> create(InetSocketAddress address, SimpleLogger logger) {
-        return create(WebServerType.SUN_NET_HTTPSERVER, address, logger);
-    }
-
-    public static <S, I, H> WebServer<S, I, H> create(InetSocketAddress address) {
-        return create(WebServerType.SUN_NET_HTTPSERVER, address, new ConsoleLogger());
-    }
-
-    public static <S, I, H> WebServer<S, I, H> create(int address, SimpleLogger logger) {
-        return create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(address), logger);
-    }
-
-    public static <S, I, H> WebServer<S, I, H> create(int address) {
-        return create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(address), new ConsoleLogger());
+    public static WebServer<?, ?, ?> create(int port) {
+        return builder().port(port).build();
     }
 
     public WebServer<S, I, H> endpoint(String endpoint, String method, ExchangeHandler<I> action) {
+        checkContextAdditionAfterStart();
         if (endpoint.isEmpty() || endpoint.equals("/")) {
             homeHandler.setRoot(method, action);
             logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
@@ -134,12 +89,14 @@ public class WebServer<S, I, H> {
 
 
     public WebServer<S, I, H> removeEndpoint(String endpoint) {
+        checkContextAdditionAfterStart();
         serverInterface.removeContext(server, endpoint);
         logger.log(WebServer.class, "Removed endpoint: " + endpoint, SimpleLogger.Level.INFO);
         return this;
     }
 
     public WebServer<S, I, H> dynamicEndpoint(String template, String method, DynamicExchangeHandler<I> action) {
+        checkContextAdditionAfterStart();
         int index = template.indexOf('$');
         String endpoint = index == -1 ? template : template.substring(0, index);
         if (endpoint.endsWith("/")) {
@@ -309,6 +266,7 @@ public class WebServer<S, I, H> {
         serverInterface.setExecutor(server, executor);
 
         serverInterface.start(server);
+        started = true;
         logger.log(WebServer.class, "Started Web Server", SimpleLogger.Level.INFO);
         return this;
     }
@@ -316,6 +274,7 @@ public class WebServer<S, I, H> {
     public WebServer<S, I, H> stop() {
         logger.log(WebServer.class, "Stopping Web Server...", SimpleLogger.Level.INFO);
         serverInterface.stop(server, 0);
+        started = false;
         logger.log(WebServer.class, "Stopped Web Server", SimpleLogger.Level.INFO);
         return this;
     }
@@ -323,6 +282,7 @@ public class WebServer<S, I, H> {
     public WebServer<S, I, H> stop(int delay) {
         logger.log(WebServer.class, "Stopping Web Server...", SimpleLogger.Level.INFO);
         serverInterface.stop(server, delay);
+        started = false;
         logger.log(WebServer.class, "Stopped Web Server", SimpleLogger.Level.INFO);
         return this;
     }
@@ -385,6 +345,10 @@ public class WebServer<S, I, H> {
         return this;
     }
 
+    public boolean started() {
+        return started;
+    }
+
     private void createContextSafe(String endpoint, ExchangeHandler<I> handler) {
         serverInterface.createContext(server, endpoint, getInternalHandler(handler));
     }
@@ -394,5 +358,62 @@ public class WebServer<S, I, H> {
                     exchangeInterface.handleExchange(exchangeInterface.createExchange(iExchange), headsAndTails, handler, exceptionHandler);
                 }
         );
+    }
+
+    private void checkContextAdditionAfterStart() {
+        if (started && !serverInterface.supportsContextMutationAfterStart()) {
+            throw new UnsupportedOperationException("Context addition after server start is not supported by the web server " + serverInterface.getClass().getSimpleName());
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private InetSocketAddress serverAddress;
+        private SimpleLogger logger;
+        private WebServerInterface<?, ?, ?> serverInterface;
+
+        private Builder() {
+            this.serverAddress = new InetSocketAddress(8080);
+            this.logger = new ConsoleLogger();
+            this.serverInterface = WebServerType.SUN_NET_HTTPSERVER.getServerInterface(logger);
+        }
+
+        public Builder port(int port) {
+            this.serverAddress = new InetSocketAddress(port);
+            return this;
+        }
+
+        public Builder port(String host, int port) {
+            this.serverAddress = new InetSocketAddress(host, port);
+            return this;
+        }
+
+        public Builder port(InetSocketAddress address) {
+            this.serverAddress = address;
+            return this;
+        }
+
+        public Builder logger(SimpleLogger logger) {
+            this.logger = logger;
+            this.serverInterface.setLogger(logger);
+            return this;
+        }
+
+        public Builder server(WebServerInterface<?, ?, ?> serverInterface) {
+            this.serverInterface = serverInterface;
+            return this;
+        }
+
+        public Builder server(WebServerType serverType) {
+            this.serverInterface = serverType.getServerInterface(logger);
+            return this;
+        }
+
+        public WebServer<?, ?, ?> build() {
+            return new WebServer<>(serverInterface, serverAddress, logger);
+        }
     }
 }

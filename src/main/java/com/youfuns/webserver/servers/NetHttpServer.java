@@ -3,6 +3,7 @@ package com.youfuns.webserver.servers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.youfuns.logger.ConsoleLogger;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.WebServer;
 import com.youfuns.webserver.interfaces.Exchange;
@@ -26,12 +27,17 @@ import java.util.function.Consumer;
  */
 public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchange, HttpHandler> {
 
-    private final SimpleLogger logger;
+    private SimpleLogger logger;
     private final ExchangeHandlerInterface<HttpExchange> exchangeHandler;
 
-    public NetHttpServer(SimpleLogger logger) {
+    public NetHttpServer() {
+        this.logger = new ConsoleLogger();
+        this.exchangeHandler = new NetExchangeHandler();
+    }
+
+    public void setLogger(SimpleLogger logger) {
         this.logger = logger;
-        this.exchangeHandler = new NetExchangeHandler(logger);
+        this.exchangeHandler.setLogger(logger);
     }
 
     @Override
@@ -60,6 +66,11 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
     public void removeContext(HttpServer server, String endpoint) {
         server.removeContext(endpoint);
         logger.log(WebServer.class, "Removed context: " + endpoint, SimpleLogger.Level.DEBUG);
+    }
+
+    @Override
+    public boolean supportsContextMutationAfterStart() {
+        return true;
     }
 
     @Override
@@ -113,9 +124,13 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
 
     private static class NetExchangeHandler implements ExchangeHandlerInterface<HttpExchange> {
 
-        private final SimpleLogger logger;
+        private SimpleLogger logger;
 
-        public NetExchangeHandler(SimpleLogger logger) {
+        public NetExchangeHandler() {
+            this.logger = new ConsoleLogger();
+        }
+
+        public void setLogger(SimpleLogger logger) {
             this.logger = logger;
         }
 
