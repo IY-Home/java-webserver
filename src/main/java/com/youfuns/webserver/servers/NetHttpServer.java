@@ -144,6 +144,7 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
                     httpExchange.getRemoteAddress(),           // remoteAddress
                     httpExchange.getRequestHeaders(),          // requestHeaderMap
                     logger,                                    // logger
+                    this.extractBody(httpExchange),
                     this,                                      // iExchangeHandler (this!)
                     httpExchange                               // exchange (the raw HttpExchange)
             );

@@ -130,17 +130,23 @@ To create an `Exchange` manually, and leave the generic parameter for internal E
 
 ```java
 Exchange<IExchange> exchange = new Exchange(String method, URI requestUri, String protocol, InetSocketAddress remoteAddress,
-                Map<String, List<String>> requestHeaderMap, SimpleLogger logger, ExchangeHandlerInterface<IExchange> exchangeInterface_nullable, IExchange wrappedExchange_nullable)
+        Map < String, List < String >> requestHeaderMap, SimpleLogger logger, String body, ExchangeHandlerInterface < IExchange > exchangeInterface_nullable, IExchange wrappedExchange_nullable)
 ```
 
 and put `Object` as the `IExchange`.
+However, with this mock instance, parsing multipart, serving file, and sending response will throw
+`UnsupportedOperationException`.
 
 The `Exchange` also lets you store attributes for use between heads, tails, and handlers. Simply use:
 
 ```java
 exchange.setAttribute("key",value_of_any_type);
-exchange.getAttribute("key",Type_Of_Value .class); // returns null if not instance
-exchange.getAttribute("key",String .class, "default");
+exchange.
+
+getAttribute("key",Type_Of_Value .class); // returns null if not instance
+exchange.
+
+getAttribute("key",String .class, "default");
 ```
 
 ## Defining Basic Endpoints

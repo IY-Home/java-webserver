@@ -7,11 +7,8 @@
     <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Major: added generic support for all web servers">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/ExchangeHandlerInterface.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/ExchangeHandlerInterface.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/Exchange.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/Exchange.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/NetHttpServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/NetHttpServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/WebServerInterface.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/WebServerInterface.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/WebServerType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/WebServerType.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

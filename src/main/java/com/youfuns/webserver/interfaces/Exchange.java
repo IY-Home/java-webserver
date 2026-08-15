@@ -21,8 +21,9 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class Exchange<IExchange> implements AutoCloseable {
-    private ExchangeHandlerInterface<IExchange> iExchangeHandler;
-    private IExchange iExchange;
+    private final ExchangeHandlerInterface<IExchange> iExchangeHandler;
+    private final IExchange iExchange;
+    private final boolean wrapper;
     private final String method;
     private final URI requestUri;
     private final String path;
@@ -53,10 +54,17 @@ public class Exchange<IExchange> implements AutoCloseable {
 
     // Primary constructor - creates Exchange<IExchange> from parameters
     public Exchange(String method, URI requestUri, String protocol, InetSocketAddress remoteAddress,
-                    Map<String, List<String>> requestHeaderMap, SimpleLogger logger, ExchangeHandlerInterface<IExchange> iExchangeHandler, IExchange exchange) {
+                    Map<String, List<String>> requestHeaderMap, SimpleLogger logger, String body, ExchangeHandlerInterface<IExchange> iExchangeHandler, IExchange exchange) {
         this.logger = logger;
-        this.iExchangeHandler = iExchangeHandler;
-        this.iExchange = exchange;
+        if (iExchangeHandler == null || exchange == null) {
+            this.wrapper = false;
+            this.iExchangeHandler = null;
+            this.iExchange = null;
+        } else {
+            this.wrapper = true;
+            this.iExchangeHandler = iExchangeHandler;
+            this.iExchange = exchange;
+        }
 
         this.method = method;
         this.requestUri = requestUri;
@@ -66,7 +74,7 @@ public class Exchange<IExchange> implements AutoCloseable {
         this.protocol = protocol;
         this.remoteAddress = remoteAddress;
         this.requestHeaderMap = Map.copyOf(requestHeaderMap);
-        this.body = iExchangeHandler.extractBody(iExchange);
+        this.body = body;
 
         // ===== LOGGING =====
         String fullAddress = requestUri.toString();
@@ -624,6 +632,8 @@ public class Exchange<IExchange> implements AutoCloseable {
             return;
         }
 
+        checkReal("parse_multipart");
+
         try {
             parseMultipart();
             multipartParsed = true;
@@ -974,6 +984,9 @@ public class Exchange<IExchange> implements AutoCloseable {
             logger.log(Exchange.class, "File does not exist: " + filePath, SimpleLogger.Level.ERROR);
             throw new IllegalArgumentException("File does not exist: " + filePath);
         }
+
+        checkReal("serve_file");
+
         try {
             iExchangeHandler.serveFile(iExchange, responseStatusCode, responseHeadersMap, file);
             responseSent = true;
@@ -984,6 +997,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     }
 
     public void serveFile(byte[] fileBytes) throws IOException {
+        checkReal("serve_file_bytes");
         try {
             iExchangeHandler.serveFile(iExchange, responseStatusCode, responseHeadersMap, fileBytes);
             responseSent = true;
@@ -1188,6 +1202,7 @@ public class Exchange<IExchange> implements AutoCloseable {
             logger.log(Exchange.class, "Response already sent, returning", SimpleLogger.Level.WARN);
             return;
         }
+        checkReal("send_response");
         iExchangeHandler.sendResponse(iExchange, responseStatusCode, responseHeadersMap, responseBodyContent);
         responseSent = true;
     }
@@ -1601,13 +1616,17 @@ public class Exchange<IExchange> implements AutoCloseable {
         }
     }
 
+    private void checkReal(String operation) {
+        if (!wrapper)
+            throw new UnsupportedOperationException("This operation is not supported as this is a mock Exchange: " + operation);
+    }
 
     // ===== CLEANUP =====
 
     @Override
     public void close() {
         logger.log(Exchange.class, "Closing IExchange", SimpleLogger.Level.DEBUG);
-        iExchangeHandler.closeExchange(iExchange);
+        if (wrapper) iExchangeHandler.closeExchange(iExchange);
     }
 
     public static void setFileUploadLimit(int fileUploadLimit) {
