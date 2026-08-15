@@ -698,7 +698,7 @@ exchange.removeCookie("jwt");
 exchange.removeCookie("jwt", "/");
 ```
 
-## HTTPS Support
+## HTTPS Support *(exclusive for `com.sun.net.HttpServer`)*
 
 ***Note:** This feature is very basic and for development or prototyping only. Do not use this in commercial HTTPS
 servers.*
