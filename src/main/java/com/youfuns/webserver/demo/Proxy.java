@@ -24,7 +24,7 @@ public class Proxy {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) {
-        var proxy = WebServer.create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(PROXY_PORT), LoggerManager.INSTANCE.getLogger());
+        var proxy = WebServer.builder().server(WebServerType.SUN_NET_HTTPSERVER).port(new InetSocketAddress(PROXY_PORT)).logger(LoggerManager.INSTANCE.getLogger()).build();
 
         // Use head to log ALL requests
         proxy.head(exchange -> {

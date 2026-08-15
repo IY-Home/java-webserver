@@ -3,13 +3,10 @@ package com.youfuns.webserver.demo;
 import com.youfuns.logger.LoggerManager;
 import com.youfuns.webserver.TemplateEngine;
 import com.youfuns.webserver.WebServer;
-import com.youfuns.webserver.servers.WebServerType;
-
-import java.net.InetSocketAddress;
 
 public class FileUploadTest {
     public static void main(String[] args) {
-        var webServer = WebServer.create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(8080), LoggerManager.INSTANCE.getLogger());
+        var webServer = WebServer.create(8080);
         webServer
                 .ensureExists("./fileUploadDemo/uploads")
                 .on("/", exchange -> {

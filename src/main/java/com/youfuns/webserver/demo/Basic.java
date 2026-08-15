@@ -11,7 +11,7 @@ import java.util.Map;
 public class Basic {
     public static void main(String[] args) {
         // Create serverInterface on port 8080
-        var server = WebServer.create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(8080), LoggerManager.INSTANCE.getLogger());
+        var server = WebServer.create(8080);
 
         LoggerManager.INSTANCE.getLogger().setLogLevel(SimpleLogger.Level.DEBUG);
 

@@ -7,9 +7,7 @@ import com.youfuns.webserver.JwtService;
 import com.youfuns.webserver.TemplateEngine;
 import com.youfuns.webserver.WebServer;
 import com.youfuns.webserver.interfaces.Exchange;
-import com.youfuns.webserver.servers.WebServerType;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,7 +38,7 @@ public class UserProfileServer {
         ConsoleLogger logger = new ConsoleLogger();
         logger.setLogLevel(SimpleLogger.Level.DEBUG);
 
-        var server = WebServer.create(WebServerType.SUN_NET_HTTPSERVER, new InetSocketAddress(8080), LoggerManager.INSTANCE.getLogger());
+        var server = WebServer.create(8080);
 
         server.ensureExists(UPLOAD_DIR)
         .on("/", exchange ->

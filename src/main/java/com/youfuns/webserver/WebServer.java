@@ -376,7 +376,7 @@ public class WebServer<S, I, H> {
         private WebServerInterface<?, ?, ?> serverInterface;
 
         private Builder() {
-            this.serverAddress = new InetSocketAddress(8080);
+            this.serverAddress = null;
             this.logger = new ConsoleLogger();
             this.serverInterface = WebServerType.SUN_NET_HTTPSERVER.getServerInterface(logger);
         }
@@ -413,6 +413,9 @@ public class WebServer<S, I, H> {
         }
 
         public WebServer<?, ?, ?> build() {
+            if (serverAddress == null) {
+                throw new IllegalStateException("Server port is not set");
+            }
             return new WebServer<>(serverInterface, serverAddress, logger);
         }
     }

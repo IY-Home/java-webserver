@@ -42,10 +42,27 @@ import java.net.InetSocketAddress;
 
 // Bind ONLY to localhost (127.0.0.1)
 InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8080);
-        var myServer = WebServer.builder().port(address);
+        var server = WebServer.builder().port(address).build();
 // Note: use 'var' during assignments of WebServer, as the WebServer class has variable generic parameters,
 // WebServer<InternalServer, InternalExchange, InternalHandler>
 ```
+
+### Builder
+
+```java
+import com.youfuns.webserver.servers.WebServerType;
+
+var server = WebServer.builder() // get builder
+        .port(8080) // int port, or
+        .port(new InetSocketAddress("127.0.0.1", 8080)) // InetSocketAddress
+        .logger(new ConsoleLogger(System.out)) // SimpleLogger
+        .server(WebServerType.SUN_NET_HTTPSERVER) // WebServerType, or
+        .server(new NetHttpServer()) // WebServerInterface
+        .build() // Returns a WebServer<?, ?, ?>
+```
+
+Logger (default `ConsoleLogger`) and server (default `WebServerType.SUN_NET_HTTPSERVER`) are optional, but port is mandatory.
+If not set, `build()` throws `IllegalStateException`.
 
 ### Server operations
 

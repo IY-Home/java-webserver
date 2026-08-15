@@ -4,11 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Major: added generic support for all web servers">
+    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Made it actually nullable">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/Exchange.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/interfaces/Exchange.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/NetHttpServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/NetHttpServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Basic.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Basic.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/FileUploadTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/FileUploadTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Proxy.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Proxy.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -408,7 +411,15 @@
       <option name="project" value="LOCAL" />
       <updated>1786775688155</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="Made it actually nullable">
+      <option name="closed" value="true" />
+      <created>1786806503553</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1786806503553</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -426,7 +437,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Patches" />
     <MESSAGE value="Fixed issues with dynamic endpoint with trailing slash not recognize URL without trailing slash" />
     <MESSAGE value="Adjusted demo" />
     <MESSAGE value="Removed unnecessary logging" />
@@ -451,7 +461,8 @@
     <MESSAGE value="Added demo" />
     <MESSAGE value="Removed pom.xml section from README." />
     <MESSAGE value="Major: added generic support for all web servers" />
-    <option name="LAST_COMMIT_MESSAGE" value="Major: added generic support for all web servers" />
+    <MESSAGE value="Made it actually nullable" />
+    <option name="LAST_COMMIT_MESSAGE" value="Made it actually nullable" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
