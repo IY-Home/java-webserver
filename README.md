@@ -558,11 +558,18 @@ String path2 = exchange.saveFileAt(file, "./uploads/photo.jpg"); // Specific loc
 String path3 = exchange.saveFileSafe(file, "./uploads", true);
 // With duplicate handling.
 // Returned path will be "" if file is null.
-// (UploadedFile uploadedFile, String filePath, boolean preserveOriginalName) -> String savedFilePath
-// If preserveOriginalName is false, it generates a random UUID for filename. If preserveOriginalName is true, 
-// it saves with original filename, and if duplicate, saves as filename_X.extension where X is the incremented file number.
-// For all of these, if "../" is found in the save path, it will be BLOCKED, and an attribute "_path_traversal_" (Boolean true) will be added to the exchange.
 ```
+
+#### Note on saveFileSafe
+
+`(UploadedFile uploadedFile, String filePath, boolean preserveOriginalName): String savedFilePath`
+
+If preserveOriginalName is false, it generates a random UUID for filename. If preserveOriginalName is true,
+it saves with original filename, and if duplicate, saves as
+`filename_X.extension` where X is the incremented file number.
+
+For all of these, if "../" or "..\\" is found in the save path, it will be BLOCKED, and an attribute "
+_path_traversal_" (Boolean true) will be added to the exchange.
 
 ### Check File Types
 
@@ -794,6 +801,8 @@ new WebServerSecure(443)
     .start();
 ```
 
+---
+
 ## JWT utility
 
 `com.youfuns.webserver.JwtService` provides a basic convenient way to generate and validate JWTs (JSON Web Tokens):
@@ -869,7 +878,8 @@ public class Main {
             })
                 .head(exchange -> {
                 if (exchange.getRequestPath().startsWith("/api")) {
-                    return jwtService.authorize(exchange.getBearerToken());
+                    String subject = JwtService.extractSubject(exchange.getBearerToken());
+                    return (subject != null); // demo
                 }
                 return true;
             })
