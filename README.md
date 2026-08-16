@@ -81,20 +81,20 @@ This framework includes a basic logger through the `SimpleLogger` interface:
 package com.youfuns.logger;
 
 public interface SimpleLogger {
-  enum Level {
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR
-  }
+    enum Level {
+        DEBUG,
+        INFO,
+        WARN,
+        ERROR
+    }
 
-  void log(Class<?> clazz, String message, Level level);
+    void log(Class<?> clazz, String message, Level level);
 
-  void log(Class<?> clazz, String message, Level level, Throwable t);
+    void log(Class<?> clazz, String message, Level level, Throwable t);
 
-  Level getLogLevel();
+    Level getLogLevel();
 
-  void setLogLevel(Level logLevel);
+    void setLogLevel(Level logLevel);
 }
 ```
 
@@ -113,7 +113,7 @@ ConsoleLogger fileLogger = new ConsoleLogger(new java.io.PrintStream("./logs/app
 
 // Set config
 logger
-    .setShowTimestamp(true)
+        .setShowTimestamp(true)
     .setShowClass(true)
     .setShowLevel(true)
     .setPrefix("> ")
@@ -122,7 +122,7 @@ logger
 
 // Convenience logging methods
 logger.debug(this.getClass(), "Debugging");
-logger.info(this.getClass(), "Info");
+        logger.info(this.getClass(), "Info");
 // same for warn and error
 ```
 
@@ -147,7 +147,7 @@ To create an `Exchange` manually, and leave the generic parameter for internal E
 
 ```java
 Exchange<IExchange> exchange = new Exchange(String method, URI requestUri, String protocol, InetSocketAddress remoteAddress,
-        Map < String, List < String >> requestHeaderMap, SimpleLogger logger, String body, ExchangeHandlerInterface < IExchange > exchangeInterface_nullable, IExchange wrappedExchange_nullable)
+        Map <String, List <String>> requestHeaderMap, SimpleLogger logger, String body, ExchangeHandlerInterface <IExchange> exchangeInterface_nullable, IExchange wrappedExchange_nullable)
 ```
 
 and put `Object` as the `IExchange`.
@@ -158,12 +158,8 @@ The `Exchange` also lets you store attributes for use between heads, tails, and 
 
 ```java
 exchange.setAttribute("key",value_of_any_type);
-exchange.
-
-getAttribute("key",Type_Of_Value .class); // returns null if not instance
-exchange.
-
-getAttribute("key",String .class, "default");
+exchange.getAttribute("key",Type_Of_Value .class); // returns null if not instance
+exchange.getAttribute("key",String .class, "default");
 ```
 
 ## Defining Basic Endpoints
@@ -395,7 +391,7 @@ Note that `FileAction` is a `FunctionalInterface` that declares throwing `IOExce
 The action is only executed if the validation is passed (code = 1).
 
 
-## HTML Form (URL-encoded) 
+## HTML Form (URL-encoded)
 
 ### HTML Form
 
@@ -561,15 +557,12 @@ String path3 = exchange.saveFileSafe(file, "./uploads", true);
 ```
 
 #### Note on saveFileSafe
-
 `(UploadedFile uploadedFile, String filePath, boolean preserveOriginalName): String savedFilePath`
 
 If preserveOriginalName is false, it generates a random UUID for filename. If preserveOriginalName is true,
-it saves with original filename, and if duplicate, saves as
-`filename_X.extension` where X is the incremented file number.
+it saves with original filename, and if duplicate, saves as `filename_X.extension` where X is the incremented file number.
 
-For all of these, if "../" or "..\\" is found in the save path, it will be BLOCKED, and an attribute "
-_path_traversal_" (Boolean true) will be added to the exchange.
+For all of these, if "../" or "..\\" is found in the save path, it will be BLOCKED, and an attribute "_path_traversal_" (Boolean true) will be added to the exchange.
 
 ### Check File Types
 
@@ -598,9 +591,7 @@ boolean empty = file.isEmpty();
 ```java
 yourWebServer.ensureExists("./myDir");
 // or static method (without logging)
-WebServer.
-
-createIfNotExists("./myDir");
+WebServer.createIfNotExists("./myDir");
 ```
 
 Throws `RuntimeException("The directory could not be created: {directory}", IOException)` if directory creation failed.
@@ -825,77 +816,77 @@ public class Main {
     public static void main(String[] args) throws Exception {
         var myServer = WebServer.create(8080);
         myServer
-            .on("/api/users", "GET", exchange -> {
-                exchange.sendJsonResponse(Map.of("users", "list"));
-            })
-            .on("/api/users/$", (params, exchange) -> {
-                String id = params[0];
-                exchange.sendResponse("User: " + id);
-            })
-            .on("/api/user/update", "POST", exchange -> {
-                if (!exchange.isMultipartRequest()) {
-                    exchange.sendBadRequestResponse("Expected multipart/form-data");
-                    return;
-                }
-                
-                String username = exchange.getFormField("username");
-                
-                if (!exchange.hasFile("file")) {
-                    exchange.sendBadRequestResponse("No file uploaded");
-                    return;
-                }
-                
-                UploadedFile file = exchange.getFile("file");
-                
-                // Check file type
-                if (exchange.isPNG(file) || exchange.isJPEG(file)) {
-                    exchange.saveFileIn(file, "./uploads");
-                    exchange.sendResponse("Uploaded: " + file.getFilename());
-                } else {
-                    exchange.sendBadRequestResponse("Only PNG and JPEG allowed");
-                }
-            })
-            .on("/api/setConfig", "POST", exchange -> {
-              int result = exchange.getAndSaveAt("config", new String[]{"json"}, file -> {
-                String savedPath = exchange.saveFileSafe(file, "./config", false);
-                myServer.serveFile("/config", savedPath);
-              });
+                .on("/api/users", "GET", exchange -> {
+                    exchange.sendJsonResponse(Map.of("users", "list"));
+                })
+                .on("/api/users/$", (params, exchange) -> {
+                    String id = params[0];
+                    exchange.sendResponse("User: " + id);
+                })
+                .on("/api/user/update", "POST", exchange -> {
+                    if (!exchange.isMultipartRequest()) {
+                        exchange.sendBadRequestResponse("Expected multipart/form-data");
+                        return;
+                    }
 
-              switch (result) {
-                case -1 -> exchange.sendBadRequestResponse("Expected multipart/form-data");
-                case -2 -> exchange.sendBadRequestResponse("No config uploaded");
-                case -3 -> exchange.sendBadRequestResponse("Only JSON files allowed");
-                0 ->exchange.sendResponse("Uploaded successfully!");
-              }
-            })
-            .serveStatic("/", "./public", false, "index.html")
-            .onNotFound(exchange -> {
-                exchange.sendResponse(404, "Not Found: " + exchange.getRequestPath());
-            })
+                    String username = exchange.getFormField("username");
+
+                    if (!exchange.hasFile("file")) {
+                        exchange.sendBadRequestResponse("No file uploaded");
+                        return;
+                    }
+
+                    UploadedFile file = exchange.getFile("file");
+
+                    // Check file type
+                    if (exchange.isPNG(file) || exchange.isJPEG(file)) {
+                        exchange.saveFileIn(file, "./uploads");
+                        exchange.sendResponse("Uploaded: " + file.getFilename());
+                    } else {
+                        exchange.sendBadRequestResponse("Only PNG and JPEG allowed");
+                    }
+                })
+                .on("/api/setConfig", "POST", exchange -> {
+                    int result = exchange.getAndSaveAt("config", new String[]{"json"}, file -> {
+                        String savedPath = exchange.saveFileSafe(file, "./config", false);
+                        myServer.serveFile("/config", savedPath);
+                    });
+
+                    switch (result) {
+                        case -1 -> exchange.sendBadRequestResponse("Expected multipart/form-data");
+                        case -2 -> exchange.sendBadRequestResponse("No config uploaded");
+                        case -3 -> exchange.sendBadRequestResponse("Only JSON files allowed");
+                        0 ->exchange.sendResponse("Uploaded successfully!");
+                    }
+                })
+                .serveStatic("/", "./public", false, "index.html")
+                .onNotFound(exchange -> {
+                    exchange.sendResponse(404, "Not Found: " + exchange.getRequestPath());
+                })
                 .head(exchange -> {
-                System.out.println("Request: " + exchange.getRequestPath());
-                return true;
-            })
+                    System.out.println("Request: " + exchange.getRequestPath());
+                    return true;
+                })
                 .head(exchange -> {
-                if (exchange.getRequestPath().startsWith("/api")) {
-                    String subject = JwtService.extractSubject(exchange.getBearerToken());
-                    return (subject != null); // demo
-                }
-                return true;
-            })
-            .tail(exchange -> {
-                System.out.println("Finished handling response");
-            })
-            .onException((exchange, exception) -> {
-                LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
-                if (exception instanceof IllegalArgumentException) {
-                    exchange.sendBadRequestResponse("Bad request: " + exception.getMessage());
-                } else {
-                    exchange.sendErrorResponse("An error occurred.");
-                }
-            })
-            .limitUploadSize(50 * 1024 * 1024) // 50 MB
-            .start();
+                    if (exchange.getRequestPath().startsWith("/api")) {
+                        String subject = JwtService.extractSubject(exchange.getBearerToken());
+                        return (subject != null); // demo
+                    }
+                    return true;
+                })
+                .tail(exchange -> {
+                    System.out.println("Finished handling response");
+                })
+                .onException((exchange, exception) -> {
+                    LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
+                    if (exception instanceof IllegalArgumentException) {
+                        exchange.sendBadRequestResponse("Bad request: " + exception.getMessage());
+                    } else {
+                        exchange.sendErrorResponse("An error occurred.");
+                    }
+                })
+                .limitUploadSize(50 * 1024 * 1024) // 50 MB
+                .start();
     }
 }
 ```
@@ -935,8 +926,8 @@ See `com.youfuns.webserver.demo` for full demonstrations:
 
 ## Using other web servers
 
-Currently, the framework natively supports `com.sun.net.HttpServer`, 
-but if you want to plug in your own web server, e.g. Undertow, 
+Currently, the framework natively supports `com.sun.net.HttpServer`,
+but if you want to plug in your own web server, e.g. Undertow,
 
 please reference `com.youfuns.webserver.servers` and implement the `WebServerInterface<Server, InternalExchange, InternalHandler>` interface.
 
