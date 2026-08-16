@@ -6,12 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Made it actually nullable">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Basic.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Basic.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/FileUploadTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/FileUploadTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Proxy.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/Proxy.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/UserProfileServer.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,7 +90,7 @@
     "project.structure.last.edited": "Artifacts",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",
-    "settings.editor.selected.configurable": "preferences.keymap",
+    "settings.editor.selected.configurable": "preferences.sourceCode.Markdown",
     "vcs.patch.to.clipboard": "true"
   }
 }]]></component>

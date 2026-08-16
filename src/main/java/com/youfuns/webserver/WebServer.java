@@ -9,6 +9,7 @@ import com.youfuns.webserver.servers.WebServerType;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.URLConnection;
 import java.nio.file.Files;
@@ -370,7 +371,7 @@ public class WebServer<S, I, H> {
         return new Builder();
     }
 
-    public static class Builder {
+    public static class Builder implements Serializable, Cloneable {
         private InetSocketAddress serverAddress;
         private SimpleLogger logger;
         private WebServerInterface<?, ?, ?> serverInterface;
@@ -417,6 +418,19 @@ public class WebServer<S, I, H> {
                 throw new IllegalStateException("Server port is not set");
             }
             return new WebServer<>(serverInterface, serverAddress, logger);
+        }
+
+        @Override
+        public Builder clone() {
+            try {
+                Builder clone = (Builder) super.clone();
+                clone.serverAddress = new InetSocketAddress(serverAddress.getAddress(), serverAddress.getPort());
+                clone.logger = logger;
+                clone.serverInterface = serverInterface;
+                return clone;
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError(e);
+            }
         }
     }
 }
