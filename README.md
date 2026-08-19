@@ -2,8 +2,12 @@
 
 ## Overview
 
-A lightweight web server framework built on Java's built-in HttpServer *(or any common web server)* with a fluent API for defining routes,
+A simple, lightweight web server framework built on Java's built-in HttpServer *(or any common web
+server)* with a fluent API for defining routes,
 handling requests, and serving static files.
+
+***Note:** This framework is very simple and lacks production features, such as rate limiting or authentication. It is
+intended for prototyping only. Please do not use it in production applications.*
 
 ## Adding to project
 
@@ -140,7 +144,8 @@ com.youfuns.logger.LoggerManager.quickLog(Object caller_to_get_class, String mes
 
 ## `Exchange` class
 
-The `Exchange` class is a wrapper around `HttpExchange` (or any internal exchange class) that provides various utility methods.
+The `Exchange<InternalExchange>` class is a wrapper around
+`HttpExchange` (or any internal exchange class) that provides various utility methods.
 You typically receive it in the `FunctionalInterfaces` for your endpoints, hooks/tails, and exception handlers.
 
 To create an `Exchange` manually, and leave the generic parameter for internal Exchange classes as blank, use this constructor:
@@ -157,9 +162,9 @@ However, with this mock instance, parsing multipart, serving file, and sending r
 The `Exchange` also lets you store attributes for use between heads, tails, and handlers. Simply use:
 
 ```java
-exchange.setAttribute("key",value_of_any_type);
-exchange.getAttribute("key",Type_Of_Value .class); // returns null if not instance
-exchange.getAttribute("key",String .class, "default");
+exchange.setAttribute("key", value_of_any_type);
+exchange.getAttribute("key", Type_Of_Value.class); // returns null if not instance
+exchange.getAttribute("key", String.class, "default");
 ```
 
 ## Defining Basic Endpoints
@@ -177,6 +182,14 @@ exchange.getAttribute("key",String .class, "default");
 ```java
 .on("/hello", "POST", exchange -> {
     exchange.sendResponse("POST received");
+})
+```
+
+### Multiple Methods
+
+```java
+.on("/hello", new String[]{"GET", "POST"}, exchange -> {
+    exchange.sendResponse("GET or POST received");
 })
 ```
 

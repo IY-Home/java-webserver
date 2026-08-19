@@ -48,7 +48,7 @@ public interface ExchangeHandlerInterface<InternalExchange> {
         } catch (Exception e) {
             try {
                 exceptionHandler.handle(exchange, e);
-            } catch (IOException _) {
+            } catch (IOException ignored) {
 
             }
         } finally {
@@ -60,7 +60,7 @@ public interface ExchangeHandlerInterface<InternalExchange> {
             } catch (Exception e) {
                 try {
                     exceptionHandler.handle(exchange, e);
-                } catch (IOException _) {
+                } catch (IOException ignored) {
 
                 }
             }

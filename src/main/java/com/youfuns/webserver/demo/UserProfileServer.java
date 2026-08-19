@@ -19,6 +19,7 @@ public class UserProfileServer {
     private static final String UPLOAD_DIR = "./userServiceDemo/user_avatars";
 
     // Pre-made admin user
+    // Note: this demo stores passwords in plain text. In a true application, passwords must be hashed.
     private static final User ADMIN_USER = new User(
             "Admin",
             "admin@system.com",

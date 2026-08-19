@@ -5,8 +5,8 @@ import com.youfuns.logger.SimpleLogger;
 import java.util.function.Supplier;
 
 public enum WebServerType {
-    SUN_NET_HTTPSERVER(NetHttpServer::new),
-    UNDERTOW_SERVER(null);
+    SUN_NET_HTTPSERVER(NetHttpServer::new);
+    // To add your own server, put it here
 
     private final Supplier<WebServerInterface<?, ?, ?>> serverInterfaceSupplier;
 

@@ -64,10 +64,10 @@ public class WebServer<S, I, H> {
         return builder().port(port).build();
     }
 
-    public WebServer<S, I, H> endpoint(String endpoint, String method, ExchangeHandler<I> action) {
+    public WebServer<S, I, H> endpoint(String endpoint, String[] method, ExchangeHandler<I> action) {
         checkContextAdditionAfterStart();
         if (endpoint.isEmpty() || endpoint.equals("/")) {
-            homeHandler.setRoot(method, action);
+            for (String iMethod : method) homeHandler.setRoot(iMethod, action);
             logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
             return this;
         }
@@ -77,11 +77,15 @@ public class WebServer<S, I, H> {
         boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
         dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler<I>().setOnNotFound(homeHandler.getNotFound()));
         InternalDynamicHandler<I> dynamicHandler = dynamicHandlers.get(endpoint);
-        dynamicHandler.addPath(endpoint, method, action);
+        for (String iMethod : method) dynamicHandler.addPath(endpoint, iMethod, action);
         if (!alreadyExists)
             createContextSafe(endpoint, dynamicHandler);
         logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
         return this;
+    }
+
+    public WebServer<S, I, H> endpoint(String endpoint, String method, ExchangeHandler<I> action) {
+        return endpoint(endpoint, new String[]{method}, action);
     }
 
     public WebServer<S, I, H> endpoint(String endpoint, ExchangeHandler<I> action) {
@@ -96,21 +100,25 @@ public class WebServer<S, I, H> {
         return this;
     }
 
-    public WebServer<S, I, H> dynamicEndpoint(String template, String method, DynamicExchangeHandler<I> action) {
+    public WebServer<S, I, H> dynamicEndpoint(String template, String[] method, DynamicExchangeHandler<I> action) {
         checkContextAdditionAfterStart();
         int index = template.indexOf('$');
         String endpoint = index == -1 ? template : template.substring(0, index);
-        if (endpoint.endsWith("/")) {
+        if (endpoint.endsWith("/") && !endpoint.equals("/")) {
             endpoint = endpoint.substring(0, endpoint.length() - 1);
         }
         boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
         dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler<I>().setOnNotFound(homeHandler.getNotFound()));
         InternalDynamicHandler<I> dynamicHandler = dynamicHandlers.get(endpoint);
-        dynamicHandler.addPath(template, method, action);
+        for (String iMethod : method) dynamicHandler.addPath(template, iMethod, action);
         if (!alreadyExists)
             createContextSafe(endpoint, dynamicHandler);
         logger.log(WebServer.class, "Created dynamic endpoint: " + template, SimpleLogger.Level.INFO);
         return this;
+    }
+
+    public WebServer<S, I, H> dynamicEndpoint(String template, String method, DynamicExchangeHandler<I> action) {
+        return dynamicEndpoint(template, new String[]{method}, action);
     }
 
     public WebServer<S, I, H> dynamicEndpoint(String template, DynamicExchangeHandler<I> action) {
@@ -123,6 +131,16 @@ public class WebServer<S, I, H> {
 
     public WebServer<S, I, H> on(String template, String method, DynamicExchangeHandler<I> action) {
         return dynamicEndpoint(template, method, action);
+    }
+
+    public WebServer<S, I, H> on(String endpoint, String[] methods, ExchangeHandler<I> action) {
+        endpoint(endpoint, methods, action);
+        return this;
+    }
+
+    public WebServer<S, I, H> on(String template, String[] methods, DynamicExchangeHandler<I> action) {
+        dynamicEndpoint(template, methods, action);
+        return this;
     }
 
     public WebServer<S, I, H> on(String endpoint, ExchangeHandler<I> action) {

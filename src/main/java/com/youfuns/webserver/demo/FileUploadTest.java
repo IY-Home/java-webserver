@@ -6,7 +6,7 @@ import com.youfuns.webserver.WebServer;
 
 public class FileUploadTest {
     public static void main(String[] args) {
-        var webServer = WebServer.create(8080);
+        var webServer = WebServer.builder().port("127.0.0.1", 8080).build();
         webServer
                 .ensureExists("./fileUploadDemo/uploads")
                 .on("/", exchange -> {

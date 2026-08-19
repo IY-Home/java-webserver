@@ -818,13 +818,18 @@ public class Exchange<IExchange> implements AutoCloseable {
             logger.log(Exchange.class, "File is null, cannot save", SimpleLogger.Level.WARN);
             return "";
         }
-        if (saveDir.contains("../") || saveDir.contains("..\\")) {
+        if (saveDir.contains("..") || saveDir.toLowerCase().contains("%2e%2e")) {
             logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
             this.setAttribute("_path_traversal_", true);
             return "";
         }
         logger.log(Exchange.class, "Saving file '" + file.filename + "' to directory: " + saveDir, SimpleLogger.Level.INFO);
         Path dir = Paths.get(saveDir);
+        if (!dir.normalize().equals(dir)) {
+            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
+            this.setAttribute("_path_traversal_", true);
+            return "";
+        }
         if (!Files.exists(dir)) {
             Files.createDirectories(dir);
             logger.log(Exchange.class, "Created directory: " + saveDir, SimpleLogger.Level.DEBUG);

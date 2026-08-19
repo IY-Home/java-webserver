@@ -127,7 +127,7 @@ public class WebServerSecure extends WebServer {
         try {
             Process process = pb.start();
             process.waitFor();
-        } catch (IOException | InterruptedException _) {
+        } catch (IOException | InterruptedException ignored) {
         }
     }
 

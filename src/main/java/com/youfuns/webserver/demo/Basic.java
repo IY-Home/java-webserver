@@ -3,9 +3,7 @@ package com.youfuns.webserver.demo;
 import com.youfuns.logger.LoggerManager;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.WebServer;
-import com.youfuns.webserver.servers.WebServerType;
 
-import java.net.InetSocketAddress;
 import java.util.Map;
 
 public class Basic {
