@@ -8,8 +8,8 @@ import java.util.Map;
 
 public class Basic {
     public static void main(String[] args) {
-        // Create serverInterface on port 8080
-        var server = WebServer.create(8080);
+        // Create server on port 8080
+        var server = WebServer.create(8080, LoggerManager.INSTANCE.getLogger());
 
         LoggerManager.INSTANCE.getLogger().setLogLevel(SimpleLogger.Level.DEBUG);
 
@@ -33,7 +33,7 @@ public class Basic {
             exchange.sendResponse(404, "Custom 404, page not found: " + exchange.getRequestPath());
         });
 
-        // Start the serverInterface
+        // Start the server
         server.start();
     }
 }

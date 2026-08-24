@@ -19,12 +19,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Proxy {
-    private static final String TARGET_URL = "http://localhost:9370"; // Do not add trailing slash at end
+    private static final String TARGET_URL = "localhost:8080"; // Do not add trailing slash at end
     private static final int PROXY_PORT = 5050;
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(String[] args) {
         var proxy = WebServer.builder().server(WebServerType.SUN_NET_HTTPSERVER).port(new InetSocketAddress(PROXY_PORT)).logger(LoggerManager.INSTANCE.getLogger()).build();
+
+        Exchange.showFullResponseInDebug(true);
 
         // Use head to log ALL requests
         proxy.head(exchange -> {

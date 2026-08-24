@@ -156,8 +156,8 @@ public class WebServerSecure extends WebServer {
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(kmf.getKeyManagers(), null, null);
 
-            // Apply to serverInterface
-            ((HttpsServer) serverInterface).setHttpsConfigurator(new HttpsConfigurator(sslContext) {
+            // Apply to server
+            ((HttpsServer) server).setHttpsConfigurator(new HttpsConfigurator(sslContext) {
                 public void configure(HttpsParameters params) {
                     // Optional: configure SSL parameters
                     configurations.accept(params);

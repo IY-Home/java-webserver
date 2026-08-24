@@ -226,7 +226,7 @@ public class UserProfileServer {
             exchange.redirect("/login?error=" + Exchange.urlEncode("An error occurred: " + exception.getMessage()));
         })
 
-                // Start serverInterface
+                // Start server
         .start();
         System.out.println("Server running at http://localhost:8080");
         System.out.println("Login: http://localhost:8080/login");

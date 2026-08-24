@@ -5,7 +5,6 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.youfuns.logger.ConsoleLogger;
 import com.youfuns.logger.SimpleLogger;
-import com.youfuns.webserver.WebServer;
 import com.youfuns.webserver.interfaces.Exchange;
 
 import java.io.IOException;
@@ -45,7 +44,7 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
         try {
             return HttpServer.create(address, backlog);
         } catch (IOException e) {
-            logger.log(WebServer.class, "HttpServer creation failed: " + e.getMessage(), SimpleLogger.Level.ERROR);
+            logger.log(this.getClass(), "HttpServer creation failed: " + e.getMessage(), SimpleLogger.Level.ERROR);
             throw new RuntimeException("Failed to create HttpServer", e);
         }
     }
@@ -54,9 +53,9 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
     public void createContext(HttpServer server, String endpoint, HttpHandler handler) {
         try {
             server.createContext(endpoint, handler);
-            logger.log(WebServer.class, "Created context: " + endpoint, SimpleLogger.Level.DEBUG);
+            logger.log(this.getClass(), "Created context: " + endpoint, SimpleLogger.Level.DEBUG);
         } catch (IllegalArgumentException e) {
-            logger.log(WebServer.class, "Context already exists: " + endpoint + ", removing and recreating", SimpleLogger.Level.WARN);
+            logger.log(this.getClass(), "Context already exists: " + endpoint + ", removing and recreating", SimpleLogger.Level.WARN);
             server.removeContext(endpoint);
             server.createContext(endpoint, handler);
         }
@@ -65,7 +64,7 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
     @Override
     public void removeContext(HttpServer server, String endpoint) {
         server.removeContext(endpoint);
-        logger.log(WebServer.class, "Removed context: " + endpoint, SimpleLogger.Level.DEBUG);
+        logger.log(this.getClass(), "Removed context: " + endpoint, SimpleLogger.Level.DEBUG);
     }
 
     @Override
@@ -79,7 +78,7 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
             try {
                 handler.accept(exchange);
             } catch (Exception e) {
-                logger.log(NetHttpServer.class, "Error in internal handler: " + e.getMessage(), SimpleLogger.Level.ERROR, e);
+                logger.log(this.getClass(), "Error in internal handler: " + e.getMessage(), SimpleLogger.Level.ERROR, e);
                 // Try to send an error response if possible
                 try {
                     String errorBody = "{\"error\": \"Internal Server Error\"}";
@@ -104,13 +103,13 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
     @Override
     public void start(HttpServer server) {
         server.start();
-        logger.log(WebServer.class, "HttpServer started", SimpleLogger.Level.INFO);
+        logger.log(this.getClass(), "HttpServer started", SimpleLogger.Level.INFO);
     }
 
     @Override
     public void stop(HttpServer server, int delay) {
         server.stop(delay);
-        logger.log(WebServer.class, "HttpServer stopped", SimpleLogger.Level.INFO);
+        logger.log(this.getClass(), "HttpServer stopped", SimpleLogger.Level.INFO);
     }
 
     @Override
@@ -208,13 +207,15 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
                 byte[] bodyBytes = is.readAllBytes();
                 return new String(bodyBytes, StandardCharsets.UTF_8);
             } catch (IOException e) {
-                logger.log(Exchange.class, "Failed to read request body: " + e.getMessage(), SimpleLogger.Level.WARN);
+                logger.log(this.getClass(), "Failed to read request body: " + e.getMessage(), SimpleLogger.Level.WARN);
                 return "";
             }
         }
 
         @Override
         public void sendResponse(HttpExchange exchange, int statusCode, Map<String, String> headers, String body) throws IOException {
+            logger.log(this.getClass(), "Sending response headers...", SimpleLogger.Level.DEBUG);
+
             // Apply headers
             for (Map.Entry<String, String> entry : headers.entrySet()) {
                 exchange.getResponseHeaders().set(entry.getKey(), entry.getValue());
@@ -222,10 +223,12 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
 
             // Handle redirects (no body)
             if (statusCode >= 300 && statusCode < 400) {
+                logger.log(this.getClass(), "Sending " + statusCode + " redirect...", SimpleLogger.Level.DEBUG);
                 exchange.sendResponseHeaders(statusCode, -1);
                 return;
             }
 
+            logger.log(this.getClass(), "Sending response body: '" + (body.length() > 32 ? (body.substring(0, 32) + "...") : body) + "'", SimpleLogger.Level.DEBUG);
             // Normal response with body
             byte[] responseBytes = body.getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(statusCode, responseBytes.length);
@@ -233,6 +236,9 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
                 os.write(responseBytes);
                 os.flush();
             }
+
+            logger.log(this.getClass(), "Response sent.", SimpleLogger.Level.INFO);
+
         }
 
         @Override

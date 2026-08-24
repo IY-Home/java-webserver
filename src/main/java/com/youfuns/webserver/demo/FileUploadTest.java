@@ -1,12 +1,16 @@
 package com.youfuns.webserver.demo;
 
 import com.youfuns.logger.LoggerManager;
+import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.TemplateEngine;
 import com.youfuns.webserver.WebServer;
 
 public class FileUploadTest {
     public static void main(String[] args) {
-        var webServer = WebServer.builder().port("127.0.0.1", 8080).build();
+        var webServer = WebServer.builder().port("127.0.0.1", 8080).logger(LoggerManager.INSTANCE.getLogger()).build();
+
+        LoggerManager.INSTANCE.getLogger().setLogLevel(SimpleLogger.Level.DEBUG);
+
         webServer
                 .ensureExists("./fileUploadDemo/uploads")
                 .on("/", exchange -> {

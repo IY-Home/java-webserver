@@ -49,6 +49,7 @@ public class Exchange<IExchange> implements AutoCloseable {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final SimpleLogger logger;
+    private static boolean showFullResponseInDebug = false;
 
     private boolean responseSent = false;
 
@@ -1201,15 +1202,8 @@ public class Exchange<IExchange> implements AutoCloseable {
         return this.getAttribute(key, clazz) == null ? defaultValue : getAttribute(key, clazz);
     }
 
-    // ===== SEND RESPONSE =====
-    public void sendResponse() throws IOException {
-        if (responseSent) {
-            logger.log(Exchange.class, "Response already sent, returning", SimpleLogger.Level.WARN);
-            return;
-        }
-        checkReal("send_response");
-        iExchangeHandler.sendResponse(iExchange, responseStatusCode, responseHeadersMap, responseBodyContent);
-        responseSent = true;
+    public static void showFullResponseInDebug(boolean show) {
+        showFullResponseInDebug = show;
     }
 
 
@@ -1624,6 +1618,20 @@ public class Exchange<IExchange> implements AutoCloseable {
     private void checkReal(String operation) {
         if (!wrapper)
             throw new UnsupportedOperationException("This operation is not supported as this is a mock Exchange: " + operation);
+    }
+
+    // ===== SEND RESPONSE =====
+    public void sendResponse() throws IOException {
+        if (responseSent) {
+            logger.log(Exchange.class, "Response already sent, returning", SimpleLogger.Level.WARN);
+            return;
+        }
+        checkReal("send_response");
+        if (showFullResponseInDebug) {
+            logger.log(Exchange.class, "Sending response:\n\t> Status code: " + responseStatusCode + "\n\t> Headers: " + responseHeadersMap.toString() + "\n\t> Body: " + responseBodyContent, SimpleLogger.Level.DEBUG);
+        }
+        iExchangeHandler.sendResponse(iExchange, responseStatusCode, responseHeadersMap, responseBodyContent);
+        responseSent = true;
     }
 
     // ===== CLEANUP =====

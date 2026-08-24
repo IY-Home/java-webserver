@@ -64,6 +64,10 @@ public class WebServer<S, I, H> {
         return builder().port(port).build();
     }
 
+    public static WebServer<?, ?, ?> create(int port, SimpleLogger logger) {
+        return builder().port(port).logger(logger).build();
+    }
+
     public WebServer<S, I, H> endpoint(String endpoint, String[] method, ExchangeHandler<I> action) {
         checkContextAdditionAfterStart();
         if (endpoint.isEmpty() || endpoint.equals("/")) {
