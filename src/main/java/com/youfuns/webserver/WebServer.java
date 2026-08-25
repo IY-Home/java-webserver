@@ -56,7 +56,7 @@ public class WebServer<S, I, H> {
         this.exchangeInterface = serverInterface.getExchangeHandlerAdapters();
 
         dynamicHandlers = new HashMap<>();
-        homeHandler = new InternalHomeHandler<>();
+        homeHandler = new InternalHomeHandler<>(logger);
         serverInterface.createContext(server, "/", getInternalHandler(homeHandler));
     }
 
@@ -197,7 +197,7 @@ public class WebServer<S, I, H> {
         }
 
         if (normalizedPath.equals("/")) {
-            homeHandler.setRoot("DEFAULT", handler);
+            homeHandler.setDynamicRoot((p, e) -> handler.handle(e));
         }
 
         logger.log(WebServer.class, "Serving static files from " + directory + " at " + normalizedPath, SimpleLogger.Level.INFO);
