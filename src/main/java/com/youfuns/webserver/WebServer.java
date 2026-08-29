@@ -17,8 +17,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class WebServer<S, I, H> {
     protected final WebServerInterface<S, I, H> serverInterface;
@@ -373,7 +371,9 @@ public class WebServer<S, I, H> {
 
     private H getInternalHandler(ExchangeHandler<I> handler) {
         return serverInterface.createInternalHandler((I iExchange) -> {
-                    exchangeInterface.handleExchange(exchangeInterface.createExchange(iExchange), headsAndTails, handler, exceptionHandler);
+            try (Exchange<I> exchange = exchangeInterface.createExchange(iExchange)) {
+                exchangeInterface.handleExchange(exchange, headsAndTails, handler, exceptionHandler);
+            }
                 }
         );
     }

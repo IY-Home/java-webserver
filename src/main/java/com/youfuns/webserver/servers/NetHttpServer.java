@@ -255,6 +255,7 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
         @Override
         public void closeExchange(HttpExchange exchange) {
             exchange.close();
+            logger.log(this.getClass(), "Exchange closed.", SimpleLogger.Level.DEBUG);
         }
 
         // ============================================================
