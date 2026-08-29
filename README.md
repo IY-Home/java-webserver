@@ -929,6 +929,7 @@ See `com.youfuns.webserver.demo` for full demonstrations:
 - ***(Not available currently)*** `HttpsTest` for HTTPS
 - `UserProfileServer` for a full user registration and admin system with JWT
 - `Proxy` for an advanced proxy program
+- ***(New)*** `TestKotlin` for a Kotlin use of the framework
 
 
 ## Using other web servers
