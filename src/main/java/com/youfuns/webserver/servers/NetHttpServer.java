@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 
@@ -42,7 +43,11 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
     @Override
     public HttpServer createServer(InetSocketAddress address, int backlog) {
         try {
-            return HttpServer.create(address, backlog);
+            HttpServer server = HttpServer.create(address, backlog);
+            // Virtual threads for better scalability
+            ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+            server.setExecutor(executor);
+            return server;
         } catch (IOException e) {
             logger.log(this.getClass(), "HttpServer creation failed: " + e.getMessage(), SimpleLogger.Level.ERROR);
             throw new RuntimeException("Failed to create HttpServer", e);
@@ -93,11 +98,6 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
                 }
             }
         };
-    }
-
-    @Override
-    public void setExecutor(HttpServer server, ExecutorService executor) {
-        server.setExecutor(executor);
     }
 
     @Override

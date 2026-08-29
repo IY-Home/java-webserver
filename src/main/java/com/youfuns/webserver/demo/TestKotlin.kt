@@ -1,0 +1,72 @@
+package com.youfuns.webserver.demo
+
+import com.youfuns.logger.LoggerManager
+import com.youfuns.webserver.JwtService
+import com.youfuns.webserver.WebServer
+
+fun main() {
+    val myServer = WebServer.create(8080)
+
+    myServer
+        .on("/api/users", "GET") {
+            it.sendJsonResponse(mapOf("users" to "list"))
+        }
+        .on("/api/users/$") { params, exchange ->
+            val id = params[0]
+            exchange.sendResponse("User: $id")
+        }
+        .on("/api/user/update", "POST") {
+            when (it.getAndSaveAt("file", arrayOf("png", "jpg", "jpeg"), "./uploads/").toInt()) {
+                -1 -> it.sendBadRequestResponse("Expected multipart/form-data")
+                -2 -> it.sendBadRequestResponse("No file uploaded")
+                -3 -> it.sendBadRequestResponse("Only PNG and JPEG allowed")
+                0 -> it.sendResponse("Uploaded successfully")
+            }
+        }
+        .on("/api/setConfig", "POST") {
+            val result = it.getAndSaveAt("config", arrayOf("json")) { file ->
+                val savedPath = it.saveFileSafe(file, "./config", false)
+                myServer.serveFile("/config", savedPath)
+            }
+
+            when (result.toInt()) {
+                -1 -> it.sendBadRequestResponse("Expected multipart/form-data")
+                -2 -> it.sendBadRequestResponse("No config uploaded")
+                -3 -> it.sendBadRequestResponse("Only JSON files allowed")
+                0 -> it.sendResponse("Uploaded successfully!")
+            }
+        }
+        .serveStatic("/", "./public", false, "index.html")
+        .onNotFound {
+            it.sendResponse(404, "Not Found: ${it.requestPath}")
+        }
+        .head {
+            println("Request: ${it.requestPath}")
+            it.setAttribute("startTime", System.nanoTime())
+            true
+        }
+        .head {
+            if (it.requestPath.startsWith("/api")) {
+                val subject = JwtService.extractSubject(it.bearerToken)
+                subject != null // demo
+            } else {
+                true
+            }
+        }
+        .tail {
+            val startTime = it.getAttribute("startTime", Long::class.java)
+            if (startTime != null) {
+                val duration = (System.nanoTime() - startTime) / 1_000_000 // Convert to milliseconds
+                println("Request to ${it.requestPath} took ${duration}ms")
+            }
+        }
+        .onException { exchange, exception ->
+            LoggerManager.quickLog("Caught ${exception::class.simpleName}: ${exception.message}")
+            when (exception) {
+                is IllegalArgumentException -> exchange.sendBadRequestResponse("Bad request: ${exception.message}")
+                else -> exchange.sendErrorResponse("An error occurred.")
+            }
+        }
+        .limitUploadSize(50 * 1024 * 1024) // 50 MB
+        .start()
+}

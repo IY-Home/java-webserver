@@ -117,7 +117,7 @@ ConsoleLogger fileLogger = new ConsoleLogger(new java.io.PrintStream("./logs/app
 
 // Set config
 logger
-        .setShowTimestamp(true)
+    .setShowTimestamp(true)
     .setShowClass(true)
     .setShowLevel(true)
     .setPrefix("> ")
@@ -126,7 +126,7 @@ logger
 
 // Convenience logging methods
 logger.debug(this.getClass(), "Debugging");
-        logger.info(this.getClass(), "Info");
+logger.info(this.getClass(), "Info");
 // same for warn and error
 ```
 
@@ -146,7 +146,7 @@ com.youfuns.logger.LoggerManager.quickLog(Object caller_to_get_class, String mes
 
 The `Exchange<InternalExchange>` class is a wrapper around
 `HttpExchange` (or any internal exchange class) that provides various utility methods.
-You typically receive it in the `FunctionalInterfaces` for your endpoints, hooks/tails, and exception handlers.
+You typically receive it in the `FunctionalInterfaces` for your endpoints, heads/tails, and exception handlers.
 
 To create an `Exchange` manually, and leave the generic parameter for internal Exchange classes as blank, use this constructor:
 
@@ -825,6 +825,8 @@ String subject = JwtService.extractSubject(String token); // null if invalid
 ## Complete Example
 
 ```java
+import com.youfuns.webserver.WebServer;
+
 public class Main {
     public static void main(String[] args) throws Exception {
         var myServer = WebServer.create(8080);
@@ -837,26 +839,13 @@ public class Main {
                     exchange.sendResponse("User: " + id);
                 })
                 .on("/api/user/update", "POST", exchange -> {
-                    if (!exchange.isMultipartRequest()) {
-                        exchange.sendBadRequestResponse("Expected multipart/form-data");
-                        return;
-                    }
+                    int result = exchange.getAndSaveAt("file", new String[]{"png", "jpg", "jpeg"}, "./uploads/");
 
-                    String username = exchange.getFormField("username");
-
-                    if (!exchange.hasFile("file")) {
-                        exchange.sendBadRequestResponse("No file uploaded");
-                        return;
-                    }
-
-                    UploadedFile file = exchange.getFile("file");
-
-                    // Check file type
-                    if (exchange.isPNG(file) || exchange.isJPEG(file)) {
-                        exchange.saveFileIn(file, "./uploads");
-                        exchange.sendResponse("Uploaded: " + file.getFilename());
-                    } else {
-                        exchange.sendBadRequestResponse("Only PNG and JPEG allowed");
+                    switch (result) {
+                        case -1 -> exchange.sendBadRequestResponse("Expected multipart/form-data");
+                        case -2 -> exchange.sendBadRequestResponse("No file uploaded");
+                        case -3 -> exchange.sendBadRequestResponse("Only PNG and JPEG allowed");
+                        case 0 -> exchange.sendResponse("Uploaded successfully");
                     }
                 })
                 .on("/api/setConfig", "POST", exchange -> {
@@ -878,6 +867,7 @@ public class Main {
                 })
                 .head(exchange -> {
                     System.out.println("Request: " + exchange.getRequestPath());
+                    exchange.setAttribute("startTime", System.nanoTime());
                     return true;
                 })
                 .head(exchange -> {
@@ -888,7 +878,11 @@ public class Main {
                     return true;
                 })
                 .tail(exchange -> {
-                    System.out.println("Finished handling response");
+                    Long startTime = exchange.getAttribute("startTime", Long.class);
+                    if (startTime != null) {
+                        long duration = (System.nanoTime() - startTime) / 1_000_000; // Convert to milliseconds
+                        System.out.println("Request to " + exchange.getRequestPath() + " took " + duration + "ms");
+                    }
                 })
                 .onException((exchange, exception) -> {
                     LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());

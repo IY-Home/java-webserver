@@ -4,8 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="Fixed issues for /$.">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="689a764c-fb06-4daa-9515-1c3766ebf58a" name="Changes" comment="Added Kotlin code example, updated README and pom version (2.1.1), and removed too specific methods from WebServerInterface">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/LoggerTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/demo/TestKotlin.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/WebServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/NetHttpServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/NetHttpServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/WebServerInterface.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/youfuns/webserver/servers/WebServerInterface.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,17 +21,17 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="54" />
+    <option name="cachedIndexableFilesCount" value="50" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Record" />
-        <option value="HTML File" />
-        <option value="Interface" />
-        <option value="Enum" />
+        <option value="module-info" />
+        <option value="package-info" />
+        <option value="Kotlin Class" />
+        <option value="Kotlin File" />
+        <option value="Python Script" />
         <option value="Class" />
-        <option value="AnnotationType" />
       </list>
     </option>
   </component>
@@ -42,139 +50,42 @@
     &quot;accountId&quot;: &quot;e659c8e1-b8ee-4052-98cc-56cbdcb39714&quot;
   }
 }</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
   </component>
-  <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
-  </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 0
+  &quot;associatedIndex&quot;: 5,
+  &quot;fromUser&quot;: false
 }</component>
-  <component name="ProjectId" id="3HJKk8YFQGpEkcizbgKFZ794zYH" />
+  <component name="ProjectId" id="3IR8qlVmSQo9xkp6vuLPqQ4bz9T" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Application.Basic.executor": "Run",
-    "Application.FileUploadTest.executor": "Run",
-    "Application.FullDisk.executor": "Run",
-    "Application.HotLoadingTest.executor": "Run",
-    "Application.HttpsTest.executor": "Run",
-    "Application.LMStudio.executor": "Run",
-    "Application.Main.executor": "Run",
-    "Application.PasswordStrengthValidator.executor": "Run",
-    "Application.Proxy.executor": "Run",
-    "Application.TestAnno.executor": "Run",
-    "Application.UserProfileServer.executor": "Run",
-    "Application.WebSocketDemo.executor": "Run",
-    "Application.WebSocketServer.executor": "Run",
-    "DefaultHtmlFileTemplate": "HTML File",
-    "HTTP Request.rest-api | #1.executor": "Run",
-    "Maven.WebServer [clean,install,-U].executor": "Run",
-    "Maven.WebServer [clean].executor": "Run",
-    "Maven.WebServer [compile].executor": "Run",
-    "Maven.WebServer [install].executor": "Run",
-    "Maven.WebServer [package].executor": "Run",
-    "Maven.WebServer [test].executor": "Run",
-    "Maven.WebServer [validate].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Application.LoggerTest.executor": "Run",
+    "Application.Test.executor": "Run",
+    "Kotlin.BasicServerKt.executor": "Run",
+    "Kotlin.TestKotlinKt.executor": "Run",
+    "Maven.WebServer [exec:java...].executor": "Run",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/isaac/IdeaProjects/java-webserver/src/main/java/com/youfuns/webserver",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
+    "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15234375",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "project.propCompiler",
-    "vcs.patch.to.clipboard": "true"
+    "settings.editor.selected.configurable": "terminal"
   }
 }]]></component>
-  <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/src/main/java/com/youfuns/webserver" />
-      <recent name="$PROJECT_DIR$/uploads" />
-      <recent name="$PROJECT_DIR$/templates" />
-      <recent name="$PROJECT_DIR$/default.png" />
-    </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/userServiceDemo" />
-      <recent name="$PROJECT_DIR$/fileUploadDemo" />
-      <recent name="$PROJECT_DIR$/src/main/resources" />
-      <recent name="$PROJECT_DIR$/demo" />
-      <recent name="$PROJECT_DIR$/uploads" />
-    </key>
-    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
-      <recent name="com.youfuns.logger" />
-    </key>
-    <key name="MoveInnerDialog.RECENTS_KEY">
-      <recent name="com.youfuns.webserver" />
-    </key>
-    <key name="CopyClassDialog.RECENTS_KEY">
-      <recent name="com.youfuns.webserver.annotations" />
-    </key>
-  </component>
-  <component name="RunAnythingCache">
-    <option name="myCommands">
-      <command value="mvn clean install -U" />
-    </option>
-  </component>
-  <component name="RunManager">
-    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="Tox" factoryName="Tox">
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="RUN_TOOL" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration default="true" type="JetRunConfigurationType">
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
-      <option name="filePath" />
-      <method v="2" />
-    </configuration>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -184,307 +95,17 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="11579a1e-8c5b-475d-be79-bf4c7b76edf4" name="Changes" comment="" />
-      <created>1785580872182</created>
+      <changelist id="689a764c-fb06-4daa-9515-1c3766ebf58a" name="Changes" comment="" />
+      <created>1787716228008</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1785580872182</updated>
+      <updated>1787716228008</updated>
     </task>
-    <task id="LOCAL-00001" summary="Updated framework">
-      <option name="closed" value="true" />
-      <created>1785580998238</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1785580998238</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Updated .gitignore, README.md, and WebServer.java, to add manual InetSocketAddress passing.">
-      <option name="closed" value="true" />
-      <created>1785588970891</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1785588970891</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Refactor and modernize API for configuration uploads&#10;&#10;This commit introduces several significant updates to the project structure and functionality:&#10;&#10;- Bumped the project version from 1.0-SNAPSHOT to 1.1.0 and updated the group ID.&#10;- Refactored file serving logic in `Exchange.java` to properly throw `IOException` instead of internal logging/handling, ensuring proper exception propagation.&#10;- Replaced the old `/setLogo` endpoint with a robust `/api/setConfig` endpoint to handle multipart file uploads for configuration.&#10;- Added validation to ensure uploaded files are only PNG or JPEG formats, and implemented safe saving for configurations.&#10;- Updated logging behavior in various places for clearer debugging.">
-      <option name="closed" value="true" />
-      <created>1785915183525</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1785915183525</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Updated typo">
-      <option name="closed" value="true" />
-      <created>1785916588267</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1785916588267</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Fixed issues with dynamic endpoint with trailing slash not recognize URL without trailing slash">
-      <option name="closed" value="true" />
-      <created>1785920239297</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1785920239297</updated>
-    </task>
-    <task id="LOCAL-00006" summary="Adjusted demo">
-      <option name="closed" value="true" />
-      <created>1785920325239</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1785920325239</updated>
-    </task>
-    <task id="LOCAL-00007" summary="Removed unnecessary logging">
-      <option name="closed" value="true" />
-      <created>1785920662253</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1785920662253</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Added a lot of helper functions">
-      <option name="closed" value="true" />
-      <created>1786097104040</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1786097104040</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Fixed package issues">
-      <option name="closed" value="true" />
-      <created>1786278728320</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1786278728320</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Fixed package issues">
-      <option name="closed" value="true" />
-      <created>1786279204697</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1786279204697</updated>
-    </task>
-    <task id="LOCAL-00011" summary="Added HTTPS support">
-      <option name="closed" value="true" />
-      <created>1786292717747</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1786292717747</updated>
-    </task>
-    <task id="LOCAL-00012" summary="Fixed typo">
-      <option name="closed" value="true" />
-      <created>1786292914405</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1786292914405</updated>
-    </task>
-    <task id="LOCAL-00013" summary="Added dynamic endpoint code upload">
-      <option name="closed" value="true" />
-      <created>1786333578858</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1786333578858</updated>
-    </task>
-    <task id="LOCAL-00014" summary="Added warnings to README for hot-loading">
-      <option name="closed" value="true" />
-      <created>1786334200067</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1786334200067</updated>
-    </task>
-    <task id="LOCAL-00015" summary="Updated gitignore">
-      <option name="closed" value="true" />
-      <created>1786338911865</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1786338911865</updated>
-    </task>
-    <task id="LOCAL-00016" summary="Fixed formatting issues and added initialization checks to WebServerSecure">
-      <option name="closed" value="true" />
-      <created>1786371350170</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1786371350170</updated>
-    </task>
-    <task id="LOCAL-00017" summary="Fixed formatting issues and added initialization checks to WebServerSecure">
-      <option name="closed" value="true" />
-      <created>1786371561697</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1786371561697</updated>
-    </task>
-    <task id="LOCAL-00018" summary="Added more security warnings">
-      <option name="closed" value="true" />
-      <created>1786380058747</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1786380058747</updated>
-    </task>
-    <task id="LOCAL-00019" summary="Added more security warnings, removed unneeded folders">
-      <option name="closed" value="true" />
-      <created>1786430474717</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1786430474717</updated>
-    </task>
-    <task id="LOCAL-00020" summary="Added even more warnings (because why not) and path traversal preventions">
-      <option name="closed" value="true" />
-      <created>1786459381168</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1786459381168</updated>
-    </task>
-    <task id="LOCAL-00021" summary="Renamed hooks to heads and made tails not return a boolean">
-      <option name="closed" value="true" />
-      <created>1786506363107</created>
-      <option name="number" value="00021" />
-      <option name="presentableId" value="LOCAL-00021" />
-      <option name="project" value="LOCAL" />
-      <updated>1786506363107</updated>
-    </task>
-    <task id="LOCAL-00022" summary="Added stuff in README">
-      <option name="closed" value="true" />
-      <created>1786519023820</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1786519023820</updated>
-    </task>
-    <task id="LOCAL-00023" summary="Fixed formatting issues">
-      <option name="closed" value="true" />
-      <created>1786519137472</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1786519137472</updated>
-    </task>
-    <task id="LOCAL-00024" summary="Fixed formatting issues">
-      <option name="closed" value="true" />
-      <created>1786519197791</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1786519197791</updated>
-    </task>
-    <task id="LOCAL-00025" summary="Added logger config">
-      <option name="closed" value="true" />
-      <created>1786520018148</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1786520018148</updated>
-    </task>
-    <task id="LOCAL-00026" summary="Made major file changes">
-      <option name="closed" value="true" />
-      <created>1786521553899</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1786521553899</updated>
-    </task>
-    <task id="LOCAL-00027" summary="Added demo">
-      <option name="closed" value="true" />
-      <created>1786528225317</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1786528225317</updated>
-    </task>
-    <task id="LOCAL-00028" summary="Major: added generic support for all web servers">
-      <option name="closed" value="true" />
-      <created>1786775688155</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1786775688155</updated>
-    </task>
-    <task id="LOCAL-00029" summary="Made it actually nullable">
-      <option name="closed" value="true" />
-      <created>1786806503553</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1786806503553</updated>
-    </task>
-    <task id="LOCAL-00030" summary="Made builder cloneable">
-      <option name="closed" value="true" />
-      <created>1786881508141</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1786881508141</updated>
-    </task>
-    <task id="LOCAL-00031" summary="Fixed README formatting">
-      <option name="closed" value="true" />
-      <created>1786881876262</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1786881876262</updated>
-    </task>
-    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
-  <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="3" />
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Added a lot of helper functions" />
-    <MESSAGE value="Fixed formatting issues in README.md" />
-    <MESSAGE value="Updated README" />
-    <MESSAGE value="Fixed package issues" />
-    <MESSAGE value="Added HTTPS support" />
-    <MESSAGE value="Fixed typo" />
-    <MESSAGE value="Added dynamic endpoint code upload" />
-    <MESSAGE value="Added warnings to README for hot-loading" />
-    <MESSAGE value="Updated gitignore" />
-    <MESSAGE value="Fixed formatting issues and added initialization checks to WebServerSecure" />
-    <MESSAGE value="Added more security warnings" />
-    <MESSAGE value="Added more security warnings, removed unneeded folders" />
-    <MESSAGE value="Added even more warnings (because why not) and path traversal preventions" />
-    <MESSAGE value="Renamed hooks to heads and made tails not return a boolean" />
-    <MESSAGE value="Added stuff in README" />
-    <MESSAGE value="Fixed formatting issues" />
-    <MESSAGE value="Added logger config" />
-    <MESSAGE value="Made major file changes" />
-    <MESSAGE value="Added demo" />
-    <MESSAGE value="Removed pom.xml section from README." />
-    <MESSAGE value="Major: added generic support for all web servers" />
-    <MESSAGE value="Made it actually nullable" />
-    <MESSAGE value="Made builder cloneable" />
-    <MESSAGE value="Fixed README formatting" />
-    <MESSAGE value="Fixed issues for /$." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed issues for /$." />
-    <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
-    <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
-    <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
+    <MESSAGE value="Added Kotlin code example, updated README and pom version (2.1.1), and removed too specific methods from WebServerInterface" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added Kotlin code example, updated README and pom version (2.1.1), and removed too specific methods from WebServerInterface" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

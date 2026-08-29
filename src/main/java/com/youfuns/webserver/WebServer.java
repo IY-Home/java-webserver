@@ -283,11 +283,6 @@ public class WebServer<S, I, H> {
 
     public WebServer<S, I, H> start() {
         logger.log(WebServer.class, "Starting Web Server...", SimpleLogger.Level.INFO);
-
-        // Virtual threads for better scalability
-        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-        serverInterface.setExecutor(server, executor);
-
         serverInterface.start(server);
         started = true;
         logger.log(WebServer.class, "Started Web Server", SimpleLogger.Level.INFO);

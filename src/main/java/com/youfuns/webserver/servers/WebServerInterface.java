@@ -19,8 +19,6 @@ public interface WebServerInterface<Server, InternalExchange, InternalHandler> {
 
     InternalHandler createInternalHandler(Consumer<InternalExchange> handler);
 
-    void setExecutor(Server server, ExecutorService executor);
-
     void start(Server server);
 
     void stop(Server server, int delay);
