@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class UserProfileServer {
 
-    // In-memory user database
+    // In-memory user database — in a true application, you would save to a database
     private static final List<User> users = new CopyOnWriteArrayList<>();
     private static final String UPLOAD_DIR = "./userServiceDemo/user_avatars";
 
@@ -30,7 +30,7 @@ public class UserProfileServer {
 
     public static void main(String[] args) {
         // Initialize JWT
-        JwtService.setSecretKey("your-secret-key-change-this-in-production");
+        JwtService.setSecretKey("your-secret-key-change-this-in-production"); // In a true application, get this from environment variables
         JwtService.setExpiration(3600); // 1 hour
 
         // Add admin user to the list

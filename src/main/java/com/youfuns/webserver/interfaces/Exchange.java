@@ -853,6 +853,12 @@ public class Exchange<IExchange> implements AutoCloseable {
             this.setAttribute("_path_traversal_", true);
             return "";
         }
+        Path dir = Paths.get(saveLocation);
+        if (!dir.normalize().equals(dir)) {
+            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
+            this.setAttribute("_path_traversal_", true);
+            return "";
+        }
         logger.log(Exchange.class, "Saving file '" + file.filename + "' to: " + saveLocation, SimpleLogger.Level.INFO);
         Path savePath = Paths.get(saveLocation);
 
@@ -886,9 +892,15 @@ public class Exchange<IExchange> implements AutoCloseable {
             return "";
         }
 
+        Path dir = Paths.get(saveDir);
+        if (!dir.normalize().equals(dir)) {
+            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
+            this.setAttribute("_path_traversal_", true);
+            return "";
+        }
+
         logger.log(Exchange.class, "Saving file safely '" + file.filename + "' to directory: " + saveDir + ", preserveOriginalName: " + preserveOriginalName, SimpleLogger.Level.INFO);
 
-        Path dir = Paths.get(saveDir);
         if (!Files.exists(dir)) {
             Files.createDirectories(dir);
             logger.log(Exchange.class, "Created directory: " + saveDir, SimpleLogger.Level.DEBUG);

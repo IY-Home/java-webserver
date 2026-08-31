@@ -575,7 +575,8 @@ String path3 = exchange.saveFileSafe(file, "./uploads", true);
 If preserveOriginalName is false, it generates a random UUID for filename. If preserveOriginalName is true,
 it saves with original filename, and if duplicate, saves as `filename_X.extension` where X is the incremented file number.
 
-For all of these, if "../" or "..\\" is found in the save path, it will be BLOCKED, and an attribute "_path_traversal_" (Boolean true) will be added to the exchange.
+***Note:** The saveFile functions include prevention against common path traversal attacks (e.g. `../../../../etc/passwd`) using the Java `Paths`. 
+However, it does NOT prevent absolute paths (e.g. intentionally opening uploads to `C:\`). You are recommended only to save uploaded files in project directories, such as `./public/uploads`.*
 
 ### Check File Types
 

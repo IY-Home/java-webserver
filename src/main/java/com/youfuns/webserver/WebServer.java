@@ -76,12 +76,16 @@ public class WebServer<S, I, H> {
         if (endpoint.endsWith("/")) {
             endpoint = endpoint.substring(0, endpoint.length() - 1);
         }
-        boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
-        dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler<I>().setOnNotFound(homeHandler.getNotFound()));
-        InternalDynamicHandler<I> dynamicHandler = dynamicHandlers.get(endpoint);
-        for (String iMethod : method) dynamicHandler.addPath(endpoint, iMethod, action);
-        if (!alreadyExists)
-            createContextSafe(endpoint, dynamicHandler);
+        if (serverInterface.supportsMultipleContexts()) {
+            boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
+            dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler<I>().setOnNotFound(homeHandler.getNotFound()));
+            InternalDynamicHandler<I> dynamicHandler = dynamicHandlers.get(endpoint);
+            for (String iMethod : method) dynamicHandler.addPath(endpoint, iMethod, action);
+            if (!alreadyExists)
+                createContextSafe(endpoint, dynamicHandler);
+        } else {
+            for (String iMethod : method) homeHandler.getDynamicHandler().addPath(endpoint, iMethod, action);
+        }
         logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
         return this;
     }
@@ -97,7 +101,8 @@ public class WebServer<S, I, H> {
 
     public WebServer<S, I, H> removeEndpoint(String endpoint) {
         checkContextAdditionAfterStart();
-        serverInterface.removeContext(server, endpoint);
+        if (serverInterface.supportsMultipleContexts()) serverInterface.removeContext(server, endpoint);
+        else homeHandler.getDynamicHandler().removePath(endpoint);
         logger.log(WebServer.class, "Removed endpoint: " + endpoint, SimpleLogger.Level.INFO);
         return this;
     }
@@ -109,12 +114,16 @@ public class WebServer<S, I, H> {
         if (endpoint.endsWith("/") && !endpoint.equals("/")) {
             endpoint = endpoint.substring(0, endpoint.length() - 1);
         }
-        boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
-        dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler<I>().setOnNotFound(homeHandler.getNotFound()));
-        InternalDynamicHandler<I> dynamicHandler = dynamicHandlers.get(endpoint);
-        for (String iMethod : method) dynamicHandler.addPath(template, iMethod, action);
-        if (!alreadyExists)
-            createContextSafe(endpoint, dynamicHandler);
+        if (serverInterface.supportsMultipleContexts()) {
+            boolean alreadyExists = dynamicHandlers.containsKey(endpoint);
+            dynamicHandlers.putIfAbsent(endpoint, new InternalDynamicHandler<I>().setOnNotFound(homeHandler.getNotFound()));
+            InternalDynamicHandler<I> dynamicHandler = dynamicHandlers.get(endpoint);
+            for (String iMethod : method) dynamicHandler.addPath(template, iMethod, action);
+            if (!alreadyExists)
+                createContextSafe(endpoint, dynamicHandler);
+        } else {
+            for (String iMethod : method) homeHandler.getDynamicHandler().addPath(template, iMethod, action);
+        }
         logger.log(WebServer.class, "Created dynamic endpoint: " + template, SimpleLogger.Level.INFO);
         return this;
     }
@@ -366,7 +375,8 @@ public class WebServer<S, I, H> {
     }
 
     private void createContextSafe(String endpoint, ExchangeHandler<I> handler) {
-        serverInterface.createContext(server, endpoint, getInternalHandler(handler));
+        if (serverInterface.supportsMultipleContexts()) serverInterface.createContext(server, endpoint, getInternalHandler(handler));
+        else homeHandler.getDynamicHandler().addPath(endpoint, handler);
     }
 
     private H getInternalHandler(ExchangeHandler<I> handler) {
@@ -374,14 +384,17 @@ public class WebServer<S, I, H> {
             try (Exchange<I> exchange = exchangeInterface.createExchange(iExchange)) {
                 exchangeInterface.handleExchange(exchange, headsAndTails, handler, exceptionHandler);
             }
-                }
-        );
+        });
     }
 
     private void checkContextAdditionAfterStart() {
         if (started && !serverInterface.supportsContextMutationAfterStart()) {
             throw new UnsupportedOperationException("Context addition after server start is not supported by the web server " + serverInterface.getClass().getSimpleName());
         }
+    }
+
+    public S getInternalServer() {
+        return server;
     }
 
     public static Builder builder() {

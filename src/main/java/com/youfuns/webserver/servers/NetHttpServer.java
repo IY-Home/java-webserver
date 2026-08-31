@@ -73,6 +73,11 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
     }
 
     @Override
+    public boolean supportsMultipleContexts() {
+        return true;
+    }
+
+    @Override
     public boolean supportsContextMutationAfterStart() {
         return true;
     }
@@ -239,12 +244,6 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
 
             logger.log(this.getClass(), "Response sent.", SimpleLogger.Level.INFO);
 
-        }
-
-        @Override
-        public boolean isMultipart(HttpExchange exchange) {
-            String contentType = getHeaderCaseInsensitive(exchange, "Content-Type");
-            return contentType != null && contentType.startsWith("multipart/form-data");
         }
 
         @Override

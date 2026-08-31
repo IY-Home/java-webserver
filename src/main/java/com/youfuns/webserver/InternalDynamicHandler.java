@@ -5,7 +5,9 @@ import com.youfuns.webserver.interfaces.Exchange;
 import com.youfuns.webserver.interfaces.ExchangeHandler;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
@@ -35,6 +37,23 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
 
     public void addPath(String template, String method, ExchangeHandler<I> exchangeHandler) {
         paths.put(Map.entry(template, method), exchangeHandler);
+    }
+
+    public void removePath(String template) {
+        List<Map.Entry<String, String>> pathsToRemove = new ArrayList<>();
+        for (Map.Entry<String, String> entry : paths.keySet()) {
+            if (entry.getValue().equals(template)) pathsToRemove.add(entry);
+        }
+        for (Map.Entry<String, String> path : pathsToRemove) {
+            paths.remove(path);
+        }
+        pathsToRemove.clear();
+        for (Map.Entry<String, String> entry : dynamicPaths.keySet()) {
+            if (entry.getValue().equals(template)) pathsToRemove.add(entry);
+        }
+        for (Map.Entry<String, String> path : pathsToRemove) {
+            dynamicPaths.remove(path);
+        }
     }
 
     public InternalDynamicHandler<I> setOnNotFound(ExchangeHandler<I> exchangeHandler) {

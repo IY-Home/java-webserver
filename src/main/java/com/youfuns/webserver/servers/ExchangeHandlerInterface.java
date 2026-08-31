@@ -24,8 +24,6 @@ public interface ExchangeHandlerInterface<InternalExchange> {
 
     void sendResponse(InternalExchange internalExchange, int statusCode, Map<String, String> headers, String body) throws IOException;
 
-    boolean isMultipart(InternalExchange internalExchange);
-
     org.apache.commons.fileupload.RequestContext createFileUploadRequestContext(InternalExchange internalExchange);
 
     void closeExchange(InternalExchange internalExchange);

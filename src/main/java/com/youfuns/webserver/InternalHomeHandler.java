@@ -33,6 +33,10 @@ public class InternalHomeHandler<InternalExchange> implements ExchangeHandler<In
         this.dynamicHandler.addPath("/$", root);
     }
 
+    public InternalDynamicHandler<InternalExchange> getDynamicHandler() {
+        return dynamicHandler;
+    }
+
     public ExchangeHandler<InternalExchange> getNotFound() {
         return this.notFound;
     }
