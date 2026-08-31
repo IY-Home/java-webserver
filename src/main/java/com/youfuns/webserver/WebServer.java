@@ -41,7 +41,25 @@ public class WebServer<S, I, H> {
         this.logger = logger;
 
         this.serverInterface = serverInterface;
-        this.server = serverInterface.createServer(address, 0);
+        this.homeHandler = new InternalHomeHandler<>(logger);
+
+        if (serverInterface.supportsMultipleContexts()) {
+            S result = serverInterface.createServer(address, 0);
+            if (result == null) {
+                this.server = serverInterface.createServer(address, 0, getInternalHandler(homeHandler));
+            } else {
+                this.server = result;
+                serverInterface.createContext(server, "/", getInternalHandler(homeHandler));
+            }
+        } else {
+            S result = serverInterface.createServer(address, 0, getInternalHandler(homeHandler));
+            if (result == null) {
+                this.server = serverInterface.createServer(address, 0);
+                serverInterface.createContext(server, "/", getInternalHandler(homeHandler));
+            } else {
+                this.server = result;
+            }
+        }
 
         logger.log(WebServer.class, "Starting Web Server...", SimpleLogger.Level.INFO);
 
@@ -54,8 +72,6 @@ public class WebServer<S, I, H> {
         this.exchangeInterface = serverInterface.getExchangeHandlerAdapters();
 
         dynamicHandlers = new HashMap<>();
-        homeHandler = new InternalHomeHandler<>(logger);
-        serverInterface.createContext(server, "/", getInternalHandler(homeHandler));
     }
 
     public static WebServer<?, ?, ?> create(int port) {

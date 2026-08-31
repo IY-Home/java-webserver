@@ -68,6 +68,30 @@ var server = WebServer.builder() // get builder
 Logger (default `ConsoleLogger`) and server (default `WebServerType.SUN_NET_HTTPSERVER`) are optional, but port is mandatory.
 If not set, `build()` throws `IllegalStateException`.
 
+### Web Server Types
+
+The default web server is the built-in `com.sun.net.HttpServer`, but Undertow is also supported. 
+
+To use Undertow, import the Undertow dependency:
+```xml
+        <dependency>
+            <groupId>io.undertow</groupId>
+            <artifactId>undertow-core</artifactId>
+            <version>2.3.18.Final</version>
+        </dependency>
+```
+Then remove the `.txt` extension from `UndertowServer.java.txt` (in `./src/main/java/com/youfuns/servers/`), 
+uncomment 
+```java
+// UNDERTOW(UndertowServer::new);
+```
+in `WebServerType`, and in the builder, pass
+```java
+.server(WebServerType.UNDERTOW)
+```
+Everything else should work normally. 
+However, Undertow does not support context mutation after start, so you cannot add or remove endpoints after starting the server.
+
 ### Server operations
 
 ```java

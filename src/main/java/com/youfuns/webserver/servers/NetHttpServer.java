@@ -99,7 +99,8 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
                         os.write(errorBytes);
                     }
                 } catch (IOException ex) {
-                    // Ignore - can't do much if response fails
+                    // Can't do much if response fails
+                    ex.printStackTrace();
                 }
             }
         };

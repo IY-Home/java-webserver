@@ -1,0 +1,363 @@
+// Change file extension from .java.txt to .java and import Undertow to use
+
+package com.youfuns.webserver.servers;
+
+import com.youfuns.logger.ConsoleLogger;
+import com.youfuns.logger.SimpleLogger;
+import com.youfuns.webserver.interfaces.Exchange;
+import io.undertow.Undertow;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.BlockingHandler;
+import io.undertow.util.Headers;
+import io.undertow.util.HttpString;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+
+/**
+ * Undertow adapter for the WebServer framework.
+ * Since Undertow requires all routes at build time, this adapter uses
+ * the single-handler approach.
+ */
+public class UndertowServer implements WebServerInterface<Undertow, HttpServerExchange, HttpHandler> {
+
+    private SimpleLogger logger;
+    private final ExchangeHandlerInterface<HttpServerExchange> exchangeHandler;
+
+    public UndertowServer() {
+        this.logger = new ConsoleLogger();
+        this.exchangeHandler = new UndertowExchangeHandler();
+    }
+
+    @Override
+    public void setLogger(SimpleLogger logger) {
+        this.logger = logger;
+        this.exchangeHandler.setLogger(logger);
+    }
+
+    // ============================================================
+    // These methods are never called when supportsMultipleContexts() == false
+    // ============================================================
+
+    @Override
+    public Undertow createServer(InetSocketAddress address, int backlog) {
+        // Should never be called - framework will use the 3-arg version
+        throw new UnsupportedOperationException("Use createServer(address, backlog, handler) instead");
+    }
+
+    @Override
+    public void createContext(Undertow server, String endpoint, HttpHandler handler) {
+        // Should never be called - framework ignores this when supportsMultipleContexts() == false
+        throw new UnsupportedOperationException("Undertow does not support per-context routing");
+    }
+
+    @Override
+    public void removeContext(Undertow server, String endpoint) {
+        // Should never be called - framework ignores this when supportsMultipleContexts() == false
+        throw new UnsupportedOperationException("Undertow does not support runtime context removal");
+    }
+
+    // ============================================================
+    // The ONLY methods that matter when supportsMultipleContexts() == false
+    // ============================================================
+
+    @Override
+    public Undertow createServer(InetSocketAddress address, int backlog, HttpHandler handler) {
+        logger.log(this.getClass(), "Building Undertow server on " + address, SimpleLogger.Level.INFO);
+
+        return Undertow.builder()
+                .addHttpListener(address.getPort(), address.getHostString())
+                .setHandler(handler)
+                .setIoThreads(Runtime.getRuntime().availableProcessors() * 2)
+                .setWorkerThreads(Runtime.getRuntime().availableProcessors() * 8)
+                .build();
+    }
+
+    @Override
+    public void start(Undertow server) {
+        server.start();
+        logger.log(this.getClass(), "Undertow server started", SimpleLogger.Level.INFO);
+    }
+
+    @Override
+    public void stop(Undertow server, int delay) {
+        server.stop();
+        logger.log(this.getClass(), "Undertow server stopped", SimpleLogger.Level.INFO);
+    }
+
+    // ============================================================
+    // Tell the framework how we work
+    // ============================================================
+
+    @Override
+    public boolean supportsMultipleContexts() {
+        return false;  // Single handler for all routing
+    }
+
+    @Override
+    public boolean supportsContextMutationAfterStart() {
+        return false;  // Can't add/remove routes after start
+    }
+
+    // ============================================================
+    // Bridge to the framework's Exchange system
+    // ============================================================
+    @Override
+    public HttpHandler createInternalHandler(Consumer<HttpServerExchange> consumer) {
+        HttpHandler actualHandler = exchange -> {
+            try {
+                consumer.accept(exchange);
+            } catch (Exception e) {
+                logger.log(this.getClass(), "Error in handler: " + e.getMessage(),
+                        SimpleLogger.Level.ERROR, e);
+                try {
+                    exchange.setStatusCode(500);
+                    exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
+                    exchange.getResponseSender().send("{\"error\":\"Internal Server Error\"}");
+                } catch (Exception ex) {
+                    logger.log(this.getClass(), "Failed to send error response", SimpleLogger.Level.ERROR, ex);
+                }
+            }
+        };
+
+        return new BlockingHandler(actualHandler);
+    }
+
+    @Override
+    public ExchangeHandlerInterface<HttpServerExchange> getExchangeHandlerAdapters() {
+        return exchangeHandler;
+    }
+
+    // ============================================================
+    // Inner class: UndertowExchangeHandler
+    // ============================================================
+
+    private static class UndertowExchangeHandler implements ExchangeHandlerInterface<HttpServerExchange> {
+
+        private SimpleLogger logger;
+
+        public UndertowExchangeHandler() {
+            this.logger = new ConsoleLogger();
+        }
+
+        @Override
+        public void setLogger(SimpleLogger logger) {
+            this.logger = logger;
+        }
+
+        @Override
+        public Exchange<HttpServerExchange> createExchange(HttpServerExchange undertowExchange) {
+            // Extract request details from Undertow's exchange
+            String method = undertowExchange.getRequestMethod().toString();
+            String protocol = undertowExchange.getProtocol().toString();
+            InetSocketAddress remoteAddress = undertowExchange.getSourceAddress();
+            Map<String, List<String>> headers = new HashMap<>();
+
+            // Convert Undertow's headers to Map<String, List<String>>
+            for (HttpString headerName : undertowExchange.getRequestHeaders().getHeaderNames()) {
+                headers.put(headerName.toString(), undertowExchange.getRequestHeaders().get(headerName));
+            }
+
+            // Parse URI (Undertow doesn't have URI directly, but we can construct it)
+            String queryString = undertowExchange.getQueryString();
+            String path = undertowExchange.getRequestPath();
+            java.net.URI requestUri = java.net.URI.create(path + (queryString.isEmpty() ? "" : "?" + queryString));
+
+            return new Exchange<>(
+                    method,
+                    requestUri,
+                    protocol,
+                    remoteAddress,
+                    headers,
+                    logger,
+                    this.extractBody(undertowExchange),
+                    this,
+                    undertowExchange
+            );
+        }
+
+        @Override
+        public void serveFile(HttpServerExchange exchange, int statusCode, Map<String, String> headers, Path file) throws IOException {
+            if (!Files.exists(file) || Files.isDirectory(file)) {
+                throw new IllegalArgumentException("File does not exist or is a directory: " + file);
+            }
+
+            // Apply headers
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                exchange.getResponseHeaders().put(HttpString.tryFromString(entry.getKey()), entry.getValue());
+            }
+
+            // Set status
+            exchange.setStatusCode(statusCode);
+
+            // Send file
+            long fileSize = Files.size(file);
+            exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, fileSize);
+
+            try (OutputStream os = exchange.getOutputStream();
+                 InputStream is = Files.newInputStream(file)) {
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, bytesRead);
+                }
+                os.flush();
+            }
+        }
+
+        @Override
+        public void serveFile(HttpServerExchange exchange, int statusCode, Map<String, String> headers, byte[] fileBytes) throws IOException {
+            // Apply headers
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                exchange.getResponseHeaders().put(HttpString.tryFromString(entry.getKey()), entry.getValue());
+            }
+
+            // Set status
+            exchange.setStatusCode(statusCode);
+
+            // Send bytes
+            exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, fileBytes.length);
+            try (OutputStream os = exchange.getOutputStream()) {
+                os.write(fileBytes);
+                os.flush();
+            }
+        }
+
+        @Override
+        public String extractBody(HttpServerExchange exchange) {
+            // Check if multipart - don't read body for multipart requests
+            String contentType = getHeaderCaseInsensitive(exchange, "Content-Type");
+            boolean isMultipart = contentType != null && contentType.startsWith("multipart/form-data");
+
+            if (isMultipart) {
+                return "[multipart/form-data - stream preserved for parser]";
+            }
+
+            try (InputStream is = exchange.getInputStream()) {
+                byte[] bodyBytes = is.readAllBytes();
+                return new String(bodyBytes, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                logger.log(this.getClass(), "Failed to read request body: " + e.getMessage(), SimpleLogger.Level.WARN);
+                return "";
+            }
+        }
+
+        @Override
+        public void sendResponse(HttpServerExchange exchange, int statusCode, Map<String, String> headers, String body) throws IOException {
+            logger.log(this.getClass(), "Sending response...", SimpleLogger.Level.DEBUG);
+
+            // Apply headers
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                exchange.getResponseHeaders().put(HttpString.tryFromString(entry.getKey()), entry.getValue());
+            }
+
+            // Set status
+            exchange.setStatusCode(statusCode);
+
+            // Handle redirects (no body)
+            if (statusCode >= 300 && statusCode < 400) {
+                logger.log(this.getClass(), "Sending " + statusCode + " redirect", SimpleLogger.Level.DEBUG);
+                exchange.endExchange();
+                return;
+            }
+
+            // Normal response with body
+            logger.log(this.getClass(), "Sending body: " +
+                            (body.length() > 32 ? body.substring(0, 32) + "..." : body),
+                    SimpleLogger.Level.DEBUG);
+
+            byte[] responseBytes = body.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, responseBytes.length);
+            try (OutputStream os = exchange.getOutputStream()) {
+                os.write(responseBytes);
+                os.flush();
+            }
+
+            logger.log(this.getClass(), "Response sent", SimpleLogger.Level.INFO);
+        }
+
+        @Override
+        public org.apache.commons.fileupload.RequestContext createFileUploadRequestContext(HttpServerExchange exchange) {
+            return new UndertowRequestContext(exchange);
+        }
+
+        @Override
+        public void closeExchange(HttpServerExchange exchange) {
+            // Undertow exchanges don't need explicit closing
+            // They're automatically cleaned up after the response
+            logger.log(this.getClass(), "Exchange complete", SimpleLogger.Level.DEBUG);
+        }
+
+        // ============================================================
+        // Helpers
+        // ============================================================
+
+        private String getHeaderCaseInsensitive(HttpServerExchange exchange, String headerName) {
+            for (HttpString name : exchange.getRequestHeaders().getHeaderNames()) {
+                if (name.toString().equalsIgnoreCase(headerName)) {
+                    return exchange.getRequestHeaders().getFirst(name);
+                }
+            }
+            return null;
+        }
+
+        // ============================================================
+        // Apache Commons FileUpload Context Bridge for Undertow
+        // ============================================================
+
+        private static class UndertowRequestContext implements org.apache.commons.fileupload.RequestContext {
+            private final HttpServerExchange exchange;
+
+            public UndertowRequestContext(HttpServerExchange exchange) {
+                this.exchange = exchange;
+            }
+
+            @Override
+            public String getCharacterEncoding() {
+                String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
+                if (contentType != null) {
+                    for (String part : contentType.split(";")) {
+                        String trimmed = part.trim();
+                        if (trimmed.startsWith("charset=")) {
+                            return trimmed.substring("charset=".length()).replace("\"", "");
+                        }
+                    }
+                }
+                return StandardCharsets.UTF_8.name();
+            }
+
+            @Override
+            public String getContentType() {
+                return exchange.getRequestHeaders().getFirst("Content-Type");
+            }
+
+            @Override
+            public int getContentLength() {
+                String length = exchange.getRequestHeaders().getFirst("Content-Length");
+                if (length != null) {
+                    try {
+                        return Integer.parseInt(length);
+                    } catch (NumberFormatException e) {
+                        // Ignore
+                    }
+                }
+                return -1;
+            }
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return exchange.getInputStream();
+            }
+        }
+    }
+}

@@ -11,6 +11,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -819,25 +820,31 @@ public class Exchange<IExchange> implements AutoCloseable {
             logger.log(Exchange.class, "File is null, cannot save", SimpleLogger.Level.WARN);
             return "";
         }
-        if (saveDir.contains("..") || saveDir.toLowerCase().contains("%2e%2e")) {
-            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
-            this.setAttribute("_path_traversal_", true);
-            return "";
-        }
+
         logger.log(Exchange.class, "Saving file '" + file.filename + "' to directory: " + saveDir, SimpleLogger.Level.INFO);
-        Path dir = Paths.get(saveDir);
-        if (!dir.normalize().equals(dir)) {
-            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
+
+        Path baseDir = Paths.get(saveDir).normalize().toAbsolutePath();
+
+        String safeFilename = Paths.get(file.filename).getFileName().toString();
+        if (safeFilename.isEmpty()) {
+            logger.log(Exchange.class, "Empty filename", SimpleLogger.Level.WARN);
+            return "";
+        }
+
+        Path targetPath = baseDir.resolve(safeFilename).normalize().toAbsolutePath();
+
+        if (!targetPath.startsWith(baseDir)) {
+            logger.log(Exchange.class, "Path traversal detected: " + file.filename, SimpleLogger.Level.WARN);
             this.setAttribute("_path_traversal_", true);
             return "";
         }
-        if (!Files.exists(dir)) {
-            Files.createDirectories(dir);
+
+        if (!Files.exists(baseDir)) {
+            Files.createDirectories(baseDir);
             logger.log(Exchange.class, "Created directory: " + saveDir, SimpleLogger.Level.DEBUG);
         }
-        Path savePath = dir.resolve(file.filename);
-        logger.log(Exchange.class, "Saving to path: " + savePath, SimpleLogger.Level.DEBUG);
-        return saveFileAt(file, savePath.toString());
+
+        return saveFileAt(file, targetPath.toString());
     }
 
     /**
@@ -848,17 +855,7 @@ public class Exchange<IExchange> implements AutoCloseable {
             logger.log(Exchange.class, "File is null, cannot save", SimpleLogger.Level.WARN);
             return "";
         }
-        if (saveLocation.contains("../") || saveLocation.contains("..\\")) {
-            logger.log(Exchange.class, "Save location contains potential path traversal attempt", SimpleLogger.Level.WARN);
-            this.setAttribute("_path_traversal_", true);
-            return "";
-        }
-        Path dir = Paths.get(saveLocation);
-        if (!dir.normalize().equals(dir)) {
-            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
-            this.setAttribute("_path_traversal_", true);
-            return "";
-        }
+
         logger.log(Exchange.class, "Saving file '" + file.filename + "' to: " + saveLocation, SimpleLogger.Level.INFO);
         Path savePath = Paths.get(saveLocation);
 
@@ -873,67 +870,68 @@ public class Exchange<IExchange> implements AutoCloseable {
         return saveLocation;
     }
 
-    /**
-     * Saves an uploaded file with a generated unique name.
-     * @param file The uploaded file
-     * @param saveDir The directory to save to
-     * @param preserveOriginalName If true, keep the original filename; if false, generate a UUID name
-     * @return The path where the file was saved
-     */
     public String saveFileSafe(UploadedFile file, String saveDir, boolean preserveOriginalName) throws IOException {
         if (file == null) {
             logger.log(Exchange.class, "File is null, cannot save", SimpleLogger.Level.WARN);
             return null;
         }
 
-        if (saveDir.contains("../") || saveDir.contains("..\\")) {
-            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
+        Path baseDir = Paths.get(saveDir).normalize().toAbsolutePath();
+
+        String filename = file.getFilename();
+        if (filename == null || filename.isEmpty()) {
+            logger.log(Exchange.class, "File has no filename", SimpleLogger.Level.WARN);
+            return "";
+        }
+
+        String safeFilename = Paths.get(filename).getFileName().toString();
+        if (safeFilename.isEmpty()) {
+            logger.log(Exchange.class, "Filename is empty after sanitization", SimpleLogger.Level.WARN);
+            return "";
+        }
+
+        if (!preserveOriginalName) {
+            String extension = "";
+            int dotIndex = safeFilename.lastIndexOf('.');
+            if (dotIndex > 0) {
+                extension = safeFilename.substring(dotIndex);
+            }
+            safeFilename = UUID.randomUUID().toString() + extension;
+        }
+
+        Path targetPath = baseDir.resolve(safeFilename).normalize();
+
+        if (!targetPath.startsWith(baseDir)) {
+            logger.log(Exchange.class, "Path traversal attempt detected: " + safeFilename, SimpleLogger.Level.WARN);
             this.setAttribute("_path_traversal_", true);
             return "";
         }
 
-        Path dir = Paths.get(saveDir);
-        if (!dir.normalize().equals(dir)) {
-            logger.log(Exchange.class, "Save directory contains potential path traversal attempt", SimpleLogger.Level.WARN);
-            this.setAttribute("_path_traversal_", true);
-            return "";
-        }
+        Files.createDirectories(baseDir);
 
-        logger.log(Exchange.class, "Saving file safely '" + file.filename + "' to directory: " + saveDir + ", preserveOriginalName: " + preserveOriginalName, SimpleLogger.Level.INFO);
-
-        if (!Files.exists(dir)) {
-            Files.createDirectories(dir);
-            logger.log(Exchange.class, "Created directory: " + saveDir, SimpleLogger.Level.DEBUG);
-        }
-
-        String filename;
         if (preserveOriginalName) {
-            filename = file.filename;
-            logger.log(Exchange.class, "Preserving original filename: " + filename, SimpleLogger.Level.DEBUG);
-        } else {
-            String ext = file.getExtension();
-            filename = UUID.randomUUID().toString() + ext;
-            logger.log(Exchange.class, "Generated UUID filename: " + filename, SimpleLogger.Level.DEBUG);
-        }
-
-        Path savePath = dir.resolve(filename);
-
-        if (preserveOriginalName && Files.exists(savePath)) {
-            String baseName = file.filename.substring(0, file.filename.lastIndexOf('.'));
-            String ext = file.filename.substring(file.filename.lastIndexOf('.'));
             int counter = 1;
-            while (Files.exists(savePath)) {
-                filename = baseName + "_" + counter + ext;
-                savePath = dir.resolve(filename);
+            while (Files.exists(targetPath)) {
+                String nameWithoutExt = safeFilename;
+                String extension = "";
+                int dotIndex = safeFilename.lastIndexOf('.');
+                if (dotIndex > 0) {
+                    nameWithoutExt = safeFilename.substring(0, dotIndex);
+                    extension = safeFilename.substring(dotIndex);
+                }
+                String newFilename = nameWithoutExt + "_" + counter + extension;
+                targetPath = baseDir.resolve(newFilename);
                 counter++;
-                logger.log(Exchange.class, "Duplicate found, trying: " + filename, SimpleLogger.Level.DEBUG);
             }
         }
 
-        Files.write(savePath, file.data);
-        String result = savePath.toString();
-        logger.log(Exchange.class, "File saved safely at: " + result, SimpleLogger.Level.INFO);
-        return result;
+        try (FileOutputStream fos = new FileOutputStream(targetPath.toFile())) {
+            fos.write(file.getData());
+            fos.flush();
+        }
+
+        logger.log(Exchange.class, "File saved to: " + targetPath, SimpleLogger.Level.INFO);
+        return targetPath.toString();
     }
 
     public short getAndSaveAt(String filename, String[] extensions, FileAction<UploadedFile> fileAction) throws IOException {
@@ -971,6 +969,9 @@ public class Exchange<IExchange> implements AutoCloseable {
 
         logger.log(Exchange.class, "File validation passed, executing file action", SimpleLogger.Level.DEBUG);
         fileAction.accept(file);
+        if (this.getAttribute("_path_traversal_", Boolean.class) != null) {
+            return -4;
+        }
         logger.log(Exchange.class, "File action executed successfully, returning 0", SimpleLogger.Level.INFO);
         return 0;
     }
@@ -1644,6 +1645,19 @@ public class Exchange<IExchange> implements AutoCloseable {
         }
         iExchangeHandler.sendResponse(iExchange, responseStatusCode, responseHeadersMap, responseBodyContent);
         responseSent = true;
+    }
+
+
+    public int getResponseStatusCode() {
+        return responseStatusCode;
+    }
+
+    public String getResponseBodyContent() {
+        return responseBodyContent;
+    }
+
+    public Map<String, String> getResponseHeadersMap() {
+        return responseHeadersMap;
     }
 
     // ===== CLEANUP =====
