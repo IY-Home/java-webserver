@@ -83,7 +83,7 @@ To use Undertow, import the Undertow dependency:
 Then remove the `.txt` extension from `UndertowServer.java.txt` (in `./src/main/java/com/youfuns/servers/`), 
 uncomment 
 ```java
-// UNDERTOW(UndertowServer::new);
+// UNDERTOW(UndertowServer::new)
 ```
 in `WebServerType`, and in the builder, pass
 ```java
@@ -91,6 +91,8 @@ in `WebServerType`, and in the builder, pass
 ```
 Everything else should work normally. 
 However, Undertow does not support context mutation after start, so you cannot add or remove endpoints after starting the server.
+
+To acquire the internal server from a `WebServer` instance, call `getInternalServer()`.
 
 ### Server operations
 
@@ -190,6 +192,8 @@ exchange.setAttribute("key", value_of_any_type);
 exchange.getAttribute("key", Type_Of_Value.class); // returns null if not instance
 exchange.getAttribute("key", String.class, "default");
 ```
+
+To get the wrapped internal exchange object from an `Exchange` instance, call `getUnderlyingExchange`.
 
 ## Defining Basic Endpoints
 
@@ -959,8 +963,8 @@ See `com.youfuns.webserver.demo` for full demonstrations:
 
 ## Using other web servers
 
-Currently, the framework natively supports `com.sun.net.HttpServer`,
-but if you want to plug in your own web server, e.g. Undertow,
+Currently, the framework natively supports `com.sun.net.HttpServer` and `io.undertow`,
+but if you want to plug in your own web server, e.g. Jetty,
 
 please reference `com.youfuns.webserver.servers` and implement the `WebServerInterface<Server, InternalExchange, InternalHandler>` interface.
 
@@ -970,5 +974,5 @@ Then, in the builder, pass
 ```
 e.g.
 ```java
-var myUndertowServer = WebServer.builder().port(8080).server(new UndertowServer()).build();
+var myJettyServer = WebServer.builder().port(8080).server(new JettyServer()).build();
 ```
