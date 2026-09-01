@@ -1647,6 +1647,9 @@ public class Exchange<IExchange> implements AutoCloseable {
         responseSent = true;
     }
 
+    public boolean responseSent() {
+        return responseSent;
+    }
 
     public int getResponseStatusCode() {
         return responseStatusCode;
@@ -1665,6 +1668,12 @@ public class Exchange<IExchange> implements AutoCloseable {
     @Override
     public void close() {
         logger.log(Exchange.class, "Closing IExchange", SimpleLogger.Level.DEBUG);
+        if (!responseSent) {
+            logger.log(Exchange.class, "Response not sent at all, sending error 500", SimpleLogger.Level.WARN);
+            try {
+                sendResponse(500, "Response was never sent");
+            } catch (IOException e) {}
+        }
         if (wrapper) iExchangeHandler.closeExchange(iExchange);
     }
 

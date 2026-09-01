@@ -185,6 +185,8 @@ and put `Object` as the `IExchange`.
 However, with this mock instance, parsing multipart, serving file, and sending response will throw
 `UnsupportedOperationException`.
 
+You can only call `sendResponse` once. To check if response is sent already, use `responseSent()` (boolean).
+
 The `Exchange` also lets you store attributes for use between heads, tails, and handlers. Simply use:
 
 ```java
