@@ -61,8 +61,8 @@ public class UserProfileServer {
 
         // Handle login
         .on("/login", "POST", exchange -> {
-            String email = exchange.getFormFieldFromUrlEncoded("email");
-            String password = exchange.getFormFieldFromUrlEncoded("password");
+            String email = exchange.getFormField("email");
+            String password = exchange.getFormField("password");
 
             if (email == null || email.trim().isEmpty() ||
                     password == null || password.trim().isEmpty()) {

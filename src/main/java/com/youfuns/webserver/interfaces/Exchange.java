@@ -571,6 +571,10 @@ public class Exchange<IExchange> implements AutoCloseable {
         return result;
     }
 
+    public String getJsonParameterAsString(String name) {
+        return getJsonParameterAsString(name, null);
+    }
+
     public String getJsonName(String defaultValue) {
         String result = getJsonParameterAsString("name", defaultValue);
         logger.log(Exchange.class, "Getting JSON name: " + result, SimpleLogger.Level.DEBUG);
@@ -716,7 +720,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     /**
      * Gets a form field value (non-file field).
      */
-    public String getFormField(String fieldName) {
+    public String getMultipartFormField(String fieldName) {
         parseMultipartIfNeeded();
         String value = formFields.get(fieldName);
         logger.log(Exchange.class, "Getting form field '" + fieldName + "': " + value, SimpleLogger.Level.DEBUG);
@@ -724,9 +728,79 @@ public class Exchange<IExchange> implements AutoCloseable {
     }
 
     /**
+     * Gets a form field value (non-file field) with a default.
+     */
+    public String getMultipartFormField(String fieldName, String defaultValue) {
+        logger.log(Exchange.class, "Getting form field '" + fieldName + "' with default", SimpleLogger.Level.DEBUG);
+        String value = getMultipartFormField(fieldName);
+        String result = value != null ? value : defaultValue;
+        logger.log(Exchange.class, "Form field '" + fieldName + "' = " + result, SimpleLogger.Level.DEBUG);
+        return result;
+    }
+
+    /**
+     * Gets an integer form field value (non-file field) with a default.
+     */
+    public int getIntMultipartFormField(String fieldName, int defaultValue) {
+        logger.log(Exchange.class, "Getting integer form field '" + fieldName + "' with default: " + defaultValue, SimpleLogger.Level.DEBUG);
+        String value = getMultipartFormField(fieldName);
+        if (value == null || value.trim().isEmpty()) {
+            logger.log(Exchange.class, "Form field '" + fieldName + "' is null or empty, returning default: " + defaultValue, SimpleLogger.Level.DEBUG);
+            return defaultValue;
+        }
+        try {
+            int result = Integer.parseInt(value.trim());
+            logger.log(Exchange.class, "Form field '" + fieldName + "' = " + result, SimpleLogger.Level.DEBUG);
+            return result;
+        } catch (NumberFormatException e) {
+            logger.log(Exchange.class, "Failed to parse integer form field '" + fieldName + "' with value '" + value + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Gets a double form field value (non-file field) with a default.
+     */
+    public double getDoubleMultipartFormField(String fieldName, double defaultValue) {
+        logger.log(Exchange.class, "Getting double form field '" + fieldName + "' with default: " + defaultValue, SimpleLogger.Level.DEBUG);
+        String value = getMultipartFormField(fieldName);
+        if (value == null || value.trim().isEmpty()) {
+            logger.log(Exchange.class, "Form field '" + fieldName + "' is null or empty, returning default: " + defaultValue, SimpleLogger.Level.DEBUG);
+            return defaultValue;
+        }
+        try {
+            double result = Double.parseDouble(value.trim());
+            logger.log(Exchange.class, "Form field '" + fieldName + "' = " + result, SimpleLogger.Level.DEBUG);
+            return result;
+        } catch (NumberFormatException e) {
+            logger.log(Exchange.class, "Failed to parse double form field '" + fieldName + "' with value '" + value + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Gets a boolean form field value (non-file field).
+     * Returns false if the field is null, empty, or not a recognized truth value.
+     * Recognizes "true", "1", "on", "yes" as true (case-insensitive).
+     * All other values (including null) return false.
+     */
+    public boolean getBooleanMultipartFormField(String fieldName) {
+        logger.log(Exchange.class, "Getting boolean form field '" + fieldName + "'", SimpleLogger.Level.DEBUG);
+        String value = getMultipartFormField(fieldName);
+        if (value == null || value.trim().isEmpty()) {
+            logger.log(Exchange.class, "Form field '" + fieldName + "' is null or empty, returning false", SimpleLogger.Level.DEBUG);
+            return false;
+        }
+        String trimmed = value.trim().toLowerCase();
+        boolean result = trimmed.equals("true") || trimmed.equals("1") || trimmed.equals("on") || trimmed.equals("yes");
+        logger.log(Exchange.class, "Form field '" + fieldName + "' = " + result, SimpleLogger.Level.DEBUG);
+        return result;
+    }
+
+    /**
      * Gets all form fields (non-file fields).
      */
-    public Map<String, String> getAllFormFields() {
+    public Map<String, String> getAllMultipartFormFields() {
         parseMultipartIfNeeded();
         logger.log(Exchange.class, "Getting all form fields: " + formFields, SimpleLogger.Level.DEBUG);
         return Collections.unmodifiableMap(formFields);
@@ -1066,7 +1140,7 @@ public class Exchange<IExchange> implements AutoCloseable {
         for (String m : methods) {
             allowed.append(m).append(", ");
         }
-        if (allowed.length() > 0) {
+        if (!allowed.isEmpty()) {
             allowed.setLength(allowed.length() - 2);
         }
         String allowedMethods = allowed.toString();
@@ -1504,7 +1578,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     /**
      * Parses application/x-www-form-urlencoded body into a map.
      */
-    public Map<String, String> parseFormUrlEncoded() throws IOException {
+    public Map<String, String> parseForm() throws IOException {
         logger.log(Exchange.class, "Parsing form URL-encoded body", SimpleLogger.Level.DEBUG);
         Map<String, String> params = new HashMap<>();
 
@@ -1527,10 +1601,10 @@ public class Exchange<IExchange> implements AutoCloseable {
     /**
      * Parses application/x-www-form-urlencoded body into a map with a default.
      */
-    public Map<String, String> parseFormUrlEncoded(Map<String, String> defaultMap) {
+    public Map<String, String> parseForm(Map<String, String> defaultMap) {
         logger.log(Exchange.class, "Parsing form URL-encoded body with default map", SimpleLogger.Level.DEBUG);
         try {
-            Map<String, String> result = parseFormUrlEncoded();
+            Map<String, String> result = parseForm();
             if (result.isEmpty()) {
                 logger.log(Exchange.class, "Parsed result is empty, using default map: " + defaultMap, SimpleLogger.Level.DEBUG);
                 return defaultMap;
@@ -1545,9 +1619,9 @@ public class Exchange<IExchange> implements AutoCloseable {
     /**
      * Gets a form field value from application/x-www-form-urlencoded body.
      */
-    public String getFormFieldFromUrlEncoded(String name) throws IOException {
+    public String getFormField(String name) throws IOException {
         logger.log(Exchange.class, "Getting form field from URL-encoded body: " + name, SimpleLogger.Level.DEBUG);
-        Map<String, String> params = parseFormUrlEncoded();
+        Map<String, String> params = parseForm();
         String value = params.get(name);
         logger.log(Exchange.class, "Form field '" + name + "' = " + value, SimpleLogger.Level.DEBUG);
         return value;
@@ -1556,11 +1630,125 @@ public class Exchange<IExchange> implements AutoCloseable {
     /**
      * Gets a form field value from application/x-www-form-urlencoded body with a default.
      */
-    public String getFormFieldFromUrlEncoded(String name, String defaultValue) {
+    public String getFormField(String name, String defaultValue) {
         logger.log(Exchange.class, "Getting form field from URL-encoded body: " + name + " with default", SimpleLogger.Level.DEBUG);
         try {
-            String value = getFormFieldFromUrlEncoded(name);
+            String value = getFormField(name);
             String result = value != null ? value : defaultValue;
+            logger.log(Exchange.class, "Form field '" + name + "' = " + result, SimpleLogger.Level.DEBUG);
+            return result;
+        } catch (IOException e) {
+            logger.log(Exchange.class, "Failed to get form field '" + name + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Gets an integer form field value from application/x-www-form-urlencoded body with a default.
+     */
+    public int getIntFormField(String name, int defaultValue) {
+        logger.log(Exchange.class, "Getting integer form field from URL-encoded body: " + name + " with default", SimpleLogger.Level.DEBUG);
+        try {
+            String value = getFormField(name);
+            if (value == null || value.trim().isEmpty()) {
+                logger.log(Exchange.class, "Form field '" + name + "' is null or empty, returning default: " + defaultValue, SimpleLogger.Level.DEBUG);
+                return defaultValue;
+            }
+            try {
+                int result = Integer.parseInt(value.trim());
+                logger.log(Exchange.class, "Form field '" + name + "' = " + result, SimpleLogger.Level.DEBUG);
+                return result;
+            } catch (NumberFormatException e) {
+                logger.log(Exchange.class, "Failed to parse integer form field '" + name + "' with value '" + value + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+                return defaultValue;
+            }
+        } catch (IOException e) {
+            logger.log(Exchange.class, "Failed to get form field '" + name + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Gets a float form field value from application/x-www-form-urlencoded body with a default.
+     */
+    public float getFloatFormField(String name, float defaultValue) {
+        logger.log(Exchange.class, "Getting float form field from URL-encoded body: " + name + " with default", SimpleLogger.Level.DEBUG);
+        try {
+            String value = getFormField(name);
+            if (value == null || value.trim().isEmpty()) {
+                logger.log(Exchange.class, "Form field '" + name + "' is null or empty, returning default: " + defaultValue, SimpleLogger.Level.DEBUG);
+                return defaultValue;
+            }
+            try {
+                float result = Float.parseFloat(value.trim());
+                logger.log(Exchange.class, "Form field '" + name + "' = " + result, SimpleLogger.Level.DEBUG);
+                return result;
+            } catch (NumberFormatException e) {
+                logger.log(Exchange.class, "Failed to parse float form field '" + name + "' with value '" + value + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+                return defaultValue;
+            }
+        } catch (IOException e) {
+            logger.log(Exchange.class, "Failed to get form field '" + name + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Gets a double form field value from application/x-www-form-urlencoded body with a default.
+     */
+    public double getDoubleFormField(String name, double defaultValue) {
+        logger.log(Exchange.class, "Getting double form field from URL-encoded body: " + name + " with default", SimpleLogger.Level.DEBUG);
+        try {
+            String value = getFormField(name);
+            if (value == null || value.trim().isEmpty()) {
+                logger.log(Exchange.class, "Form field '" + name + "' is null or empty, returning default: " + defaultValue, SimpleLogger.Level.DEBUG);
+                return defaultValue;
+            }
+            try {
+                double result = Double.parseDouble(value.trim());
+                logger.log(Exchange.class, "Form field '" + name + "' = " + result, SimpleLogger.Level.DEBUG);
+                return result;
+            } catch (NumberFormatException e) {
+                logger.log(Exchange.class, "Failed to parse double form field '" + name + "' with value '" + value + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+                return defaultValue;
+            }
+        } catch (IOException e) {
+            logger.log(Exchange.class, "Failed to get form field '" + name + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Gets a boolean form field value from application/x-www-form-urlencoded body with a default.
+     * Recognizes "true", "false", "1", "0", "on", "off", "yes", "no" (case-insensitive).
+     */
+    public boolean getBooleanFormField(String name, boolean defaultValue) {
+        logger.log(Exchange.class, "Getting boolean form field from URL-encoded body: " + name + " with default", SimpleLogger.Level.DEBUG);
+        try {
+            String value = getFormField(name);
+            if (value == null || value.trim().isEmpty()) {
+                logger.log(Exchange.class, "Form field '" + name + "' is null or empty, returning default: " + defaultValue, SimpleLogger.Level.DEBUG);
+                return defaultValue;
+            }
+            String trimmed = value.trim().toLowerCase();
+            boolean result;
+            switch (trimmed) {
+                case "true":
+                case "1":
+                case "on":
+                case "yes":
+                    result = true;
+                    break;
+                case "false":
+                case "0":
+                case "off":
+                case "no":
+                    result = false;
+                    break;
+                default:
+                    logger.log(Exchange.class, "Unrecognized boolean value '" + value + "' for field '" + name + "', returning default: " + defaultValue, SimpleLogger.Level.WARN);
+                    return defaultValue;
+            }
             logger.log(Exchange.class, "Form field '" + name + "' = " + result, SimpleLogger.Level.DEBUG);
             return result;
         } catch (IOException e) {
@@ -1572,10 +1760,10 @@ public class Exchange<IExchange> implements AutoCloseable {
     /**
      * Gets multiple form fields from application/x-www-form-urlencoded body.
      */
-    public Map<String, String> getFormFieldsFromUrlEncoded(String... names) throws IOException {
+    public Map<String, String> getFormFields(String... names) throws IOException {
         logger.log(Exchange.class, "Getting form fields from URL-encoded body: " + Arrays.toString(names), SimpleLogger.Level.DEBUG);
         Map<String, String> result = new HashMap<>();
-        Map<String, String> params = parseFormUrlEncoded();
+        Map<String, String> params = parseForm();
 
         for (String name : names) {
             result.put(name, params.get(name));

@@ -243,6 +243,10 @@ To get the wrapped internal exchange object from an `Exchange` instance, call `g
 .on("/api/users", exchange -> {
     // Default: Method Not Allowed
     exchange.sendMethodNotAllowedResponse("GET", "POST");
+    /* or
+            exchange.allowMethods("GET", "POST");
+            exchange.sendResponse(405, "{\"error\": \"Method Not Allowed\"}");
+     */
 })
 ```
 
@@ -456,9 +460,9 @@ The action is only executed if the validation is passed (code = 1).
         return;
     }
     
-    String username = exchange.getFormFieldFromUrlEncoded("username", "unknown");
-    String password = exchange.getFormFieldFromUrlEncoded("password", "");
-    String email = exchange.getFormFieldFromUrlEncoded("email", "");
+    String username = exchange.getFormField("username", "unknown");
+    String password = exchange.getFormField("password", "");
+    String email = exchange.getFormField("email", "");
     
     exchange.sendJsonResponse(Map.of(
         "message", "Login attempt",
@@ -468,6 +472,79 @@ The action is only executed if the validation is passed (code = 1).
     ));
 })
 ```
+
+## Using Parameter/Field Methods in Exchange
+
+There are multiple methods for getting user parameter input in `Exchange`, 
+including `getQueryParameter`, `getJsonParameter`, `getFormField`, and `getMultipartFormField`.
+The choice of which to use depends on the format.
+
+### GET Query String (`getQueryParameter`)
+
+To retrieve parameters from a URL query string (e.g. `example.com/products?q=Apple&cat=FOOD&price_high=10`), 
+use the `getQueryParameter` method:
+```java
+String query = exchange.getQueryParameter("q"); // Null if doesn't exist
+String category = exchange.getQueryParameter("cat", "DEFAULT");
+double priceHigh = exchange.getQueryParameterAsDouble("price_high", 100000.0);
+Map<String, String> queryParams = exchange.getQueryParameters();
+```
+
+### JSON body (`getJsonParameter`)
+
+To retrieve parameters from a JSON body,  e.g. 
+```bash
+curl -X POST example.com/products -d '{"q": "Apple", "cat": "FOOD", "price_high": 10}'
+```
+use the `getJsonParameter` method:
+```java
+Object query = (String) exchange.getJsonParameter("q"); // Not recommended, use a method below
+String category = exchange.getJsonParameterAsString("cat", "DEFAULT");
+double priceHigh = exchange.getJsonParameterAsDouble("price_high", 100000.0);
+MyClass myClassFromJsonParameter = exchange.getJsonParameter(MyClass.class, "myclass", defaultValue)
+Map<String, Object> jsonMap = exchange.parseBodyAsJsonMap();
+MyClass convertedToMyClass = exchange.parseBodyAsJson(MyClass.class); // Convert entire JSON body to a specific class
+```
+
+### POST form field (`getFormField`)
+
+To retrieve parameters from an encoded HTML POST form, e.g.
+```html
+<form action="/products" method="post"> <!-- By default application/x-www-form-urlencoded -->
+    <input type="text" name="q" placeholder="Query">
+    <input type="text" name="cat" placeholder="Category">
+    <input type="number" name="price_high" placeholder="Max Price">
+    <button type="submit">Submit</button>
+</form>
+```
+use the `getFormField` method:
+```java
+String query = exchange.getFormField("q"); // Null if doesn't exist
+String category = exchange.getFormField("cat", "DEFAULT");
+double priceHigh = exchange.getDoubleFormField("price_high", 100000.0);
+Map<String, String> formParams = exchange.parseForm();
+```
+
+### Multipart form field (`getMultipartFormField`)
+
+To retrieve parameters (except files) from a multipart HTML POST form, e.g.
+```html
+<form action="/products" method="post" enctype="multipart/form-data"> <!-- By default application/x-www-form-urlencoded -->
+    <input type="text" name="q" placeholder="Query">
+    <input type="text" name="cat" placeholder="Category">
+    <input type="number" name="price_high" placeholder="Max Price">
+    <input type="file" name="file">
+    <button type="submit">Submit</button>
+</form>
+```
+use the `getMultipartFormField` method:
+```java
+String query = exchange.getMultipartFormField("q"); // Null if doesn't exist
+String category = exchange.getMultipartFormField("cat", "DEFAULT");
+double priceHigh = exchange.getDoubleMultipartFormField("price_high", 100000.0);
+Map<String, String> formParams = exchange.getAllMultipartFormFields();
+```
+
 
 ## Multiple Heads/Tails (Request Interceptors)
 
