@@ -39,7 +39,7 @@ public class UserProfileServer {
         ConsoleLogger logger = new ConsoleLogger();
         logger.setLogLevel(SimpleLogger.Level.DEBUG);
 
-        var server = WebServer.create(8080);
+        var server = WebServer.create(8080, logger);
 
         server.ensureExists(UPLOAD_DIR)
         .on("/", exchange ->
@@ -289,7 +289,6 @@ public class UserProfileServer {
             this.isAdmin = true;
         }
 
-        // Admin constructor
         private User(String name, String email, String phone, String password, String avatarPath, boolean isAdmin) {
             this.name = name;
             this.email = email;
@@ -297,11 +296,6 @@ public class UserProfileServer {
             this.password = password;
             this.avatarPath = avatarPath;
             this.isAdmin = isAdmin;
-        }
-
-        // Factory method for admin
-        public static User createAdmin(String name, String email, String phone, String password) {
-            return new User(name, email, phone, password, null, true);
         }
 
         public String getName() {

@@ -13,6 +13,7 @@ target/
 *.iws
 *.iml
 *.ipr
+dependency-reduced-pom.xml
 
 ### Eclipse ###
 .apt_generated
@@ -41,4 +42,5 @@ build/
 
 public/
 fileUploadDemo/uploads/
+userServiceDemo/user_avatars/
 # /src/main/java/com/youfuns/webserver/personal/

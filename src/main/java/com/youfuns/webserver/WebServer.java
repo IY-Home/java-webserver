@@ -38,6 +38,10 @@ public class WebServer<S, I, H> {
     private boolean started;
 
     private WebServer(WebServerInterface<S, I, H> serverInterface, InetSocketAddress address, SimpleLogger logger) {
+        if (!Builder.isCurrentlyBuilding()) {
+            throw new SecurityException("WebServer must be initialized by builder (WebServer.builder()).");
+        }
+
         this.logger = logger;
 
         this.serverInterface = serverInterface;
@@ -421,11 +425,16 @@ public class WebServer<S, I, H> {
         private InetSocketAddress serverAddress;
         private SimpleLogger logger;
         private WebServerInterface<?, ?, ?> serverInterface;
+        private static final ThreadLocal<Boolean> buildingFlag = ThreadLocal.withInitial(() -> false);
 
         private Builder() {
             this.serverAddress = null;
             this.logger = new ConsoleLogger();
             this.serverInterface = WebServerType.SUN_NET_HTTPSERVER.getServerInterface(logger);
+        }
+
+        static boolean isCurrentlyBuilding() {
+            return buildingFlag.get();
         }
 
         public Builder port(int port) {
@@ -463,7 +472,10 @@ public class WebServer<S, I, H> {
             if (serverAddress == null) {
                 throw new IllegalStateException("Server port is not set");
             }
-            return new WebServer<>(serverInterface, serverAddress, logger);
+            buildingFlag.set(true);
+            WebServer<?, ?, ?> server = new WebServer<>(serverInterface, serverAddress, logger);
+            buildingFlag.set(false);
+            return server;
         }
 
         @Override
