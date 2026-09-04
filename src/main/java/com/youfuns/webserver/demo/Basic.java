@@ -1,7 +1,5 @@
 package com.youfuns.webserver.demo;
 
-import com.youfuns.logger.LoggerManager;
-import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.WebServer;
 
 import java.util.Map;
@@ -9,15 +7,13 @@ import java.util.Map;
 public class Basic {
     public static void main(String[] args) {
         // Create server on port 8080
-        var server = WebServer.create(8080, LoggerManager.INSTANCE.getLogger());
-
-        LoggerManager.INSTANCE.getLogger().setLogLevel(SimpleLogger.Level.DEBUG);
+       WebServer.create(8080)
 
         // Simple text response
-        server.on("/hello", "Hello, World!");
+        .on("/hello", "Hello, World!")
 
         // GET endpoint with manual handler
-        server.on("/greet", "GET", exchange -> {
+        .on("/greet", "GET", exchange -> {
             String name = exchange.getQueryParameter("name", "Stranger");
             exchange.sendResponse("Hello, " + name + "!");
         }).on("/api/status", exchange -> {
@@ -31,9 +27,9 @@ public class Basic {
             exchange.sendResponse("User ID: " + userId);
         }).onNotFound(exchange -> {
             exchange.sendResponse(404, "Custom 404, page not found: " + exchange.getRequestPath());
-        });
+        })
 
         // Start the server
-        server.start();
+        .start();
     }
 }
