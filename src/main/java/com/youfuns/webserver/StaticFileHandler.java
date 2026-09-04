@@ -59,7 +59,7 @@ public class StaticFileHandler<I> implements ExchangeHandler<I> {
 
         // Security: Prevent directory traversal
         if (relativePath.contains("..")) {
-            req.sendForbiddenResponse();
+            req.sendForbidden();
             return;
         }
 
@@ -77,7 +77,7 @@ public class StaticFileHandler<I> implements ExchangeHandler<I> {
 
         // Security: Ensure the resolved path is still inside base directory
         if (!filePath.startsWith(baseDirectory)) {
-            req.sendForbiddenResponse();
+            req.sendForbidden();
             return;
         }
 
@@ -87,7 +87,7 @@ public class StaticFileHandler<I> implements ExchangeHandler<I> {
                 sendDirectoryListing(req, filePath);
                 return;
             }
-            req.sendNotFoundResponse();
+            req.sendNotFound();
             return;
         }
 
@@ -137,9 +137,9 @@ public class StaticFileHandler<I> implements ExchangeHandler<I> {
             html.append("</body></html>");
 
             req.addResponseHeader("Content-Type", "text/html; charset=UTF-8");
-            req.sendResponse(html.toString());
+            req.send(html.toString());
         } catch (IOException e) {
-            req.sendErrorResponse("Failed to list directory");
+            req.sendError("Failed to list directory");
         }
     }
 

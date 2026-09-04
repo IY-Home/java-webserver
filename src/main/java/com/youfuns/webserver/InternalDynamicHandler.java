@@ -130,6 +130,6 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
         }
 
         if (onNotFound != null) { onNotFound.handle(exchange); }
-        else { exchange.sendNotFoundResponse(); }
+        else { exchange.sendNotFound(); }
     }
 }

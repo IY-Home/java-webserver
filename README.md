@@ -185,7 +185,7 @@ and put `Object` as the `IExchange`.
 However, with this mock instance, parsing multipart, serving file, and sending response will throw
 `UnsupportedOperationException`.
 
-You can only call `sendResponse` once. To check if response is sent already, use `responseSent()` (boolean).
+You can only call `send` once. To check if response is sent already, use `responseSent()` (boolean).
 
 The `Exchange` also lets you store attributes for use between heads, tails, and handlers. Simply use:
 
@@ -203,7 +203,7 @@ To get the wrapped internal exchange object from an `Exchange` instance, call `g
 
 ```java
 .on("/hello", "GET", exchange -> {
-    exchange.sendResponse("Hello World");
+    exchange.send("Hello World");
 })
 ```
 
@@ -211,7 +211,7 @@ To get the wrapped internal exchange object from an `Exchange` instance, call `g
 
 ```java
 .on("/hello", "POST", exchange -> {
-    exchange.sendResponse("POST received");
+    exchange.send("POST received");
 })
 ```
 
@@ -219,7 +219,7 @@ To get the wrapped internal exchange object from an `Exchange` instance, call `g
 
 ```java
 .on("/hello", new String[]{"GET", "POST"}, exchange -> {
-    exchange.sendResponse("GET or POST received");
+    exchange.send("GET or POST received");
 })
 ```
 
@@ -227,7 +227,7 @@ To get the wrapped internal exchange object from an `Exchange` instance, call `g
 
 ```java
 .on("/hello", exchange -> {
-    exchange.sendResponse("Default response");
+    exchange.send("Default response");
 })
 ```
 
@@ -242,10 +242,10 @@ To get the wrapped internal exchange object from an `Exchange` instance, call `g
 })
 .on("/api/users", exchange -> {
     // Default: Method Not Allowed
-    exchange.sendMethodNotAllowedResponse("GET", "POST");
+    exchange.sendMethodNotAllowed("GET", "POST");
     /* or
             exchange.allowMethods("GET", "POST");
-            exchange.sendResponse(405, "{\"error\": \"Method Not Allowed\"}");
+            exchange.send(405, "{\"error\": \"Method Not Allowed\"}");
      */
 })
 ```
@@ -253,7 +253,7 @@ To get the wrapped internal exchange object from an `Exchange` instance, call `g
 ### Only return text
 
 ```java
-.on("/status", "OK") // equivalent to .on("/status", exchange -> exchange.sendResponse("OK"))
+.on("/status", "OK") // equivalent to .on("/status", exchange -> exchange.send("OK"))
 ```
 
 ## Dynamic Endpoints with Path Parameters
@@ -263,7 +263,7 @@ Use `$` as a placeholder and accept a String[]:
 ```java
 .on("/users/$", (params, exchange) -> {
     String userId = params[0];
-    exchange.sendResponse("User ID: " + userId);
+    exchange.send("User ID: " + userId);
 })
 ```
 
@@ -273,7 +273,7 @@ Multiple parameters:
 .on("/users/$/posts/$", (params, exchange) -> {
     String userId = params[0];
     String postId = params[1];
-    exchange.sendResponse("User: " + userId + ", Post: " + postId);
+    exchange.send("User: " + userId + ", Post: " + postId);
 })
 ```
 
@@ -310,7 +310,7 @@ Serving a file from resource (/src/main/resources):
 
 ```java
 .onNotFound(exchange -> {
-    exchange.sendResponse(404, "Page not found");
+    exchange.send(404, "Page not found");
 })
 ```
 or
@@ -323,7 +323,7 @@ or
 ```java
 .onException((exchange, exception) -> {
     LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
-    exchange.sendErrorResponse("An error occurred.");
+    exchange.sendError("An error occurred.");
 })
 ```
 
@@ -341,22 +341,22 @@ if ("hello".equals("hello")) {
 }
 myServer.on("/change", exchange -> {
     myServer.on("/change", "New one");
-    exchange.sendResponse("Updated");
+    exchange.send("Updated");
 })
 .on("/setLogo", (exchange) -> {
     try {
         myServer.serveFile("/logo", exchange.getQueryParameter("path", "./logos/default.png"));
     } catch (IllegalArgumentException e) {
-        exchange.sendBadRequestResponse("File was not found");
+        exchange.sendBadRequest("File was not found");
     }
-    exchange.sendResponse("Updated successfully");
+    exchange.send("Updated successfully");
 })
 .on("/one_time", exchange -> {
-    exchange.sendResponse("One time used!");
+    exchange.send("One time used!");
     myServer.removeEndpoint("/one_time");
 })
 .on("/stop", exchange -> {
-    exchange.sendResponse("Server stopping...");
+    exchange.send("Server stopping...");
     myServer.stop();
 });
 ```
@@ -379,14 +379,14 @@ myServer.on("/change", exchange -> {
 ```java
 .on("/upload", "POST", exchange -> {
     if (!exchange.isMultipartRequest()) {
-        exchange.sendBadRequestResponse("Expected multipart/form-data");
+        exchange.sendBadRequest("Expected multipart/form-data");
         return;
     }
     
     String username = exchange.getFormField("username");
     
     if (!exchange.hasFile("file")) {
-        exchange.sendBadRequestResponse("No file uploaded");
+        exchange.sendBadRequest("No file uploaded");
         return;
     }
     
@@ -396,9 +396,9 @@ myServer.on("/change", exchange -> {
     if (exchange.isPNG(file) || exchange.isJPEG(file)) {
         exchange.saveFileIn(file, "./uploads");
         // can also: exchange.saveFileAt(file, aSpecificFilePath)
-        exchange.sendResponse("Uploaded: " + file.getFilename());
+        exchange.send("Uploaded: " + file.getFilename());
     } else {
-        exchange.sendBadRequestResponse("Only PNG and JPEG allowed");
+        exchange.sendBadRequest("Only PNG and JPEG allowed");
     }
 })
 ```
@@ -456,7 +456,7 @@ The action is only executed if the validation is passed (code = 1).
 ```java
 .on("/login", "POST", exchange -> {
     if (!exchange.isFormUrlEncoded()) {
-        exchange.sendBadRequestResponse("Expected application/x-www-form-urlencoded");
+        exchange.sendBadRequest("Expected application/x-www-form-urlencoded");
         return;
     }
     
@@ -464,7 +464,7 @@ The action is only executed if the validation is passed (code = 1).
     String password = exchange.getFormField("password", "");
     String email = exchange.getFormField("email", "");
     
-    exchange.sendJsonResponse(Map.of(
+    exchange.sendJson(Map.of(
         "message", "Login attempt",
         "username", username,
         "email", email,
@@ -595,7 +595,7 @@ tails will still run, allowing you to close database connections or log timing.*
 ### Text Response
 
 ```java
-exchange.sendResponse("Hello World");
+exchange.send("Hello World");
 ```
 
 ### JSON Response
@@ -604,24 +604,30 @@ exchange.sendResponse("Hello World");
 Map<String, Object> data = new HashMap<>();
 data.put("message", "Hello");
 data.put("status", "ok");
-exchange.sendJsonResponse(data);
+exchange.sendJson(data);
 ```
 
 ### Status Code with Body
 
 ```java
-exchange.sendResponse(404, "Not Found");
+exchange.send(404, "Not Found");
 ```
 
-### Common Responses
+### Common JSON Responses
+
+All of the following functions send `{"error": "something"}`.
 
 ```java
-exchange.sendNotFoundResponse();      // 404
-exchange.sendBadRequestResponse("error");  // 400
-exchange.sendUnauthorizedResponse();   // 401
-exchange.sendForbiddenResponse();      // 403
-exchange.sendCreatedResponse();        // 201
-exchange.sendNoContentResponse();      // 204
+exchange.sendError("Generic error");   // 500
+exchange.sendError(406, "With error code"); // 406
+exchange.sendNotFound();      // 404
+exchange.sendBadRequest("error");  // 400
+exchange.sendUnauthorized();   // 401
+exchange.sendForbidden();      // 403
+exchange.sendMethodNotAllowed();  // 405
+exchange.sendMethodNotAllowed("GET", "POST");  // 405
+exchange.sendCreated();        // 201
+exchange.sendNoContent();      // 204
 ```
 
 ### Helper format functions
@@ -757,7 +763,7 @@ Throws `RuntimeException("The directory could not be created: {directory}", IOEx
           .replace("date", LocalDateTime.now().toString());
     
     exchange.addResponseHeader("Content-Type", "text/html");
-    exchange.sendResponse(engine.getTemplate());
+    exchange.send(engine.getTemplate());
 })
 ```
 
@@ -881,7 +887,7 @@ new WebServerSecure(8443)
         params.setWantClientAuth(false);
     })
     .on("/secure", exchange -> {
-        exchange.sendResponse("Secure connection established");
+        exchange.send("Secure connection established");
     })
     .start();
 ```
@@ -909,7 +915,7 @@ WebServerSecure.deleteAlias("./https/keystore.p12", "myapp", "changeit");
 // Use an existing PKCS12 keystore (e.g., from Let's Encrypt or a CA)
 new WebServerSecure(443)
     .setupHttps("your_password", "/path/to/your/keystore.p12")
-    .on("/", exchange -> exchange.sendResponse("Using real HTTPS certificate"))
+    .on("/", exchange -> exchange.send("Using real HTTPS certificate"))
     .start();
 ```
 
@@ -940,20 +946,20 @@ public class Main {
         var myServer = WebServer.create(8080);
         myServer
                 .on("/api/users", "GET", exchange -> {
-                    exchange.sendJsonResponse(Map.of("users", "list"));
+                    exchange.sendJson(Map.of("users", "list"));
                 })
                 .on("/api/users/$", (params, exchange) -> {
                     String id = params[0];
-                    exchange.sendResponse("User: " + id);
+                    exchange.send("User: " + id);
                 })
                 .on("/api/user/update", "POST", exchange -> {
                     int result = exchange.getAndSaveAt("file", new String[]{"png", "jpg", "jpeg"}, "./uploads/");
 
                     switch (result) {
-                        case -1 -> exchange.sendBadRequestResponse("Expected multipart/form-data");
-                        case -2 -> exchange.sendBadRequestResponse("No file uploaded");
-                        case -3 -> exchange.sendBadRequestResponse("Only PNG and JPEG allowed");
-                        case 0 -> exchange.sendResponse("Uploaded successfully");
+                        case -1 -> exchange.sendBadRequest("Expected multipart/form-data");
+                        case -2 -> exchange.sendBadRequest("No file uploaded");
+                        case -3 -> exchange.sendBadRequest("Only PNG and JPEG allowed");
+                        case 0 -> exchange.send("Uploaded successfully");
                     }
                 })
                 .on("/api/setConfig", "POST", exchange -> {
@@ -963,15 +969,15 @@ public class Main {
                     });
 
                     switch (result) {
-                        case -1 -> exchange.sendBadRequestResponse("Expected multipart/form-data");
-                        case -2 -> exchange.sendBadRequestResponse("No config uploaded");
-                        case -3 -> exchange.sendBadRequestResponse("Only JSON files allowed");
-                        0 ->exchange.sendResponse("Uploaded successfully!");
+                        case -1 -> exchange.sendBadRequest("Expected multipart/form-data");
+                        case -2 -> exchange.sendBadRequest("No config uploaded");
+                        case -3 -> exchange.sendBadRequest("Only JSON files allowed");
+                        0 ->exchange.send("Uploaded successfully!");
                     }
                 })
                 .serveStatic("/", "./public", false, "index.html")
                 .onNotFound(exchange -> {
-                    exchange.sendResponse(404, "Not Found: " + exchange.getRequestPath());
+                    exchange.send(404, "Not Found: " + exchange.getRequestPath());
                 })
                 .head(exchange -> {
                     System.out.println("Request: " + exchange.getRequestPath());
@@ -995,9 +1001,9 @@ public class Main {
                 .onException((exchange, exception) -> {
                     LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
                     if (exception instanceof IllegalArgumentException) {
-                        exchange.sendBadRequestResponse("Bad request: " + exception.getMessage());
+                        exchange.sendBadRequest("Bad request: " + exception.getMessage());
                     } else {
-                        exchange.sendErrorResponse("An error occurred.");
+                        exchange.sendError("An error occurred.");
                     }
                 })
                 .limitUploadSize(50 * 1024 * 1024) // 50 MB

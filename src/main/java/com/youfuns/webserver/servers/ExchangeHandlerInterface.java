@@ -20,8 +20,6 @@ public interface ExchangeHandlerInterface<InternalExchange> {
 
     void serveFile(InternalExchange internalExchange, int statusCode, Map<String, String> headers, byte[] fileBytes) throws IOException;
 
-    String extractBody(InternalExchange internalExchange);
-
     void sendResponse(InternalExchange internalExchange, int statusCode, Map<String, String> headers, String body) throws IOException;
 
     org.apache.commons.fileupload.RequestContext createFileUploadRequestContext(InternalExchange internalExchange);

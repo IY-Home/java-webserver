@@ -20,7 +20,7 @@ public class FileUploadTest {
                             .replace("user", exchange.getQueryParameter("user", "Guest"))
                             .replace("image", "./pic");
                     exchange.formatHTML();
-                    exchange.sendResponse(templateEngine.getTemplate());
+                    exchange.send(templateEngine.getTemplate());
                 })
                 .on("/upload", "POST", exchange -> {
                     int result = exchange.getAndSaveAt("file", new String[]{"png", "jpg"}, file -> {
@@ -30,10 +30,10 @@ public class FileUploadTest {
                     });
 
                     switch (result) {
-                        case -1 -> exchange.sendBadRequestResponse("Not multipart");      // Client error
-                        case -2 -> exchange.sendBadRequestResponse("File missing");       // Client error
-                        case -3 -> exchange.sendBadRequestResponse("Invalid extension");  // Client error
-                        case -4 -> exchange.sendBadRequestResponse("Invalid file name");  // Path traversal attempt
+                        case -1 -> exchange.sendBadRequest("Not multipart");      // Client error
+                        case -2 -> exchange.sendBadRequest("File missing");       // Client error
+                        case -3 -> exchange.sendBadRequest("Invalid extension");  // Client error
+                        case -4 -> exchange.sendBadRequest("Invalid file name");  // Path traversal attempt
                         case 1 -> {
                         }
                     }
@@ -48,7 +48,7 @@ public class FileUploadTest {
                     LoggerManager.quickLog(FileUploadTest.class, "Request took " + (System.currentTimeMillis() - exchange.getAttribute("start_time", Long.class)) + " ms");
                 })
                 .onException((exchange, exception) -> {
-                    exchange.sendErrorResponse(exception.getMessage());
+                    exchange.sendError(exception.getMessage());
                 }).start();
     }
 }

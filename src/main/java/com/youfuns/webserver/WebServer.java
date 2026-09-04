@@ -183,7 +183,7 @@ public class WebServer<S, I, H> {
     }
 
     public WebServer<S, I, H> on(String endpoint, String method, String response) {
-        return on(endpoint, method, exchange -> exchange.sendResponse(response));
+        return on(endpoint, method, (ExchangeHandler<I>) exchange -> exchange.send(response));
     }
 
     public WebServer<S, I, H> on(String endpoint, String response) {
@@ -359,7 +359,7 @@ public class WebServer<S, I, H> {
                 exchange.serveFile(data);
             } catch (IOException e) {
                 logger.log(WebServer.class, "Failed to serve file from resource: " + e.getMessage(), SimpleLogger.Level.ERROR);
-                exchange.sendErrorResponse(e.getMessage());
+                exchange.sendError(e.getMessage());
             }
         };
     }

@@ -233,7 +233,6 @@ public class UndertowServer implements WebServerInterface<Undertow, HttpServerEx
             }
         }
 
-        @Override
         public String extractBody(HttpServerExchange exchange) {
             // Check if multipart - don't read body for multipart requests
             String contentType = getHeaderCaseInsensitive(exchange, "Content-Type");

@@ -395,7 +395,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     public void redirect(String url) throws IOException {
         logger.log(Exchange.class, "Redirecting (302) to: " + url, SimpleLogger.Level.INFO);
         addResponseHeader("Location", url);
-        sendResponse(302, "");
+        send(302, "");
     }
 
     /**
@@ -404,7 +404,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     public void redirectPermanent(String url) throws IOException {
         logger.log(Exchange.class, "Redirecting permanently (301) to: " + url, SimpleLogger.Level.INFO);
         addResponseHeader("Location", url);
-        sendResponse(301, "");
+        send(301, "");
     }
 
     /**
@@ -413,7 +413,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     public void redirectSeeOther(String url) throws IOException {
         logger.log(Exchange.class, "Redirecting (303 See Other) to: " + url, SimpleLogger.Level.INFO);
         addResponseHeader("Location", url);
-        sendResponse(303, "");
+        send(303, "");
     }
 
     /**
@@ -422,7 +422,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     public void redirect(int statusCode, String url) throws IOException {
         logger.log(Exchange.class, "Redirecting (" + statusCode + ") to: " + url, SimpleLogger.Level.INFO);
         addResponseHeader("Location", url);
-        sendResponse(statusCode, "");
+        send(statusCode, "");
     }
 
 
@@ -1294,89 +1294,89 @@ public class Exchange<IExchange> implements AutoCloseable {
     }
 
 
-    public void sendResponse(String body) throws IOException {
+    public void send(String body) throws IOException {
         logger.log(Exchange.class, "Sending response with body: " + (body != null ? body.length() + " chars" : "null"), SimpleLogger.Level.DEBUG);
         this.responseBodyContent = body;
-        sendResponse();
+        send();
     }
 
-    public void sendResponse(int statusCode, String body) throws IOException {
+    public void send(int statusCode, String body) throws IOException {
         logger.log(Exchange.class, "Sending response with status: " + statusCode + ", body: " + (body != null ? body.length() + " chars" : "null"), SimpleLogger.Level.DEBUG);
         this.responseStatusCode = statusCode;
         this.responseBodyContent = body;
-        sendResponse();
+        send();
     }
 
-    public void sendJsonResponse(Object object) throws IOException {
+    public void sendJson(Object object) throws IOException {
         logger.log(Exchange.class, "Sending JSON response from object", SimpleLogger.Level.DEBUG);
         setResponseBodyAsJson(object);
-        sendResponse();
+        send();
     }
 
-    public void sendJsonResponse(int statusCode, Object object) throws IOException {
+    public void sendJson(int statusCode, Object object) throws IOException {
         logger.log(Exchange.class, "Sending JSON response with status: " + statusCode + " from object", SimpleLogger.Level.DEBUG);
         this.responseStatusCode = statusCode;
         setResponseBodyAsJson(object);
-        sendResponse();
+        send();
     }
 
-    public void sendErrorResponse(String errorMessage) throws IOException {
+    public void sendError(String errorMessage) throws IOException {
         logger.log(Exchange.class, "Sending error response (500): " + errorMessage, SimpleLogger.Level.ERROR);
-        sendResponse(500, "{\"error\": \"" + errorMessage + "\"}");
+        send(500, "{\"error\": \"" + errorMessage + "\"}");
     }
 
-    public void sendErrorResponse(int statusCode, String errorMessage) throws IOException {
+    public void sendError(int statusCode, String errorMessage) throws IOException {
         logger.log(Exchange.class, "Sending error response (" + statusCode + "): " + errorMessage, SimpleLogger.Level.ERROR);
-        sendResponse(statusCode, "{\"error\": \"" + errorMessage + "\"}");
+        send(statusCode, "{\"error\": \"" + errorMessage + "\"}");
     }
 
-    public void sendNotFoundResponse() throws IOException {
+    public void sendNotFound() throws IOException {
         logger.log(Exchange.class, "Sending 404 Not Found response", SimpleLogger.Level.INFO);
-        sendResponse(404, "{\"error\": \"Not Found\"}");
+        send(404, "{\"error\": \"Not Found\"}");
     }
 
-    public void sendBadRequestResponse(String errorMessage) throws IOException {
+    public void sendBadRequest(String errorMessage) throws IOException {
         logger.log(Exchange.class, "Sending 400 Bad Request response: " + errorMessage, SimpleLogger.Level.WARN);
-        sendResponse(400, "{\"error\": \"" + errorMessage + "\"}");
+        send(400, "{\"error\": \"" + errorMessage + "\"}");
     }
 
-    public void sendUnauthorizedResponse() throws IOException {
+    public void sendUnauthorized() throws IOException {
         logger.log(Exchange.class, "Sending 401 Unauthorized response", SimpleLogger.Level.WARN);
-        sendResponse(401, "{\"error\": \"Unauthorized\"}");
+        send(401, "{\"error\": \"Unauthorized\"}");
     }
 
-    public void sendForbiddenResponse() throws IOException {
+    public void sendForbidden() throws IOException {
         logger.log(Exchange.class, "Sending 403 Forbidden response", SimpleLogger.Level.WARN);
-        sendResponse(403, "{\"error\": \"Forbidden\"}");
+        send(403, "{\"error\": \"Forbidden\"}");
     }
 
-    public void sendMethodNotAllowedResponse() throws IOException {
+    public void sendMethodNotAllowed() throws IOException {
         logger.log(Exchange.class, "Sending 405 Method Not Allowed response", SimpleLogger.Level.WARN);
-        sendResponse(405, "{\"error\": \"Method Not Allowed\"}");
+        send(405, "{\"error\": \"Method Not Allowed\"}");
     }
 
-    public void sendMethodNotAllowedResponse(String... allowedMethods) throws IOException {
+    public void sendMethodNotAllowed(String... allowedMethods) throws IOException {
         logger.log(Exchange.class, "Sending 405 Method Not Allowed response, allowed methods: " + Arrays.toString(allowedMethods), SimpleLogger.Level.WARN);
         if (allowedMethods.length > 0) {
             allowMethods(allowedMethods);
         }
-        sendMethodNotAllowedResponse();
+        sendMethodNotAllowed();
     }
 
-    public void sendCreatedResponse() throws IOException {
+    public void sendCreated() throws IOException {
         logger.log(Exchange.class, "Sending 201 Created response", SimpleLogger.Level.INFO);
-        sendResponse(201, "{\"message\": \"Resource created successfully\"}");
+        send(201, "{\"message\": \"Resource created successfully\"}");
     }
 
-    public void sendCreatedResponse(String resourceLocation) throws IOException {
+    public void sendCreated(String resourceLocation) throws IOException {
         logger.log(Exchange.class, "Sending 201 Created response with location: " + resourceLocation, SimpleLogger.Level.INFO);
         addResponseHeader("Location", resourceLocation);
-        sendResponse(201, "{\"message\": \"Resource created successfully\", \"location\": \"" + resourceLocation + "\"}");
+        send(201, "{\"message\": \"Resource created successfully\", \"location\": \"" + resourceLocation + "\"}");
     }
 
-    public void sendNoContentResponse() throws IOException {
+    public void sendNoContent() throws IOException {
         logger.log(Exchange.class, "Sending 204 No Content response", SimpleLogger.Level.INFO);
-        sendResponse(204, "");
+        send(204, "");
     }
 
     public Exchange<IExchange> formatHTML() {
@@ -1822,7 +1822,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     }
 
     // ===== SEND RESPONSE =====
-    public void sendResponse() throws IOException {
+    public void send() throws IOException {
         if (responseSent) {
             logger.log(Exchange.class, "Response already sent, returning", SimpleLogger.Level.WARN);
             return;
@@ -1857,9 +1857,9 @@ public class Exchange<IExchange> implements AutoCloseable {
     public void close() {
         logger.log(Exchange.class, "Closing IExchange", SimpleLogger.Level.DEBUG);
         if (!responseSent) {
-            logger.log(Exchange.class, "Response not sent at all, sending error 500", SimpleLogger.Level.WARN);
+            logger.log(Exchange.class, "Response not sent at all, sending 204", SimpleLogger.Level.WARN);
             try {
-                sendJsonResponse(500, Map.of("error", "Response was never sent"));
+                send(204, "");
             } catch (IOException e) {}
         }
         if (wrapper) iExchangeHandler.closeExchange(iExchange);

@@ -141,7 +141,7 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
 
         @Override
         public Exchange<HttpExchange> createExchange(HttpExchange httpExchange) {
-            // Use the NEW generic constructor that takes all the raw data
+            // Use the generic constructor that takes all the raw data
             return new Exchange<>(
                     httpExchange.getRequestMethod(),           // method
                     httpExchange.getRequestURI(),              // requestUri
@@ -150,7 +150,7 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
                     httpExchange.getRequestHeaders(),          // requestHeaderMap
                     logger,                                    // logger
                     this.extractBody(httpExchange),
-                    this,                                      // iExchangeHandler (this!)
+                    this,                                      // iExchangeHandler (this)
                     httpExchange                               // exchange (the raw HttpExchange)
             );
         }
@@ -199,7 +199,6 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
             }
         }
 
-        @Override
         public String extractBody(HttpExchange exchange) {
             // Check if multipart - don't read body for multipart requests
             String contentType = getHeaderCaseInsensitive(exchange, "Content-Type");
@@ -230,6 +229,12 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
             // Handle redirects (no body)
             if (statusCode >= 300 && statusCode < 400) {
                 logger.log(this.getClass(), "Sending " + statusCode + " redirect...", SimpleLogger.Level.DEBUG);
+                exchange.sendResponseHeaders(statusCode, -1);
+                return;
+            }
+            // No content
+            if (statusCode == 204) {
+                logger.log(this.getClass(), "Sending 204 No Content...", SimpleLogger.Level.DEBUG);
                 exchange.sendResponseHeaders(statusCode, -1);
                 return;
             }

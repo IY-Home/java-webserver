@@ -56,7 +56,7 @@ public class UserProfileServer {
                 engine.replace("show_error_display", "none");
             }
             exchange.formatHTML();
-            exchange.sendResponse(engine.getTemplate());
+            exchange.send(engine.getTemplate());
         })
 
         // Handle login
@@ -104,13 +104,13 @@ public class UserProfileServer {
         .on("/register", exchange -> {
             TemplateEngine engine = TemplateEngine.fromFile("./userServiceDemo/templates/register.html");
             exchange.formatHTML();
-            exchange.sendResponse(engine.getTemplate());
+            exchange.send(engine.getTemplate());
         })
 
         // Handle form submission
         .on("/register", "POST", exchange -> {
             if (!exchange.isMultipartRequest()) {
-                exchange.sendBadRequestResponse("Expected multipart/form-data");
+                exchange.sendBadRequest("Expected multipart/form-data");
                 return;
             }
 
@@ -126,13 +126,13 @@ public class UserProfileServer {
                     email == null || email.trim().isEmpty() ||
                     phone == null || phone.trim().isEmpty() ||
                     password == null || password.trim().isEmpty()) {
-                exchange.sendBadRequestResponse("All fields are required");
+                exchange.sendBadRequest("All fields are required");
                 return;
             }
 
             // Check if username already exists
             if (findUserByEmail(name) != null) {
-                exchange.sendBadRequestResponse("Username already exists");
+                exchange.sendBadRequest("Username already exists");
                 return;
             }
 
@@ -209,7 +209,7 @@ public class UserProfileServer {
                     .replace("admin_name", currentUser.getName());
 
             exchange.formatHTML();
-            exchange.sendResponse(engine.getTemplate());
+            exchange.send(engine.getTemplate());
         })
 
         // Serve uploaded avatars

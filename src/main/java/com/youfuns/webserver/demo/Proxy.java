@@ -71,7 +71,7 @@ public class Proxy {
             LoggerManager.quickLog(Proxy.class, "  Forwarding: " + method + " " + fullPath);
 
             String response = forwardRequest(method, fullPath, exchange);
-            exchange.sendResponse(response);
+            exchange.send(response);
         });
 
         proxy.start();
