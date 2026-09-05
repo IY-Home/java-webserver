@@ -560,11 +560,12 @@ Map<String, String> formParams = exchange.getAllMultipartFormFields();
     exchange.setAttribute("startTime", System.nanoTime());
     return true;
 })
-.head(exchange -> {
+.head("/admin", exchange -> { 
+    // first parameter means the head only executes if path starts with the string. 
+    // Slashes at front and end are ignored.
+    // Only plain text, no regex or '$'.
     String jwt = exchange.getBearerToken();
-    return jwtService.
-
-authenticate(jwt); // if false, do not run the main endpoint. Stops subsequent heads too. Tails are unaffected.
+    return jwtService.authenticate(jwt); // if false, do not run the main endpoint. Stops subsequent heads too. Tails are unaffected.
 })
 ```
 
@@ -582,6 +583,9 @@ authenticate(jwt); // if false, do not run the main endpoint. Stops subsequent h
         System.out.println("Request to " + exchange.getRequestPath() + 
                             " took " + duration + "ms");
     }
+})
+.tail("/db", exchange -> {
+    exchange.getAttribute("db", Database.class).close();
 })
 ```
 
@@ -984,12 +988,9 @@ public class Main {
                     exchange.setAttribute("startTime", System.nanoTime());
                     return true;
                 })
-                .head(exchange -> {
-                    if (exchange.getRequestPath().startsWith("/api")) {
-                        String subject = JwtService.extractSubject(exchange.getBearerToken());
-                        return (subject != null); // demo
-                    }
-                    return true;
+                .head("/api", exchange -> {
+                    String subject = JwtService.extractSubject(exchange.getBearerToken());
+                    return (subject != null); // demo
                 })
                 .tail(exchange -> {
                     Long startTime = exchange.getAttribute("startTime", Long.class);

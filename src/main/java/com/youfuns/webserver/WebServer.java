@@ -263,7 +263,13 @@ public class WebServer<S, I, H> {
     }
 
     public WebServer<S, I, H> head(HeadHandler<I> action) {
-        headsAndTails.addHead(action);
+        headsAndTails.addHead("/", action);
+        logger.log(WebServer.class, "Set request head", SimpleLogger.Level.INFO);
+        return this;
+    }
+
+    public WebServer<S, I, H> head(String template, HeadHandler<I> action) {
+        headsAndTails.addHead(template, action);
         logger.log(WebServer.class, "Set request head", SimpleLogger.Level.INFO);
         return this;
     }
@@ -281,7 +287,13 @@ public class WebServer<S, I, H> {
     }
 
     public WebServer<S, I, H> tail(ExchangeHandler<I> action) {
-        headsAndTails.addTail(action);
+        headsAndTails.addTail("/", action);
+        logger.log(WebServer.class, "Set request tail", SimpleLogger.Level.INFO);
+        return this;
+    }
+
+    public WebServer<S, I, H> tail(String template, ExchangeHandler<I> action) {
+        headsAndTails.addTail(template, action);
         logger.log(WebServer.class, "Set request tail", SimpleLogger.Level.INFO);
         return this;
     }

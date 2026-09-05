@@ -31,8 +31,9 @@ public interface ExchangeHandlerInterface<InternalExchange> {
             boolean headsPassed = true;
 
             // Process heads
-            for (HeadHandler<InternalExchange> head : headsAndTails.getHeads()) {
-                if (!head.handle(exchange)) {
+            for (Map.Entry<String, HeadHandler<InternalExchange>> head : headsAndTails.getHeads()) {
+                if (!exchange.getRequestPath().replaceAll("^/|/$", "").startsWith(head.getKey().replaceAll("^/|/$", ""))) continue;
+                if (!head.getValue().handle(exchange)) {
                     headsPassed = false;
                     break; // Head prevented further processing
                 }
@@ -50,8 +51,9 @@ public interface ExchangeHandlerInterface<InternalExchange> {
         } finally {
             try {
                 // Process tails
-                for (ExchangeHandler<InternalExchange> tail : headsAndTails.getTails()) {
-                    tail.handle(exchange);
+                for (Map.Entry<String, ExchangeHandler<InternalExchange>> tail : headsAndTails.getTails()) {
+                    if (!exchange.getRequestPath().replaceAll("^/|/$", "").startsWith(tail.getKey().replaceAll("^/|/$", ""))) continue;
+                    tail.getValue().handle(exchange);
                 }
             } catch (Exception e) {
                 try {
