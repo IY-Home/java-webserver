@@ -376,6 +376,8 @@ myServer.on("/change", exchange -> {
 
 ### Server Handler Demo
 
+***Note:* You can use the `getAndSaveAt` function for convenience, explained below.**
+
 ```java
 .on("/upload", "POST", exchange -> {
     if (!exchange.isMultipartRequest()) {
@@ -546,7 +548,7 @@ Map<String, String> formParams = exchange.getAllMultipartFormFields();
 ```
 
 
-## Multiple Heads/Tails (Request Interceptors)
+## Heads and Tails (Request Interceptors)
 
 ### Pre-Request Head
 
@@ -585,7 +587,8 @@ Map<String, String> formParams = exchange.getAllMultipartFormFields();
     }
 })
 .tail("/db", exchange -> {
-    exchange.getAttribute("db", Database.class).close();
+    Database db = exchange.getAttribute("db", Database.class);
+    if (db != null) db.close();
 })
 ```
 
