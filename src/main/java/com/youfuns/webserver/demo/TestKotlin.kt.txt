@@ -47,13 +47,9 @@ fun main() {
             it.setAttribute("startTime", System.nanoTime())
             true
         }
-        .head {
-            if (it.requestPath.startsWith("/api")) {
-                val subject = JwtService.extractSubject(it.bearerToken)
-                subject != null // demo
-            } else {
-                true
-            }
+        .head ("/api") {
+            val subject = JwtService.extractSubject(it.bearerToken)
+            subject != null // demo
         }
         .tail {
             val startTime = it.getAttribute("startTime", Long::class.java)
