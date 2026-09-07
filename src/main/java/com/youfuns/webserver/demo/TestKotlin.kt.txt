@@ -11,18 +11,18 @@ fun main() {
 
     myServer
         .on("/api/users", "GET") {
-            it.sendJsonResponse(mapOf("users" to "list"))
+            it.sendJson(mapOf("users" to "list"))
         }
         .on("/api/users/$") { params, exchange ->
             val id = params[0]
-            exchange.sendResponse("User: $id")
+            exchange.send("User: $id")
         }
         .on("/api/user/update", "POST") {
             when (it.getAndSaveAt("file", arrayOf("png", "jpg", "jpeg"), "./uploads/").toInt()) {
-                -1 -> it.sendBadRequestResponse("Expected multipart/form-data")
-                -2 -> it.sendBadRequestResponse("No file uploaded")
-                -3 -> it.sendBadRequestResponse("Only PNG and JPEG allowed")
-                0 -> it.sendResponse("Uploaded successfully")
+                -1 -> it.sendBadRequest("Expected multipart/form-data")
+                -2 -> it.sendBadRequest("No file uploaded")
+                -3 -> it.sendBadRequest("Only PNG and JPEG allowed")
+                0 -> it.send("Uploaded successfully")
             }
         }
         .on("/api/setConfig", "POST") {
@@ -32,15 +32,15 @@ fun main() {
             }
 
             when (result.toInt()) {
-                -1 -> it.sendBadRequestResponse("Expected multipart/form-data")
-                -2 -> it.sendBadRequestResponse("No config uploaded")
-                -3 -> it.sendBadRequestResponse("Only JSON files allowed")
-                0 -> it.sendResponse("Uploaded successfully!")
+                -1 -> it.sendBadRequest("Expected multipart/form-data")
+                -2 -> it.sendBadRequest("No config uploaded")
+                -3 -> it.sendBadRequest("Only JSON files allowed")
+                0 -> it.send("Uploaded successfully!")
             }
         }
         .serveStatic("/", "./public", false, "index.html")
         .onNotFound {
-            it.sendResponse(404, "Not Found: ${it.requestPath}")
+            it.send(404, "Not Found: ${it.requestPath}")
         }
         .head {
             println("Request: ${it.requestPath}")
@@ -65,8 +65,8 @@ fun main() {
         .onException { exchange, exception ->
             LoggerManager.quickLog("Caught ${exception::class.simpleName}: ${exception.message}")
             when (exception) {
-                is IllegalArgumentException -> exchange.sendBadRequestResponse("Bad request: ${exception.message}")
-                else -> exchange.sendErrorResponse("An error occurred.")
+                is IllegalArgumentException -> exchange.sendBadRequest("Bad request: ${exception.message}")
+                else -> exchange.sendError("An error occurred.")
             }
         }
         .limitUploadSize(50 * 1024 * 1024) // 50 MB
