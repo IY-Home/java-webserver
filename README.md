@@ -306,6 +306,13 @@ Serving a file from resource (/src/main/resources):
 .serveFileResource("/login","./login.html") // serving /src/main/resources/login.html
 ```
 
+Serving raw bytes:
+```java
+// with an Exchange
+byte[] aByteArray = myGetFileBytes();
+exchange.serveFile(aByteArray)
+```
+
 ## 404 Handler
 
 ```java
@@ -376,7 +383,7 @@ myServer.on("/change", exchange -> {
 
 ### Server Handler Demo
 
-***Note:* You can use the `getAndSaveAt` function for convenience, explained below.**
+***Note:* You can use the `getAndSaveAt` function for convenience, explained below. The manual method is as follows.**
 
 ```java
 .on("/upload", "POST", exchange -> {
@@ -439,6 +446,11 @@ It still returns the codes, but instead of saveFileAt it performs your action.
 Note that `FileAction` is a `FunctionalInterface` that declares throwing `IOException` so you don't have to catch it.
 The action is only executed if the validation is passed (code = 1).
 
+There is an equivalent 
+```java
+getMultipleAndSaveAt(String filename, String[] extensions, FileAction<UploadedFile> fileAction) 
+```
+which passes multiple files to the action, useful for HTML input with `multiple`.
 
 ## HTML Form (URL-encoded)
 
@@ -710,7 +722,9 @@ exchange.isExtension(file, "jpg")
 ### `UploadedFile`
 
 ```java
-UploadedFile file = exchange.getFile("file");
+UploadedFile file = exchange.getFile("file"); // Null if non-existent, can check with hasFile()
+List<UploadedFile> images = exchange.getFiles("images"); // <input type="file" name="images" multiple>
+Map<String, List<UploadedFile>> files = exchange.getAllFiles();
 String fieldName = file.getFieldName();
 String filename = file.getFilename();
 String contentType = file.getContentType();

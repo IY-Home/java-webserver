@@ -40,7 +40,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     private final Map<String, String> responseHeadersMap = new HashMap<>();
 
     // File upload fields
-    private final Map<String, UploadedFile> uploadedFiles = new HashMap<>();
+    private final Map<String, List<UploadedFile>> uploadedFiles = new HashMap<>();
     private final Map<String, String> formFields = new HashMap<>();
     private boolean multipartParsed = false;
 
@@ -678,8 +678,11 @@ public class Exchange<IExchange> implements AutoCloseable {
                     String contentType = item.getContentType();
                     byte[] data = IOUtils.toByteArray(item.getInputStream());
 
-                    uploadedFiles.put(fieldName, new UploadedFile(fieldName, filename, contentType, data));
-                    logger.log(Exchange.class, "File uploaded: " + filename + " (" + data.length + " bytes)", SimpleLogger.Level.DEBUG);
+                    uploadedFiles
+                            .computeIfAbsent(fieldName, k -> new ArrayList<>())
+                            .add(new UploadedFile(fieldName, filename, contentType, data));
+
+                    logger.log(Exchange.class, "File uploaded: " + filename + " (" + data.length + " bytes) for field '" + fieldName + "'", SimpleLogger.Level.DEBUG);
                 }
             }
         } catch (FileUploadException e) {
@@ -703,15 +706,28 @@ public class Exchange<IExchange> implements AutoCloseable {
      */
     public UploadedFile getFile(String fieldName) {
         parseMultipartIfNeeded();
-        UploadedFile file = uploadedFiles.get(fieldName);
+        List<UploadedFile> files = uploadedFiles.get(fieldName);
+        if (files == null || files.isEmpty()) return null;
+        UploadedFile file = files.getFirst();
         logger.log(Exchange.class, "Getting file '" + fieldName + "': " + file, SimpleLogger.Level.DEBUG);
         return file;
     }
 
     /**
+     * Gets all uploaded files with one form field name.
+     */
+    public List<UploadedFile> getFiles(String fieldName) {
+        parseMultipartIfNeeded();
+        List<UploadedFile> files = uploadedFiles.get(fieldName);
+        logger.log(Exchange.class, "Getting files '" + fieldName + "', total " + files.size(), SimpleLogger.Level.DEBUG);
+        return files;
+    }
+
+
+    /**
      * Gets all uploaded files.
      */
-    public Map<String, UploadedFile> getAllFiles() {
+    public Map<String, List<UploadedFile>> getAllFiles() {
         parseMultipartIfNeeded();
         logger.log(Exchange.class, "Getting all files: " + uploadedFiles.keySet(), SimpleLogger.Level.DEBUG);
         return Collections.unmodifiableMap(uploadedFiles);
@@ -1041,6 +1057,7 @@ public class Exchange<IExchange> implements AutoCloseable {
             return -3; // "Only " + extensionsAccepted + " accepted"
         }
 
+        this.attributes.remove("_path_traversal_");
         logger.log(Exchange.class, "File validation passed, executing file action", SimpleLogger.Level.DEBUG);
         fileAction.accept(file);
         if (this.getAttribute("_path_traversal_", Boolean.class) != null) {
@@ -1056,9 +1073,75 @@ public class Exchange<IExchange> implements AutoCloseable {
             logger.log(Exchange.class, "Saving file to: " + savePath, SimpleLogger.Level.DEBUG);
             saveFileAt(file, savePath);
         });
-        if (this.getAttribute("_path_traversal_", Boolean.class) != null) {
-            return -4;
+
+        return result;
+    }
+
+    public short getMultipleAndSaveAt(String filename, String[] extensions, FileAction<UploadedFile> fileAction) throws IOException {
+        logger.log(Exchange.class, "getMultipleAndSaveAt called with filename: " + filename + ", extensions: " + Arrays.toString(extensions), SimpleLogger.Level.DEBUG);
+
+        if (!this.isMultipartRequest()) {
+            logger.log(Exchange.class, "Not a multipart request, returning -1", SimpleLogger.Level.WARN);
+            return -1;
         }
+
+        List<UploadedFile> files = this.getFiles(filename);
+        if (files == null || files.isEmpty()) {
+            logger.log(Exchange.class, "No files found for field '" + filename + "', returning -2", SimpleLogger.Level.WARN);
+            return -2;
+        }
+
+        // Validate extensions for ALL files FIRST
+        boolean allowAll = extensions.length > 0 && extensions[0].equals("all");
+
+        if (!allowAll) {
+            for (UploadedFile file : files) {
+                boolean isExtensionMatch = false;
+                for (String extension : extensions) {
+                    if (isExtension(file, extension)) {
+                        isExtensionMatch = true;
+                        break;
+                    }
+                }
+                if (!isExtensionMatch) {
+                    logger.log(Exchange.class, "Extension mismatch for file '" + file.getFilename() + "', returning -3", SimpleLogger.Level.WARN);
+                    return -3;
+                }
+            }
+        }
+
+        logger.log(Exchange.class, "All files passed validation, executing file action for " + files.size() + " files", SimpleLogger.Level.DEBUG);
+
+        this.attributes.remove("_path_traversal_");
+        // Execute action on each file
+        for (UploadedFile file : files) {
+            fileAction.accept(file);
+
+            // Check for path traversal after each action
+            if (this.getAttribute("_path_traversal_", Boolean.class) != null) {
+                logger.log(Exchange.class, "Path traversal detected, returning -4", SimpleLogger.Level.WARN);
+                return -4;
+            }
+        }
+
+        logger.log(Exchange.class, "All files processed successfully, returning 0", SimpleLogger.Level.INFO);
+        return 0;
+    }
+
+    public short getMultipleAndSaveAt(String filename, String[] extensions, String saveDir) throws IOException {
+        logger.log(Exchange.class, "getMultipleAndSaveAt called with filename: " + filename + ", extensions: " + Arrays.toString(extensions) + ", saveDir: " + saveDir, SimpleLogger.Level.DEBUG);
+
+        Path dir = Paths.get(saveDir).normalize().toAbsolutePath();
+        if (!Files.exists(dir)) {
+            Files.createDirectories(dir);
+            logger.log(Exchange.class, "Created directory: " + saveDir, SimpleLogger.Level.DEBUG);
+        }
+
+        short result = this.getMultipleAndSaveAt(filename, extensions, file -> {
+            logger.log(Exchange.class, "Saving file '" + file.getFilename() + "' to: " + saveDir, SimpleLogger.Level.DEBUG);
+            saveFileSafe(file, saveDir, true);  // preserveOriginalName = true
+        });
+
         return result;
     }
 

@@ -39,7 +39,7 @@ public class WebServer<S, I, H> {
 
     private WebServer(WebServerInterface<S, I, H> serverInterface, InetSocketAddress address, SimpleLogger logger) {
         if (!Builder.isCurrentlyBuilding()) {
-            throw new SecurityException("WebServer must be initialized by builder (WebServer.builder()).");
+            throw new IllegalCallerException("WebServer must be initialized by builder (WebServer.builder()).");
         }
 
         this.logger = logger;
