@@ -1,6 +1,6 @@
 package com.youfuns.webserver;
 
-import com.youfuns.logger.ConsoleLogger;
+import com.youfuns.logger.OutputLogger;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.interfaces.*;
 import com.youfuns.webserver.servers.ExchangeHandlerInterface;
@@ -37,7 +37,7 @@ public class WebServer<S, I, H> {
 
     private boolean started;
 
-    private WebServer(WebServerInterface<S, I, H> serverInterface, InetSocketAddress address, SimpleLogger logger) {
+    private WebServer(WebServerInterface<S, I, H> serverInterface, InetSocketAddress address, SimpleLogger logger, int backlog) {
         if (!Builder.isCurrentlyBuilding()) {
             throw new IllegalCallerException("WebServer must be initialized by builder (WebServer.builder()).");
         }
@@ -45,27 +45,28 @@ public class WebServer<S, I, H> {
         this.logger = logger;
 
         this.serverInterface = serverInterface;
+        serverInterface.setLogger(logger);
         this.homeHandler = new InternalHomeHandler<>(logger);
 
+        logger.log(WebServer.class, "Creating Web Server...", SimpleLogger.Level.INFO);
+
         if (serverInterface.supportsMultipleContexts()) {
-            S result = serverInterface.createServer(address, 0);
+            S result = serverInterface.createServer(address, backlog);
             if (result == null) {
-                this.server = serverInterface.createServer(address, 0, getInternalHandler(homeHandler));
+                this.server = serverInterface.createServer(address, backlog, getInternalHandler(homeHandler));
             } else {
                 this.server = result;
                 serverInterface.createContext(server, "/", getInternalHandler(homeHandler));
             }
         } else {
-            S result = serverInterface.createServer(address, 0, getInternalHandler(homeHandler));
+            S result = serverInterface.createServer(address, backlog, getInternalHandler(homeHandler));
             if (result == null) {
-                this.server = serverInterface.createServer(address, 0);
+                this.server = serverInterface.createServer(address, backlog);
                 serverInterface.createContext(server, "/", getInternalHandler(homeHandler));
             } else {
                 this.server = result;
             }
         }
-
-        logger.log(WebServer.class, "Starting Web Server...", SimpleLogger.Level.INFO);
 
         logger.log(WebServer.class, "Created Web Server at port " + address.getPort(), SimpleLogger.Level.INFO);
 
@@ -76,6 +77,10 @@ public class WebServer<S, I, H> {
         this.exchangeInterface = serverInterface.getExchangeHandlerAdapters();
 
         dynamicHandlers = new HashMap<>();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
+
+        logger.log(WebServer.class, "Initialized Web Server, configuring endpoints", SimpleLogger.Level.INFO);
     }
 
     public static WebServer<?, ?, ?> create(int port) {
@@ -437,12 +442,14 @@ public class WebServer<S, I, H> {
         private InetSocketAddress serverAddress;
         private SimpleLogger logger;
         private WebServerInterface<?, ?, ?> serverInterface;
+        private int backlog;
         private static final ThreadLocal<Boolean> buildingFlag = ThreadLocal.withInitial(() -> false);
 
         private Builder() {
             this.serverAddress = null;
-            this.logger = new ConsoleLogger();
+            this.logger = new OutputLogger();
             this.serverInterface = WebServerType.SUN_NET_HTTPSERVER.getServerInterface(logger);
+            this.backlog = 0;
         }
 
         static boolean isCurrentlyBuilding() {
@@ -480,12 +487,17 @@ public class WebServer<S, I, H> {
             return this;
         }
 
+        public Builder backlog(int backlog) {
+            this.backlog = backlog;
+            return this;
+        }
+
         public WebServer<?, ?, ?> build() {
             if (serverAddress == null) {
                 throw new IllegalStateException("Server port is not set");
             }
             buildingFlag.set(true);
-            WebServer<?, ?, ?> server = new WebServer<>(serverInterface, serverAddress, logger);
+            WebServer<?, ?, ?> server = new WebServer<>(serverInterface, serverAddress, logger, backlog);
             buildingFlag.set(false);
             return server;
         }

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
-    private final TemplateMatcher templateMatcher;
     private final Map<Map.Entry<String, String>, DynamicExchangeHandler<I>> dynamicPaths;
     private final Map<Map.Entry<String, String>, ExchangeHandler<I>> paths;
     private ExchangeHandler<I> onNotFound;
@@ -20,7 +19,6 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
         super();
         this.dynamicPaths = new HashMap<>();
         this.paths = new HashMap<>();
-        this.templateMatcher = new TemplateMatcher('$');
     }
 
     public void addPath(String template, DynamicExchangeHandler<I> dynamicExchangeHandler) {
@@ -78,8 +76,8 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
             if (!exchange.getHttpMethod().toLowerCase().equals(requiredMethod)) {
                 continue;
             }
-            String[] extracted = templateMatcher.extractValues(template, address);
-            String[] extracted2 = extracted != null && extracted.length > 0 ? extracted : templateMatcher.extractValues(template, matchableAddress);
+            String[] extracted = TemplateMatcher.extractValues(template, address);
+            String[] extracted2 = extracted != null && extracted.length > 0 ? extracted : TemplateMatcher.extractValues(template, matchableAddress);
             if (extracted2 != null && extracted2.length > 0) {
                 entry.getValue().handle(extracted2, exchange);
                 return;
@@ -88,8 +86,8 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
 
         for (Map.Entry<String, DynamicExchangeHandler<I>> entry : defaultTemplateHandlers.entrySet()) {
             String template = entry.getKey();
-            String[] extracted = templateMatcher.extractValues(template, address);
-            String[] extracted2 = extracted != null && extracted.length > 0 ? extracted : templateMatcher.extractValues(template, matchableAddress);
+            String[] extracted = TemplateMatcher.extractValues(template, address);
+            String[] extracted2 = extracted != null && extracted.length > 0 ? extracted : TemplateMatcher.extractValues(template, matchableAddress);
             if (extracted2 != null && extracted2.length > 0) {
                 entry.getValue().handle(extracted2, exchange);
                 return;

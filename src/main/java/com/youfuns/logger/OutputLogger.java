@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class ConsoleLogger implements SimpleLogger {
-    private java.io.PrintStream console;
+public class OutputLogger implements SimpleLogger {
+    private final java.io.PrintStream console;
     private volatile Level logLevel;
     private volatile boolean outputOn;
 
@@ -15,12 +15,13 @@ public class ConsoleLogger implements SimpleLogger {
     private boolean showClass;
     private boolean showLevelPrefix;
     private boolean showThrowableStackTrace;
+    private boolean getStackCaller;
     private String prefix;
     private String throwablePrefix;
 
     private DateTimeFormatter dateTimeFormatter;
 
-    public ConsoleLogger(java.io.PrintStream console) {
+    public OutputLogger(java.io.PrintStream console) {
         if (console != null) { this.console = console; } else { this.console = System.out; }
         this.outputOn = true;
         this.logLevel = Level.INFO;
@@ -30,10 +31,11 @@ public class ConsoleLogger implements SimpleLogger {
         this.prefix = "> ";
         this.throwablePrefix = "\n[EXCEPTION]: ";
         this.showThrowableStackTrace = true;
+        this.getStackCaller = false;
         this.dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     }
 
-    public ConsoleLogger() {
+    public OutputLogger() {
         this(System.out);
     }
 
@@ -49,46 +51,51 @@ public class ConsoleLogger implements SimpleLogger {
     public boolean isOutputOn() {
         return outputOn;
     }
-    public ConsoleLogger setOutputOn(boolean outputOn) {
+    public OutputLogger setOutputOn(boolean outputOn) {
         this.outputOn = outputOn;
         return this;
     }
-    public ConsoleLogger toggleOutput() {
+    public OutputLogger toggleOutput() {
         this.outputOn = !this.outputOn;
         return this;
     }
 
-    public ConsoleLogger setShowLevel(boolean show) {
+    public OutputLogger setShowLevel(boolean show) {
         this.showLevelPrefix = show;
         return this;
     }
 
-    public ConsoleLogger setShowTimestamp(boolean show) {
+    public OutputLogger setShowTimestamp(boolean show) {
         this.showTimestamp = show;
         return this;
     }
 
-    public ConsoleLogger setShowClass(boolean show) {
+    public OutputLogger setShowClass(boolean show) {
         this.showClass = show;
         return this;
     }
 
-    public ConsoleLogger setShowThrowableStackTrace(boolean show) {
+    public OutputLogger setShowThrowableStackTrace(boolean show) {
         this.showThrowableStackTrace = show;
         return this;
     }
 
-    public ConsoleLogger setPrefix(String prefix) {
+    public OutputLogger setPrefix(String prefix) {
         if (prefix != null) this.prefix = prefix;
         return this;
     }
 
-    public ConsoleLogger setThrowablePrefix(String throwablePrefix) {
+    public OutputLogger setThrowablePrefix(String throwablePrefix) {
         if (throwablePrefix != null) this.throwablePrefix = throwablePrefix;
         return this;
     }
 
-    public ConsoleLogger setDateTimeFormatter(DateTimeFormatter dateTimeFormatter) {
+    public OutputLogger setGetStackCaller(boolean getStackCaller) {
+        this.getStackCaller = getStackCaller;
+        return this;
+    }
+
+    public OutputLogger setDateTimeFormatter(DateTimeFormatter dateTimeFormatter) {
         this.dateTimeFormatter = dateTimeFormatter;
         return this;
     }
@@ -133,7 +140,13 @@ public class ConsoleLogger implements SimpleLogger {
     }
 
     private String getPrefix(Class<?> clazz, Level level) {
-        String className = showIf(((clazz == null || clazz.getCanonicalName() == null) ? "Anonymous" : clazz.getCanonicalName()) + ", ", showClass);
+        String className;
+        if (!getStackCaller) {
+            className = showIf(((clazz == null || clazz.getCanonicalName() == null) ? "Anonymous" : clazz.getCanonicalName()) + ", ", showClass);
+        } else {
+            java.lang.StackTraceElement caller = Thread.currentThread().getStackTrace()[3];
+            className = showIf(caller.getClassName() + "." + caller.getMethodName() + "(" + caller.getFileName() + ":" + caller.getLineNumber() + "), ", showClass);
+        }
         LocalDateTime now = LocalDateTime.now();
         String timestamp = showIf(now.format(dateTimeFormatter) + ", ", showTimestamp);
         String levelPrefix = showIf(level.name(), showLevelPrefix);

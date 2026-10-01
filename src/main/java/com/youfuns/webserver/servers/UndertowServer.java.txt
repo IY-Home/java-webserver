@@ -2,7 +2,7 @@
 
 package com.youfuns.webserver.servers;
 
-import com.youfuns.logger.ConsoleLogger;
+import com.youfuns.logger.OutputLogger;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.interfaces.Exchange;
 import io.undertow.Undertow;
@@ -287,7 +287,7 @@ public class UndertowServer implements WebServerInterface<Undertow, HttpServerEx
 
         @Override
         public org.apache.commons.fileupload.RequestContext createFileUploadRequestContext(HttpServerExchange exchange) {
-            return new UndertowRequestContext(exchange);
+            return new UndertowRequestContext(exchange.getUnderlyingExchange());
         }
 
         @Override

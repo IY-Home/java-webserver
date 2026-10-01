@@ -2,15 +2,12 @@ package com.youfuns.webserver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class TemplateMatcher {
-    private char placeholder;
+    private static final char placeholder = '$';
 
-    public TemplateMatcher(char placeholder) {
-        this.placeholder = placeholder;
-    }
-
-    public String[] extractValues(String template, String input) {
+    public static String[] extractValues(String template, String input) {
         // If template has no placeholder, return empty array
         if (!template.contains(String.valueOf(placeholder))) {
             return new String[0];
@@ -128,6 +125,4 @@ public class TemplateMatcher {
 
         return results.toArray(new String[0]);
     }
-
-
 }

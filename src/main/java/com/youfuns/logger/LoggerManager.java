@@ -2,7 +2,7 @@ package com.youfuns.logger;
 
 public enum LoggerManager {
 
-    INSTANCE(new ConsoleLogger(System.out));
+    INSTANCE(new OutputLogger(System.out));
 
     private SimpleLogger logger;
     private final Class<? extends SimpleLogger> loggerType;

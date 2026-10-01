@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Exchange<IExchange> implements AutoCloseable {
     private final ExchangeHandlerInterface<IExchange> iExchangeHandler;
@@ -83,7 +84,10 @@ public class Exchange<IExchange> implements AutoCloseable {
         logger.log(Exchange.class, "Received " + method + " request to " + fullAddress, SimpleLogger.Level.INFO);
         logger.log(Exchange.class, "Request protocol: " + protocol, SimpleLogger.Level.DEBUG);
         logger.log(Exchange.class, "Remote address: " + remoteAddress, SimpleLogger.Level.DEBUG);
-        logger.log(Exchange.class, "Request requestHeaderMap: " + requestHeaderMap, SimpleLogger.Level.DEBUG);
+        logger.log(Exchange.class, "Request headers: " + requestHeaderMap.entrySet()
+                .stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining(", ")), SimpleLogger.Level.DEBUG);
         logger.log(Exchange.class, "Query parameters: " + queryParams, SimpleLogger.Level.DEBUG);
         logger.log(Exchange.class, "Request body: " + (body != null && !body.isEmpty() ? body : "(empty)"), SimpleLogger.Level.DEBUG);
     }
@@ -203,11 +207,6 @@ public class Exchange<IExchange> implements AutoCloseable {
     public InetSocketAddress getRemoteSocketAddress() {
         logger.log(Exchange.class, "Getting remote socket address: " + remoteAddress, SimpleLogger.Level.DEBUG);
         return remoteAddress;
-    }
-
-    public Map<String, List<String>> getAllRequestHeaders() {
-        logger.log(Exchange.class, "Getting all request requestHeaderMap: " + requestHeaderMap, SimpleLogger.Level.DEBUG);
-        return requestHeaderMap;
     }
 
     public String getRequestBody() {
@@ -663,7 +662,7 @@ public class Exchange<IExchange> implements AutoCloseable {
 
         try {
             // Use the custom ApacheIExchangeContext to bridge IExchange to Commons FileUpload
-            List<FileItem> items = upload.parseRequest(iExchangeHandler.createFileUploadRequestContext(iExchange));
+            List<FileItem> items = upload.parseRequest(iExchangeHandler.createFileUploadRequestContext(this));
             logger.log(Exchange.class, "Multipart parse complete, found " + items.size() + " items", SimpleLogger.Level.DEBUG);
 
             for (FileItem item : items) {

@@ -35,7 +35,7 @@ WebServer.builder().port(8080).build()
 ### Using custom `SimpleLogger`
 
 ```java
-WebServer.builder().port(8080).logger(new ConsoleLogger(System.out)).build()
+WebServer.builder().port(8080).logger(new OutputLogger(System.out)).build()
         .start();
 ```
 
@@ -59,13 +59,13 @@ import com.youfuns.webserver.servers.WebServerType;
 var server = WebServer.builder() // get builder
         .port(8080) // int port, or
         .port(new InetSocketAddress("127.0.0.1", 8080)) // InetSocketAddress
-        .logger(new ConsoleLogger(System.out)) // SimpleLogger
+        .logger(new OutputLogger(System.out)) // SimpleLogger
         .server(WebServerType.SUN_NET_HTTPSERVER) // WebServerType, or
         .server(new NetHttpServer()) // WebServerInterface
         .build() // Returns a WebServer<?, ?, ?>
 ```
 
-Logger (default `ConsoleLogger`) and server (default `WebServerType.SUN_NET_HTTPSERVER`) are optional, but port is mandatory.
+Logger (default `OutputLogger`) and server (default `WebServerType.SUN_NET_HTTPSERVER`) are optional, but port is mandatory.
 If not set, `build()` throws `IllegalStateException`.
 
 ### Web Server Types
@@ -130,22 +130,23 @@ public interface SimpleLogger {
 
 To use it, import `com.youfuns.logger.*`.
 
-The default implementation is `ConsoleLogger`, which prints to any `java.io.PrintStream`, by default `System.out`.
+The default implementation is `OutputLogger`, which prints to any `java.io.PrintStream`, by default `System.out`.
 
 ```java
 // Log to console
-ConsoleLogger logger = new ConsoleLogger(System.out);
+OutputLogger logger = new OutputLogger(System.out);
 
 // Log to a file
-ConsoleLogger fileLogger = new ConsoleLogger(new java.io.PrintStream("./logs/app.log"));
+OutputLogger fileLogger = new OutputLogger(new java.io.PrintStream("./logs/app.log"));
 
-// Only for ConsoleLogger:
+// Only for OutputLogger:
 
 // Set config
 logger
     .setShowTimestamp(true)
     .setShowClass(true)
     .setShowLevel(true)
+    .setGetStackCaller(true) // gets and displays caller file number from stack trace, e.g. (WebServer.java:113)
     .setPrefix("> ")
     .setLogLevel(Level.DEBUG)
     .setOutputOn(true);

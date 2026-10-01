@@ -1,6 +1,6 @@
 package com.youfuns.webserver.demo;
 
-import com.youfuns.logger.ConsoleLogger;
+import com.youfuns.logger.OutputLogger;
 import com.youfuns.logger.LoggerManager;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.JwtService;
@@ -36,7 +36,7 @@ public class UserProfileServer {
         // Add admin user to the list
         users.add(ADMIN_USER);
 
-        ConsoleLogger logger = new ConsoleLogger();
+        OutputLogger logger = new OutputLogger();
         logger.setLogLevel(SimpleLogger.Level.DEBUG);
 
         var server = WebServer.create(8080, logger);

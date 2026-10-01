@@ -3,7 +3,7 @@ package com.youfuns.webserver.servers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import com.youfuns.logger.ConsoleLogger;
+import com.youfuns.logger.OutputLogger;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.interfaces.Exchange;
 
@@ -31,7 +31,7 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
     private final ExchangeHandlerInterface<HttpExchange> exchangeHandler;
 
     public NetHttpServer() {
-        this.logger = new ConsoleLogger();
+        this.logger = new OutputLogger();
         this.exchangeHandler = new NetExchangeHandler();
     }
 
@@ -132,7 +132,7 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
         private SimpleLogger logger;
 
         public NetExchangeHandler() {
-            this.logger = new ConsoleLogger();
+            this.logger = new OutputLogger();
         }
 
         public void setLogger(SimpleLogger logger) {
@@ -253,8 +253,8 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
         }
 
         @Override
-        public org.apache.commons.fileupload.RequestContext createFileUploadRequestContext(HttpExchange exchange) {
-            return new ApacheHttpExchangeContext(exchange);
+        public org.apache.commons.fileupload.RequestContext createFileUploadRequestContext(Exchange<HttpExchange> exchange) {
+            return new ApacheHttpExchangeContext(exchange.getUnderlyingExchange());
         }
 
         @Override
