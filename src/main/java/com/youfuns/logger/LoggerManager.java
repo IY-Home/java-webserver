@@ -47,4 +47,13 @@ public enum LoggerManager {
     public static void quickLog(String message) {
         INSTANCE.getLogger().log(null, message, SimpleLogger.Level.DEBUG);
     }
+    public static void quickLog(Object caller, Throwable t) {
+        INSTANCE.getLogger().log(caller.getClass(), t.getClass().getSimpleName() + ": " + t.getMessage(), SimpleLogger.Level.WARN, t);
+    }
+    public static void quickLog(Class<?> clazz, Throwable t) {
+        INSTANCE.getLogger().log(clazz, t.getClass().getSimpleName() + ": " + t.getMessage(), SimpleLogger.Level.WARN, t);
+    }
+    public static void quickLog(Throwable t) {
+        INSTANCE.getLogger().log(null, t.getClass().getSimpleName() + ": " + t.getMessage(), SimpleLogger.Level.WARN, t);
+    }
 }

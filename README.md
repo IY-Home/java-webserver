@@ -186,8 +186,6 @@ and put `Object` as the `IExchange`.
 However, with this mock instance, parsing multipart, serving file, and sending response will throw
 `UnsupportedOperationException`.
 
-You can only call `send` once. To check if response is sent already, use `responseSent()` (boolean).
-
 The `Exchange` also lets you store attributes for use between heads, tails, and handlers. Simply use:
 
 ```java
@@ -369,6 +367,178 @@ myServer.on("/change", exchange -> {
 });
 ```
 
+## Heads and Tails (Request Interceptors)
+
+### Pre-Request Head
+
+```java
+.head(exchange -> {
+    System.out.println("Request: " + exchange.getRequestPath());
+    return true; // Continue processing
+})
+// Start timing in head
+.head(exchange -> {
+    exchange.setAttribute("startTime", System.nanoTime());
+    return true;
+})
+.head("/admin", exchange -> { 
+    // first parameter means the head only executes if path starts with the string. 
+    // Slashes at front and end are ignored.
+    // Only plain text, no regex or '$'.
+    String jwt = exchange.getBearerToken();
+    return jwtService.authenticate(jwt); // if false, do not run the main endpoint. Stops subsequent heads too. Tails are unaffected.
+})
+```
+
+### Post-Request Tail
+
+```java
+.tail(exchange -> {
+    System.out.println("Request completed: " + exchange.getRequestPath());
+})
+// End timing in tail
+.tail(exchange -> {
+    Long startTime = exchange.getAttribute("startTime", Long.class);
+    if (startTime != null) {
+        long duration = (System.nanoTime() - startTime) / 1_000_000; // milliseconds
+        System.out.println("Request to " + exchange.getRequestPath() + 
+                            " took " + duration + "ms");
+    }
+})
+.tail("/db", exchange -> {
+    Database db = exchange.getAttribute("db", Database.class);
+    if (db != null) db.close();
+})
+```
+
+***Note:** You can have multiple head and tails, and they run at the order that they are added.
+Only heads return boolean.
+Even if the main handler was not run due to a head returning false,
+tails will still run, allowing you to close database connections or log timing.*
+
+
+
+## Response Methods
+
+You can only call these methods once. To check if response is sent already, use `responseSent()` (boolean).
+By default, if you do not call send at all, it would automatically send `204 No Content`. To prevent this (just closing the exchange, leaving empty response), set on your webserver
+```java
+.setNoContentDefault(false)
+```
+
+### Text Response
+
+```java
+exchange.send("Hello World");
+```
+
+### JSON Response
+
+```java
+Map<String, Object> data = new HashMap<>();
+data.put("message", "Hello");
+data.put("status", "ok");
+exchange.sendJson(data);
+```
+
+### Status Code with Body
+
+```java
+exchange.send(404, "Not Found");
+```
+
+### Common JSON Responses
+
+All of the following functions send `{"error": "something"}`.
+
+```java
+exchange.sendError("Generic error");   // 500
+exchange.sendError(406, "With error code"); // 406
+exchange.sendNotFound();      // 404
+exchange.sendBadRequest("error");  // 400
+exchange.sendUnauthorized();   // 401
+exchange.sendForbidden();      // 403
+exchange.sendMethodNotAllowed();  // 405
+exchange.sendMethodNotAllowed("GET", "POST");  // 405
+exchange.sendCreated();        // 201
+exchange.sendNoContent();      // 204
+```
+
+### Helper format functions
+
+```java
+exchange.formatHTML(); // equivalent to `addResponseHeader("Content-Type", "text/html; charset=UTF-8");`
+exchange.formatJSON();
+exchange.formatXML();
+exchange.formatPlainText();
+```
+
+### CORS
+
+```java
+exchange.enableCors();
+exchange.enableCors("https://example.com");
+```
+
+## Headers
+
+```java
+exchange.addResponseHeader("X-Custom-Header", "value");
+```
+
+## URL Query Parameters
+
+```java
+String name = exchange.getQueryParameter("name");
+String name = exchange.getQueryParameter("name", "default");
+int age = exchange.getQueryParameterAsInt("age", 18); // also works for Long, Double, Boolean, returns primitive types
+```
+
+## JSON Body Parsing
+
+```java
+Map<String, Object> data = exchange.parseBodyAsJsonMap();
+User user = exchange.parseBodyAsJson(User.class);
+String name = exchange.getJsonParameter(String.class, "name", "Default name"); 
+int age = exchange.getJsonParameterAsInt("age", 20); // also works for Long, Double, Boolean, and String, returns primitive types except for String
+String password = exchange.getJsonUsername("defaultUsername"); // helper method for JSON login parameter, with getJsonName (looks for JSON parameter "name"), getJsonEmail ("email"), getJsonUsername ("username"), and getJsonPassword ("password")
+```
+
+
+## HTML Form (URL-encoded)
+
+### HTML Form
+
+```html
+<form action="/login" method="post"> <!-- By default application/x-www-form-urlencoded -->
+    <input type="text" name="username" placeholder="Username">
+    <input type="password" name="password" placeholder="Password">
+    <input type="email" name="email" placeholder="Email">
+    <button type="submit">Login</button>
+</form>
+```
+
+### Server Handler Demo
+
+```java
+.on("/login", "POST", exchange -> {
+    if (!exchange.isFormUrlEncoded()) {
+        exchange.sendBadRequest("Expected application/x-www-form-urlencoded");
+        return;
+    }
+    
+    String username = exchange.getFormField("username", "unknown");
+    String password = exchange.getFormField("password", "");
+    String email = exchange.getFormField("email", "");
+    
+    exchange.sendJson(Map.of(
+        "message", "Login attempt",
+        "username", username,
+        "email", email,
+        "password_length", password.length()
+    ));
+})
+```
 
 ## File Upload
 
@@ -453,40 +623,59 @@ getMultipleAndSaveAt(String filename, String[] extensions, FileAction<UploadedFi
 ```
 which passes multiple files to the action, useful for HTML input with `multiple`.
 
-## HTML Form (URL-encoded)
-
-### HTML Form
-
-```html
-<form action="/login" method="post"> <!-- By default application/x-www-form-urlencoded -->
-    <input type="text" name="username" placeholder="Username">
-    <input type="password" name="password" placeholder="Password">
-    <input type="email" name="email" placeholder="Email">
-    <button type="submit">Login</button>
-</form>
-```
-
-### Server Handler Demo
+### Save File
 
 ```java
-.on("/login", "POST", exchange -> {
-    if (!exchange.isFormUrlEncoded()) {
-        exchange.sendBadRequest("Expected application/x-www-form-urlencoded");
-        return;
-    }
-    
-    String username = exchange.getFormField("username", "unknown");
-    String password = exchange.getFormField("password", "");
-    String email = exchange.getFormField("email", "");
-    
-    exchange.sendJson(Map.of(
-        "message", "Login attempt",
-        "username", username,
-        "email", email,
-        "password_length", password.length()
-    ));
-})
+String path1 = exchange.saveFileIn(file, "./uploads");          // Keep original name
+String path2 = exchange.saveFileAt(file, "./uploads/photo.jpg"); // Specific location
+String path3 = exchange.saveFileSafe(file, "./uploads", true);
+// With duplicate handling.
+// Returned path will be "" if file is null.
 ```
+
+#### Note on saveFileSafe
+`(UploadedFile uploadedFile, String filePath, boolean preserveOriginalName): String savedFilePath`
+
+If preserveOriginalName is false, it generates a random UUID for filename. If preserveOriginalName is true,
+it saves with original filename, and if duplicate, saves as `filename_X.extension` where X is the incremented file number.
+
+***Note:** The saveFile functions include prevention against common path traversal attacks (e.g. `../../../../etc/passwd`) using the Java `Paths`.
+However, it does NOT prevent absolute paths (e.g. intentionally opening uploads to `C:\`). You are recommended only to save uploaded files in project directories, such as `./public/uploads`.*
+
+### Check File Types
+
+```java
+exchange.isPNG(file)
+exchange.isJPEG(file)
+exchange.isPDF(file)
+exchange.isExtension(file, "jpg")
+```
+
+### `UploadedFile`
+
+```java
+UploadedFile file = exchange.getFile("file"); // Null if non-existent, can check with hasFile()
+List<UploadedFile> images = exchange.getFiles("images"); // <input type="file" name="images" multiple>
+Map<String, List<UploadedFile>> files = exchange.getAllFiles();
+String fieldName = file.getFieldName();
+String filename = file.getFilename();
+String contentType = file.getContentType();
+String extension = file.getExtension();
+byte[] data = file.getData();
+long size = file.getSize();
+boolean empty = file.isEmpty();
+```
+
+### Create directory if not existent
+
+```java
+yourWebServer.ensureExists("./myDir");
+// or static method (without logging)
+WebServer.createIfNotExists("./myDir");
+```
+
+Throws `RuntimeException("The directory could not be created: {directory}", IOException)` if directory creation failed.
+
 
 ## Using Parameter/Field Methods in Exchange
 
@@ -559,191 +748,6 @@ String category = exchange.getMultipartFormField("cat", "DEFAULT");
 double priceHigh = exchange.getDoubleMultipartFormField("price_high", 100000.0);
 Map<String, String> formParams = exchange.getAllMultipartFormFields();
 ```
-
-
-## Heads and Tails (Request Interceptors)
-
-### Pre-Request Head
-
-```java
-.head(exchange -> {
-    System.out.println("Request: " + exchange.getRequestPath());
-    return true; // Continue processing
-})
-// Start timing in head
-.head(exchange -> {
-    exchange.setAttribute("startTime", System.nanoTime());
-    return true;
-})
-.head("/admin", exchange -> { 
-    // first parameter means the head only executes if path starts with the string. 
-    // Slashes at front and end are ignored.
-    // Only plain text, no regex or '$'.
-    String jwt = exchange.getBearerToken();
-    return jwtService.authenticate(jwt); // if false, do not run the main endpoint. Stops subsequent heads too. Tails are unaffected.
-})
-```
-
-### Post-Request Tail
-
-```java
-.tail(exchange -> {
-    System.out.println("Request completed: " + exchange.getRequestPath());
-})
-// End timing in tail
-.tail(exchange -> {
-    Long startTime = exchange.getAttribute("startTime", Long.class);
-    if (startTime != null) {
-        long duration = (System.nanoTime() - startTime) / 1_000_000; // milliseconds
-        System.out.println("Request to " + exchange.getRequestPath() + 
-                            " took " + duration + "ms");
-    }
-})
-.tail("/db", exchange -> {
-    Database db = exchange.getAttribute("db", Database.class);
-    if (db != null) db.close();
-})
-```
-
-***Note:** You can have multiple head and tails, and they run at the order that they are added.
-Only heads return boolean.
-Even if the main handler was not run due to a head returning false,
-tails will still run, allowing you to close database connections or log timing.*
-
-## Response Methods
-
-### Text Response
-
-```java
-exchange.send("Hello World");
-```
-
-### JSON Response
-
-```java
-Map<String, Object> data = new HashMap<>();
-data.put("message", "Hello");
-data.put("status", "ok");
-exchange.sendJson(data);
-```
-
-### Status Code with Body
-
-```java
-exchange.send(404, "Not Found");
-```
-
-### Common JSON Responses
-
-All of the following functions send `{"error": "something"}`.
-
-```java
-exchange.sendError("Generic error");   // 500
-exchange.sendError(406, "With error code"); // 406
-exchange.sendNotFound();      // 404
-exchange.sendBadRequest("error");  // 400
-exchange.sendUnauthorized();   // 401
-exchange.sendForbidden();      // 403
-exchange.sendMethodNotAllowed();  // 405
-exchange.sendMethodNotAllowed("GET", "POST");  // 405
-exchange.sendCreated();        // 201
-exchange.sendNoContent();      // 204
-```
-
-### Helper format functions
-
-```java
-exchange.formatHTML(); // equivalent to `addResponseHeader("Content-Type", "text/html; charset=UTF-8");`
-exchange.formatJSON();
-exchange.formatXML();
-exchange.formatPlainText();
-```
-
-### CORS
-
-```java
-exchange.enableCors();
-exchange.enableCors("https://example.com");
-```
-
-## Headers
-
-```java
-exchange.addResponseHeader("X-Custom-Header", "value");
-```
-
-## URL Query Parameters
-
-```java
-String name = exchange.getQueryParameter("name");
-String name = exchange.getQueryParameter("name", "default");
-int age = exchange.getQueryParameterAsInt("age", 18); // also works for Long, Double, Boolean, returns primitive types
-```
-
-## JSON Body Parsing
-
-```java
-Map<String, Object> data = exchange.parseBodyAsJsonMap();
-User user = exchange.parseBodyAsJson(User.class);
-String name = exchange.getJsonParameter(String.class, "name", "Default name"); 
-int age = exchange.getJsonParameterAsInt("age", 20); // also works for Long, Double, Boolean, and String, returns primitive types except for String
-String password = exchange.getJsonUsername("defaultUsername"); // helper method for JSON login parameter, with getJsonName (looks for JSON parameter "name"), getJsonEmail ("email"), getJsonUsername ("username"), and getJsonPassword ("password")
-```
-
-## File Operations
-
-### Save File
-
-```java
-String path1 = exchange.saveFileIn(file, "./uploads");          // Keep original name
-String path2 = exchange.saveFileAt(file, "./uploads/photo.jpg"); // Specific location
-String path3 = exchange.saveFileSafe(file, "./uploads", true);
-// With duplicate handling.
-// Returned path will be "" if file is null.
-```
-
-#### Note on saveFileSafe
-`(UploadedFile uploadedFile, String filePath, boolean preserveOriginalName): String savedFilePath`
-
-If preserveOriginalName is false, it generates a random UUID for filename. If preserveOriginalName is true,
-it saves with original filename, and if duplicate, saves as `filename_X.extension` where X is the incremented file number.
-
-***Note:** The saveFile functions include prevention against common path traversal attacks (e.g. `../../../../etc/passwd`) using the Java `Paths`. 
-However, it does NOT prevent absolute paths (e.g. intentionally opening uploads to `C:\`). You are recommended only to save uploaded files in project directories, such as `./public/uploads`.*
-
-### Check File Types
-
-```java
-exchange.isPNG(file)
-exchange.isJPEG(file)
-exchange.isPDF(file)
-exchange.isExtension(file, "jpg")
-```
-
-### `UploadedFile`
-
-```java
-UploadedFile file = exchange.getFile("file"); // Null if non-existent, can check with hasFile()
-List<UploadedFile> images = exchange.getFiles("images"); // <input type="file" name="images" multiple>
-Map<String, List<UploadedFile>> files = exchange.getAllFiles();
-String fieldName = file.getFieldName();
-String filename = file.getFilename();
-String contentType = file.getContentType();
-String extension = file.getExtension();
-byte[] data = file.getData();
-long size = file.getSize();
-boolean empty = file.isEmpty();
-```
-
-### Create directory if not existent
-
-```java
-yourWebServer.ensureExists("./myDir");
-// or static method (without logging)
-WebServer.createIfNotExists("./myDir");
-```
-
-Throws `RuntimeException("The directory could not be created: {directory}", IOException)` if directory creation failed.
 
 ## HTML Templating
 
@@ -945,7 +949,7 @@ new WebServerSecure(443)
 
 ## JWT utility
 
-`com.youfuns.webserver.JwtService` provides a basic convenient way to generate and validate JWTs (JSON Web Tokens):
+`com.youfuns.webserver.JwtService` provides a basic convenient way to generate and validate JWTs (JSON Web Tokens), based on `io.jsonwebtoken`:
 
 ```java
 import com.youfuns.webserver.JwtService;
@@ -953,9 +957,11 @@ import com.youfuns.webserver.JwtService;
 JwtService.setSecretKey(String key);
 JwtService.setExpiration(long seconds);
 JwtService.generateToken(String subject);
+JwtService.generateToken(String subject, String issuer, Map<String, ?> claims);
 
 boolean isValid = JwtService.validateToken(String token);
 String subject = JwtService.extractSubject(String token); // null if invalid
+io.jsonwebtoken.Claims claims = JwtService.extractClaims(String token); // Claims can be used as a Map<String, Object> 
 ```
 
 ## Complete Example
@@ -1018,7 +1024,7 @@ public class Main {
                     }
                 })
                 .onException((exchange, exception) -> {
-                    LoggerManager.quickLog("Caught " + exception.getClass().getSimpleName() + ": " + exception.getMessage());
+                    LoggerManager.quickLog(e);
                     if (exception instanceof IllegalArgumentException) {
                         exchange.sendBadRequest("Bad request: " + exception.getMessage());
                     } else {

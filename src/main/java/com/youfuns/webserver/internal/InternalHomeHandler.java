@@ -1,4 +1,4 @@
-package com.youfuns.webserver;
+package com.youfuns.webserver.internal;
 
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.interfaces.DynamicExchangeHandler;

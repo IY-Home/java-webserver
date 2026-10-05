@@ -3,6 +3,7 @@ package com.youfuns.webserver;
 import com.youfuns.logger.OutputLogger;
 import com.youfuns.logger.SimpleLogger;
 import com.youfuns.webserver.interfaces.*;
+import com.youfuns.webserver.internal.*;
 import com.youfuns.webserver.servers.ExchangeHandlerInterface;
 import com.youfuns.webserver.servers.WebServerInterface;
 import com.youfuns.webserver.servers.WebServerType;
@@ -72,7 +73,8 @@ public class WebServer<S, I, H> {
 
         this.headsAndTails = new HeadsAndTails<>();
 
-        this.exceptionHandler = (exchange, exception) -> { exception.printStackTrace(); };
+        this.exceptionHandler = (exchange, exception) -> logger.log(WebServer.class, "Unhandled exception: " + exception.getMessage(),
+                SimpleLogger.Level.ERROR, exception);
 
         this.exchangeInterface = serverInterface.getExchangeHandlerAdapters();
 
@@ -317,6 +319,11 @@ public class WebServer<S, I, H> {
 
     public WebServer<S, I, H> limitUploadSize(int fileSize) {
         Exchange.setFileUploadLimit(fileSize);
+        return this;
+    }
+
+    public WebServer<S, I, H> sendNoContentDefault(boolean noContentOnEmpty) {
+        Exchange.setNoContentOnEmpty(noContentOnEmpty);
         return this;
     }
 

@@ -222,7 +222,7 @@ public class UserProfileServer {
 
         // Exception handler
         .onException((exchange, exception) -> {
-            LoggerManager.INSTANCE.getLogger().log(UserProfileServer.class, "An exception was encountered: ", SimpleLogger.Level.ERROR, exception);
+            LoggerManager.quickLog(UserProfileServer.class, exception);
             exchange.redirect("/login?error=" + Exchange.urlEncode("An error occurred: " + exception.getMessage()));
         })
 

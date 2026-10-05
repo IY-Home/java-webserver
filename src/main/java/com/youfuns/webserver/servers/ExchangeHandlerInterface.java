@@ -1,7 +1,7 @@
 package com.youfuns.webserver.servers;
 
 import com.youfuns.logger.SimpleLogger;
-import com.youfuns.webserver.HeadsAndTails;
+import com.youfuns.webserver.internal.HeadsAndTails;
 import com.youfuns.webserver.interfaces.ExceptionHandler;
 import com.youfuns.webserver.interfaces.Exchange;
 import com.youfuns.webserver.interfaces.ExchangeHandler;

@@ -8,6 +8,7 @@ import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 
 public class JwtService {
     private static SecretKey SECRET_KEY = Jwts.SIG.HS256.key().build();
@@ -34,6 +35,20 @@ public class JwtService {
                 .compact();
     }
 
+    public static String generateToken(String subject, String issuer, Map<String, ?> claims) {
+        Instant now = Instant.now();
+        Instant expiry = now.plusSeconds(EXPIRATION_SECONDS);
+
+        return Jwts.builder()
+                .subject(subject)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .issuer(issuer)
+                .claims(claims)
+                .signWith(SECRET_KEY)
+                .compact();
+    }
+
     public static boolean validateToken(String token) {
         try {
             Jwts.parser()
@@ -46,15 +61,18 @@ public class JwtService {
         }
     }
 
-    public static String extractSubject(String token) {
+    public static Claims extractClaims(String token) {
         try {
             Jws<Claims> jws = Jwts.parser()
                     .verifyWith(SECRET_KEY)
                     .build()
                     .parseSignedClaims(token);
-            return jws.getPayload().getSubject();
+            return jws.getPayload();
         } catch (Exception e) {
             return null;
         }
+    }
+    public static String extractSubject(String token) {
+        return extractClaims(token).getSubject();
     }
 }

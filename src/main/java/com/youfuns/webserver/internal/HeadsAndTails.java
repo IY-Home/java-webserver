@@ -1,4 +1,4 @@
-package com.youfuns.webserver;
+package com.youfuns.webserver.internal;
 
 import com.youfuns.webserver.interfaces.ExchangeHandler;
 import com.youfuns.webserver.interfaces.HeadHandler;

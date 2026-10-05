@@ -1,8 +1,7 @@
-package com.youfuns.webserver;
+package com.youfuns.webserver.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class TemplateMatcher {
     private static final char placeholder = '$';

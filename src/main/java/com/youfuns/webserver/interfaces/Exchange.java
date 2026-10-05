@@ -48,6 +48,7 @@ public class Exchange<IExchange> implements AutoCloseable {
     // File upload configuration
     private static int MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
     private static final int MEMORY_THRESHOLD = 1024 * 1024; // 1MB - files larger go to disk
+    private static boolean NO_CONTENT_ON_EMPTY = true;
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final SimpleLogger logger;
@@ -1938,8 +1939,8 @@ public class Exchange<IExchange> implements AutoCloseable {
     @Override
     public void close() {
         logger.log(Exchange.class, "Closing IExchange", SimpleLogger.Level.DEBUG);
-        if (!responseSent) {
-            logger.log(Exchange.class, "Response not sent at all, sending 204", SimpleLogger.Level.WARN);
+        if (!responseSent && NO_CONTENT_ON_EMPTY) {
+            logger.log(Exchange.class, "Response not sent before close, sending 204", SimpleLogger.Level.WARN);
             try {
                 send(204, "");
             } catch (IOException e) {}
@@ -1949,5 +1950,8 @@ public class Exchange<IExchange> implements AutoCloseable {
 
     public static void setFileUploadLimit(int fileUploadLimit) {
         MAX_FILE_SIZE = fileUploadLimit;
+    }
+    public static void setNoContentOnEmpty(boolean noContentOnEmpty) {
+        NO_CONTENT_ON_EMPTY = noContentOnEmpty;
     }
 }

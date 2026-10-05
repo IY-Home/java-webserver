@@ -6,7 +6,7 @@ package com.youfuns.logger;
  */
 public interface SimpleLogger {
 
-    enum Level {
+    enum Level implements Comparable<Level> {
         DEBUG,
         INFO,
         WARN,
