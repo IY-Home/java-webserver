@@ -426,7 +426,7 @@ public class WebServer<S, I, H> {
     private H getInternalHandler(ExchangeHandler<I> handler) {
         return serverInterface.createInternalHandler((I iExchange) -> {
             try (Exchange<I> exchange = exchangeInterface.createExchange(iExchange)) {
-                exchangeInterface.handleExchange(exchange, headsAndTails, handler, exceptionHandler);
+                InternalDynamicHandler.handleExchange(exchange, headsAndTails, handler, exceptionHandler);
             }
         });
     }
