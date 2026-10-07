@@ -118,11 +118,7 @@ public class OutputLogger implements SimpleLogger {
     @Override
     public void log(Class<?> clazz, String message, Level level, Throwable t) {
         if (message != null && t != null && outputOn && Level.aboveLevel(level, logLevel)) {
-            String stackTrace = t.getStackTrace().length == 0
-                    ? t.toString()
-                    : t.toString() + "\n" + Arrays.stream(t.getStackTrace())
-                    .map(element -> "    at " + element.toString())
-                    .collect(Collectors.joining("\n"));
+            String stackTrace = getStackTrace(t);
             console.println(getPrefix(clazz, level) + message + throwablePrefix + showIf(stackTrace, t.getClass().getSimpleName() + ": '" + t.getMessage() + "'", showThrowableStackTrace));
         }
     }
@@ -136,6 +132,35 @@ public class OutputLogger implements SimpleLogger {
     public void log(Class<?> clazz, Supplier<String> message, Level level) {
         if (message != null && outputOn && Level.aboveLevel(level, logLevel)) {
             console.println(getPrefix(clazz, level) + message.get());
+        }
+    }
+
+    public static String getStackTrace(Throwable t) {
+        StringBuilder sb = new StringBuilder();
+        appendThrowable(sb, t, "");
+        return sb.toString();
+    }
+
+    private static void appendThrowable(StringBuilder sb, Throwable t, String prefix) {
+        // Header line: exception class + message
+        sb.append(prefix).append(t.toString()).append("\n");
+
+        // Stack frames
+        for (StackTraceElement element : t.getStackTrace()) {
+            sb.append(prefix).append("    at ").append(element).append("\n");
+        }
+
+        // Suppressed exceptions
+        for (Throwable suppressed : t.getSuppressed()) {
+            sb.append(prefix).append("    Suppressed: ");
+            appendThrowable(sb, suppressed, prefix + "    ");
+        }
+
+        // Cause
+        Throwable cause = t.getCause();
+        if (cause != null) {
+            sb.append(prefix).append("Caused by: ");
+            appendThrowable(sb, cause, prefix);
         }
     }
 

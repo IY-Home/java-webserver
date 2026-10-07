@@ -13,7 +13,7 @@ fun main() {
         .on("/api/users", "GET") {
             it.sendJson(mapOf("users" to "list"))
         }
-        .on("/api/users/$") { params, exchange ->
+        .on("/api/users/?") { params, exchange ->
             val id = params[0]
             exchange.send("User: $id")
         }

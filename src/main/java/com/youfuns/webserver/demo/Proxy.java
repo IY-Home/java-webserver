@@ -60,7 +60,7 @@ public class Proxy {
             return true; // Continue to handler
         });
 
-        proxy.on("/$", (params, exchange) -> {
+        proxy.on("/?", (params, exchange) -> {
             String path = params[0]; // This is everything after the first /
             String method = exchange.getHttpMethod();
             String query = exchange.getQueryString();

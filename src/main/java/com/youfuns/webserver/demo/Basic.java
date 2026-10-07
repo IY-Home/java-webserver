@@ -1,6 +1,7 @@
 package com.youfuns.webserver.demo;
 
 import com.youfuns.webserver.WebServer;
+
 import java.util.Map;
 
 public class Basic {
@@ -22,7 +23,7 @@ public class Basic {
                 "timestamp", System.currentTimeMillis()
         )))
         // Dynamic path
-        .on("/users/$", (params, exchange) -> {
+        .on("/users/?", (params, exchange) -> {
             String userId = params[0];
             exchange.send("User ID: " + userId);
         })

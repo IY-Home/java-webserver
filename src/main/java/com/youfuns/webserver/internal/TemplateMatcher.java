@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TemplateMatcher {
-    private static final char placeholder = '$';
+    private static final char placeholder = '?';
 
     public static String[] extractValues(String template, String input) {
         // If template has no placeholder, return empty array
@@ -26,7 +26,7 @@ public class TemplateMatcher {
             if (escaped) {
                 // Previous char was backslash
                 if (c == placeholder) {
-                    // Escaped $ - treat as literal
+                    // Escaped ? - treat as literal
                     currentLiteral.append(placeholder);
                 } else {
                     currentLiteral.append('\\');
@@ -50,7 +50,7 @@ public class TemplateMatcher {
                     currentLiteral = new StringBuilder();
                 }
 
-                // Skip multiple consecutive $s (treat as one)
+                // Skip multiple consecutive ?s (treat as one)
                 while (i < template.length() && template.charAt(i) == placeholder) {
                     i++;
                 }

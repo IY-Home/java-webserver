@@ -45,8 +45,9 @@ public interface ExchangeHandlerInterface<InternalExchange> {
         } catch (Exception e) {
             try {
                 exceptionHandler.handle(exchange, e);
-            } catch (IOException ignored) {
-
+            } catch (IOException i) {
+                i.addSuppressed(e);
+                throw new RuntimeException(i);
             }
         } finally {
             try {
@@ -58,8 +59,9 @@ public interface ExchangeHandlerInterface<InternalExchange> {
             } catch (Exception e) {
                 try {
                     exceptionHandler.handle(exchange, e);
-                } catch (IOException ignored) {
-
+                } catch (IOException i) {
+                    i.addSuppressed(e);
+                    throw new RuntimeException(i);
                 }
             }
         }
