@@ -25,43 +25,4 @@ public interface ExchangeHandlerInterface<InternalExchange> {
     org.apache.commons.fileupload.RequestContext createFileUploadRequestContext(Exchange<InternalExchange> internalExchange);
 
     void closeExchange(InternalExchange internalExchange);
-
-    default void handleExchange(Exchange<InternalExchange> exchange, HeadsAndTails<InternalExchange> headsAndTails, ExchangeHandler<InternalExchange> handler, ExceptionHandler<InternalExchange> exceptionHandler) {
-        try {
-            boolean headsPassed = true;
-
-            // Process heads
-            for (Map.Entry<String, HeadHandler<InternalExchange>> head : headsAndTails.getHeads()) {
-                if (!exchange.getRequestPath().replaceAll("^/|/$", "").startsWith(head.getKey().replaceAll("^/|/$", ""))) continue;
-                if (!head.getValue().handle(exchange)) {
-                    headsPassed = false;
-                    break; // Head prevented further processing
-                }
-            }
-
-            // Process the actual handler
-            if (headsPassed) handler.handle(exchange);
-
-        } catch (Exception e) {
-            try {
-                exceptionHandler.handle(exchange, e);
-            } catch (IOException ignored) {
-
-            }
-        } finally {
-            try {
-                // Process tails
-                for (Map.Entry<String, ExchangeHandler<InternalExchange>> tail : headsAndTails.getTails()) {
-                    if (!exchange.getRequestPath().replaceAll("^/|/$", "").startsWith(tail.getKey().replaceAll("^/|/$", ""))) continue;
-                    tail.getValue().handle(exchange);
-                }
-            } catch (Exception e) {
-                try {
-                    exceptionHandler.handle(exchange, e);
-                } catch (IOException ignored) {
-
-                }
-            }
-        }
-    }
 }
