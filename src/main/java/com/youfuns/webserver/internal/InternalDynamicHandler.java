@@ -100,16 +100,16 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
         for (Map.Entry<Path, ExchangeHandler<I>> pair : paths.entrySet()) {
             Path path = pair.getKey();
             String requiredMethod = path.method().toLowerCase();
-            String path = path.url();
+            String url = path.url();
             if (requiredMethod.equals("default")) {
-                defaultPathHandlers.put(path, pair.getValue());
+                defaultPathHandlers.put(url, pair.getValue());
                 continue;
             }
             if (!exchange.getHttpMethod().toLowerCase().equals(requiredMethod)) {
                 continue;
             }
             // Normalize both paths (remove trailing slash for comparison)
-            String normalizedPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+            String normalizedPath = url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
 
             if (normalizedAddress.equals(normalizedPath)) {
                 pair.getValue().handle(exchange);
