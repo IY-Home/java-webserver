@@ -16,8 +16,11 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class WebServer<S, I, H> {
     protected final WebServerInterface<S, I, H> serverInterface;
@@ -29,11 +32,8 @@ public class WebServer<S, I, H> {
     protected SimpleLogger logger;
 
     private final Map<String, InternalDynamicHandler<I>> dynamicHandlers;
-
     private final InternalHomeHandler<I> homeHandler;
-
     private final HeadsAndTails<I> headsAndTails;
-
     private ExceptionHandler<I> exceptionHandler;
 
     private boolean started;
@@ -113,7 +113,9 @@ public class WebServer<S, I, H> {
         } else {
             for (String iMethod : method) homeHandler.getDynamicHandler().addPath(endpoint, iMethod, action);
         }
-        logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
+        logger.log(WebServer.class, "Created endpoint: " + endpoint +
+                ((method.length > 0 && method[0] != null && !method[0].equals("DEFAULT")) ? " (" + Arrays.toString(method).replace("[", "").replace("]", "") + ")" : "")
+                , SimpleLogger.Level.INFO);
         return this;
     }
 
@@ -136,7 +138,7 @@ public class WebServer<S, I, H> {
 
     public WebServer<S, I, H> dynamicEndpoint(String template, String[] method, DynamicExchangeHandler<I> action) {
         checkContextAdditionAfterStart();
-        int index = template.indexOf('$');
+        int index = template.indexOf('?');
         String endpoint = index == -1 ? template : template.substring(0, index);
         if (endpoint.endsWith("/") && !endpoint.equals("/")) {
             endpoint = endpoint.substring(0, endpoint.length() - 1);
@@ -151,7 +153,9 @@ public class WebServer<S, I, H> {
         } else {
             for (String iMethod : method) homeHandler.getDynamicHandler().addPath(template, iMethod, action);
         }
-        logger.log(WebServer.class, "Created dynamic endpoint: " + template, SimpleLogger.Level.INFO);
+        logger.log(WebServer.class, "Created dynamic endpoint: " + template +
+                        ((method.length > 0 && method[0] != null && !method[0].equals("DEFAULT")) ? " (" + Arrays.toString(method).replace("[", "").replace("]", "") + ")" : "")
+                , SimpleLogger.Level.INFO);
         return this;
     }
 
@@ -426,7 +430,7 @@ public class WebServer<S, I, H> {
     private H getInternalHandler(ExchangeHandler<I> handler) {
         return serverInterface.createInternalHandler((I iExchange) -> {
             try (Exchange<I> exchange = exchangeInterface.createExchange(iExchange)) {
-                exchangeInterface.handleExchange(exchange, headsAndTails, handler, exceptionHandler);
+                InternalDynamicHandler.handleExchange(exchange, headsAndTails, handler, exceptionHandler);
             }
         });
     }
@@ -435,6 +439,13 @@ public class WebServer<S, I, H> {
         if (started && !serverInterface.supportsContextMutationAfterStart()) {
             throw new UnsupportedOperationException("Context addition after server start is not supported by the web server " + serverInterface.getClass().getSimpleName());
         }
+    }
+
+    public Map<String, String> list() {
+        return Collections.unmodifiableMap(dynamicHandlers).entrySet()
+                .stream()
+                .map(entry -> Map.entry(entry.getKey(), entry.getValue().toString()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public S getInternalServer() {
@@ -455,7 +466,7 @@ public class WebServer<S, I, H> {
         private Builder() {
             this.serverAddress = null;
             this.logger = new OutputLogger();
-            this.serverInterface = WebServerType.SUN_NET_HTTPSERVER.getServerInterface(logger);
+            this.serverInterface = WebServerType.SUN_NET_HTTPSERVER.getServerInterface();
             this.backlog = 0;
         }
 
@@ -490,7 +501,7 @@ public class WebServer<S, I, H> {
         }
 
         public Builder server(WebServerType serverType) {
-            this.serverInterface = serverType.getServerInterface(logger);
+            this.serverInterface = serverType.getServerInterface();
             return this;
         }
 

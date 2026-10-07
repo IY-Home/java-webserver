@@ -89,19 +89,6 @@ public class NetHttpServer implements WebServerInterface<HttpServer, HttpExchang
                 handler.accept(exchange);
             } catch (Exception e) {
                 logger.log(this.getClass(), "Error in internal handler: " + e.getMessage(), SimpleLogger.Level.ERROR, e);
-                // Try to send an error response if possible
-                try {
-                    String errorBody = "{\"error\": \"Internal Server Error\"}";
-                    byte[] errorBytes = errorBody.getBytes(StandardCharsets.UTF_8);
-                    exchange.getResponseHeaders().set("Content-Type", "application/json");
-                    exchange.sendResponseHeaders(500, errorBytes.length);
-                    try (OutputStream os = exchange.getResponseBody()) {
-                        os.write(errorBytes);
-                    }
-                } catch (IOException ex) {
-                    // Can't do much if response fails
-                    ex.printStackTrace();
-                }
             }
         };
     }

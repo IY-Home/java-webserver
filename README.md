@@ -257,10 +257,10 @@ To get the wrapped internal exchange object from an `Exchange` instance, call `g
 
 ## Dynamic Endpoints with Path Parameters
 
-Use `$` as a placeholder and accept a String[]:
+Use `?` as a placeholder and accept a String[]:
 
 ```java
-.on("/users/$", (params, exchange) -> {
+.on("/users/?", (params, exchange) -> {
     String userId = params[0];
     exchange.send("User ID: " + userId);
 })
@@ -269,12 +269,17 @@ Use `$` as a placeholder and accept a String[]:
 Multiple parameters:
 
 ```java
-.on("/users/$/posts/$", (params, exchange) -> {
+.on("/users/?/posts/?", (params, exchange) -> {
     String userId = params[0];
     String postId = params[1];
     exchange.send("User: " + userId + ", Post: " + postId);
 })
 ```
+
+***Note:** Only put `?` in place of the parameter. Do not put an identifier after it. So:*
+
+- `/users/?/posts/?`: Correct, 2 parameters, targets `/users/123/posts/456`.
+- `/users/?id/posts/?postid`: Incorrect, targets `/users/123id/posts/456postid`.
 
 ## Static File Serving
 
@@ -337,7 +342,7 @@ or
 
 ***Note:** This feature may not be supported by some web servers. If this feature is unsupported, an `UnsupportedOperationException` is thrown.
 The default `com.sun.net.HttpServer` supports this feature.
-If you need this feature on an unsupported web server, you are recommended to use dynamic endpoints (those with `$` parameters).*
+If you need this feature on an unsupported web server, you are recommended to use dynamic endpoints (those with `?` parameters).*
 
 ```java
 var myServer = WebServer.create(8080);
@@ -384,7 +389,8 @@ myServer.on("/change", exchange -> {
 .head("/admin", exchange -> { 
     // first parameter means the head only executes if path starts with the string. 
     // Slashes at front and end are ignored.
-    // Only plain text, no regex or '$'.
+    // Only plain text, no regex or '?'.
+    // For more complex matching, check exchange.getRequestPath().
     String jwt = exchange.getBearerToken();
     return jwtService.authenticate(jwt); // if false, do not run the main endpoint. Stops subsequent heads too. Tails are unaffected.
 })
@@ -820,7 +826,7 @@ Map<String, String> formParams = exchange.getAllMultipartFormFields();
 .on("/login", exchange -> {
     exchange.redirect("/login-beta");
 })
-.on("/page/$", (params, exchange) -> {
+.on("/page/?", (params, exchange) -> {
     switch (params[0]) {
         case "login":
             exchange.redirectPermanent("/login");
@@ -976,7 +982,7 @@ public class Main {
                 .on("/api/users", "GET", exchange -> {
                     exchange.sendJson(Map.of("users", "list"));
                 })
-                .on("/api/users/$", (params, exchange) -> {
+                .on("/api/users/?", (params, exchange) -> {
                     String id = params[0];
                     exchange.send("User: " + id);
                 })
@@ -1000,7 +1006,7 @@ public class Main {
                         case -1 -> exchange.sendBadRequest("Expected multipart/form-data");
                         case -2 -> exchange.sendBadRequest("No config uploaded");
                         case -3 -> exchange.sendBadRequest("Only JSON files allowed");
-                        0 ->exchange.send("Uploaded successfully!");
+                        0 -> exchange.send("Uploaded successfully!");
                     }
                 })
                 .serveStatic("/", "./public", false, "index.html")

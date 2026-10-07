@@ -1,8 +1,6 @@
 package com.youfuns.webserver.internal;
 
-import com.youfuns.webserver.interfaces.DynamicExchangeHandler;
-import com.youfuns.webserver.interfaces.Exchange;
-import com.youfuns.webserver.interfaces.ExchangeHandler;
+import com.youfuns.webserver.interfaces.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,47 +9,44 @@ import java.util.List;
 import java.util.Map;
 
 public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
-    private final Map<Map.Entry<String, String>, DynamicExchangeHandler<I>> dynamicPaths;
-    private final Map<Map.Entry<String, String>, ExchangeHandler<I>> paths;
+    private final Map<Path, DynamicExchangeHandler<I>> dynamicPaths;
+    private final Map<String, DynamicExchangeHandler<I>> dynamicPathsDefault;
+    private final Map<Path, ExchangeHandler<I>> paths;
+    private final Map<String, ExchangeHandler<I>> pathsDefault;
     private ExchangeHandler<I> onNotFound;
 
     public InternalDynamicHandler() {
         super();
         this.dynamicPaths = new HashMap<>();
+        this.dynamicPathsDefault = new HashMap<>();
         this.paths = new HashMap<>();
+        this.pathsDefault = new HashMap<>();
     }
 
     public void addPath(String template, DynamicExchangeHandler<I> dynamicExchangeHandler) {
-        dynamicPaths.put(Map.entry(template, "DEFAULT"), dynamicExchangeHandler);
+        dynamicPathsDefault.put(template, dynamicExchangeHandler);
     }
 
     public void addPath(String template, ExchangeHandler<I> exchangeHandler) {
-        paths.put(Map.entry(template, "DEFAULT"), exchangeHandler);
+        pathsDefault.put(template, exchangeHandler);
     }
 
     public void addPath(String template, String method, DynamicExchangeHandler<I> dynamicExchangeHandler) {
-        dynamicPaths.put(Map.entry(template, method), dynamicExchangeHandler);
+        if (method.trim().equalsIgnoreCase("default")) dynamicPathsDefault.put(template, dynamicExchangeHandler);
+        else dynamicPaths.put(new Path(template, method), dynamicExchangeHandler);
     }
 
     public void addPath(String template, String method, ExchangeHandler<I> exchangeHandler) {
-        paths.put(Map.entry(template, method), exchangeHandler);
+        if (method.trim().equalsIgnoreCase("default")) pathsDefault.put(template, exchangeHandler);
+        else paths.put(new Path(template, method), exchangeHandler);
     }
 
-    public void removePath(String template) {
-        List<Map.Entry<String, String>> pathsToRemove = new ArrayList<>();
-        for (Map.Entry<String, String> entry : paths.keySet()) {
-            if (entry.getValue().equals(template)) pathsToRemove.add(entry);
-        }
-        for (Map.Entry<String, String> path : pathsToRemove) {
-            paths.remove(path);
-        }
-        pathsToRemove.clear();
-        for (Map.Entry<String, String> entry : dynamicPaths.keySet()) {
-            if (entry.getValue().equals(template)) pathsToRemove.add(entry);
-        }
-        for (Map.Entry<String, String> path : pathsToRemove) {
-            dynamicPaths.remove(path);
-        }
+    public void removePath(String inputPath) {
+        final String path = normalizePath(inputPath);
+        dynamicPaths.keySet().removeIf(item -> normalizePath(item.url()).equals(path));
+        dynamicPathsDefault.keySet().removeIf(item -> normalizePath(item).equals(path));
+        paths.keySet().removeIf(item -> normalizePath(item.url()).equals(path));
+        pathsDefault.keySet().removeIf(item -> normalizePath(item).equals(path));
     }
 
     public InternalDynamicHandler<I> setOnNotFound(ExchangeHandler<I> exchangeHandler) {
@@ -62,67 +57,54 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
     @Override
     public void handle(Exchange<I> exchange) throws IOException {
         String address = exchange.getRequestPath();
-        String matchableAddress = address.endsWith("/") ? address : address + "/";
+        String matchableAddress = normalizePath(address);
 
-        Map<String, DynamicExchangeHandler<I>> defaultTemplateHandlers = new HashMap<>();
-        for (Map.Entry<Map.Entry<String, String>, DynamicExchangeHandler<I>> entry : dynamicPaths.entrySet()) {
-            Map.Entry<String, String> key = entry.getKey();
-            String requiredMethod = key.getValue().toLowerCase();
-            String template = key.getKey();
-            if (requiredMethod.equals("default")) {
-                defaultTemplateHandlers.put(template, entry.getValue());
-                continue;
-            }
+        for (Map.Entry<Path, DynamicExchangeHandler<I>> pair : dynamicPaths.entrySet()) {
+            Path path = pair.getKey();
+            String requiredMethod = path.method().toLowerCase();
+            String template = path.url();
             if (!exchange.getHttpMethod().toLowerCase().equals(requiredMethod)) {
                 continue;
             }
             String[] extracted = TemplateMatcher.extractValues(template, address);
-            String[] extracted2 = extracted != null && extracted.length > 0 ? extracted : TemplateMatcher.extractValues(template, matchableAddress);
-            if (extracted2 != null && extracted2.length > 0) {
-                entry.getValue().handle(extracted2, exchange);
+            String[] extracted2 = extracted.length > 0 && extracted[0] != null ? extracted : TemplateMatcher.extractValues(template, matchableAddress);
+            if (extracted2.length > 0 && extracted2[0] != null) {
+                pair.getValue().handle(extracted2, exchange);
                 return;
             }
         }
 
-        for (Map.Entry<String, DynamicExchangeHandler<I>> entry : defaultTemplateHandlers.entrySet()) {
-            String template = entry.getKey();
+        for (Map.Entry<String, DynamicExchangeHandler<I>> pair : dynamicPathsDefault.entrySet()) {
+            String template = pair.getKey();
             String[] extracted = TemplateMatcher.extractValues(template, address);
-            String[] extracted2 = extracted != null && extracted.length > 0 ? extracted : TemplateMatcher.extractValues(template, matchableAddress);
-            if (extracted2 != null && extracted2.length > 0) {
-                entry.getValue().handle(extracted2, exchange);
+            String[] extracted2 = extracted.length > 0 && extracted[0] != null ? extracted : TemplateMatcher.extractValues(template, matchableAddress);
+            if (extracted2.length > 0 && extracted2[0] != null) {
+                pair.getValue().handle(extracted2, exchange);
                 return;
             }
         }
 
-
-        Map<String, ExchangeHandler<I>> defaultPathHandlers = new HashMap<>();
-        String normalizedAddress = address.endsWith("/") ? address.substring(0, address.length() - 1) : address;
-        for (Map.Entry<Map.Entry<String, String>, ExchangeHandler<I>> entry : paths.entrySet()) {
-            Map.Entry<String, String> key = entry.getKey();
-            String requiredMethod = key.getValue().toLowerCase();
-            String path = key.getKey();
-            if (requiredMethod.equals("default")) {
-                defaultPathHandlers.put(path, entry.getValue());
-                continue;
-            }
+        for (Map.Entry<Path, ExchangeHandler<I>> pair : paths.entrySet()) {
+            Path path = pair.getKey();
+            String requiredMethod = path.method().toLowerCase();
+            String url = path.url();
             if (!exchange.getHttpMethod().toLowerCase().equals(requiredMethod)) {
                 continue;
             }
-            // Normalize both paths (remove trailing slash for comparison)
-            String normalizedPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+            String matchablePath = normalizePath(url);
 
-            if (normalizedAddress.equals(normalizedPath)) {
-                entry.getValue().handle(exchange);
+            if (matchableAddress.equals(matchablePath)) {
+                pair.getValue().handle(exchange);
                 return;
             }
         }
 
-        for (Map.Entry<String, ExchangeHandler<I>> entry : defaultPathHandlers.entrySet()) {
-            String path = entry.getKey();
-            String normalizedPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+        for (Map.Entry<String, ExchangeHandler<I>> pair : pathsDefault.entrySet()) {
+            String path = pair.getKey();
+            String matchablePath = normalizePath(path);
 
-            if (normalizedAddress.equals(normalizedPath)) {
-                entry.getValue().handle(exchange);
+            if (matchableAddress.equals(matchablePath)) {
+                pair.getValue().handle(exchange);
                 return;
             }
         }
@@ -130,4 +112,51 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
         if (onNotFound != null) { onNotFound.handle(exchange); }
         else { exchange.sendNotFound(); }
     }
+
+    public static <I> void handleExchange(Exchange<I> exchange, HeadsAndTails<I> headsAndTails, ExchangeHandler<I> handler, ExceptionHandler<I> exceptionHandler) {
+        try {
+            boolean headsPassed = true;
+
+            for (Map.Entry<String, HeadHandler<I>> head : headsAndTails.getHeads()) {
+                if (!exchange.getRequestPath().replaceAll("^/|/$", "").startsWith(head.getKey().replaceAll("^/|/$", ""))) continue;
+                if (!head.getValue().handle(exchange)) {
+                    headsPassed = false;
+                    break; // Head prevented further processing
+                }
+            }
+
+            // Process the actual handler
+            if (headsPassed) handler.handle(exchange);
+
+        } catch (Exception e) {
+            try {
+                exceptionHandler.handle(exchange, e);
+            } catch (IOException ignored) {
+
+            }
+        } finally {
+            try {
+                // Process tails
+                for (Map.Entry<String, ExchangeHandler<I>> tail : headsAndTails.getTails()) {
+                    if (!exchange.getRequestPath().replaceAll("^/|/$", "").startsWith(tail.getKey().replaceAll("^/|/$", ""))) continue;
+                    tail.getValue().handle(exchange);
+                }
+            } catch (Exception e) {
+                try {
+                    exceptionHandler.handle(exchange, e);
+                } catch (IOException ignored) {
+
+                }
+            }
+        }
+    }
+
+    private static String normalizePath(String path) {
+        path = path.trim();
+        path = path.startsWith("/") ? path.substring(1) : path;
+        path = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+        return path;
+    }
+
+    private record Path(String url, String method) {}
 }
