@@ -1,8 +1,6 @@
 package com.youfuns.webserver.internal;
 
-import com.youfuns.webserver.interfaces.DynamicExchangeHandler;
-import com.youfuns.webserver.interfaces.Exchange;
-import com.youfuns.webserver.interfaces.ExchangeHandler;
+import com.youfuns.webserver.interfaces.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -108,7 +106,6 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
             if (!exchange.getHttpMethod().toLowerCase().equals(requiredMethod)) {
                 continue;
             }
-            // Normalize both paths (remove trailing slash for comparison)
             String normalizedPath = url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
 
             if (normalizedAddress.equals(normalizedPath)) {
@@ -131,5 +128,44 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
         else { exchange.sendNotFound(); }
     }
 
+    public static <I> void handleExchange(Exchange<I> exchange, HeadsAndTails<I> headsAndTails, ExchangeHandler<I> handler, ExceptionHandler<I> exceptionHandler) {
+        try {
+            boolean headsPassed = true;
+
+            // Process heads
+            for (Map.Entry<String, HeadHandler<I>> head : headsAndTails.getHeads()) {
+                if (!exchange.getRequestPath().replaceAll("^/|/$", "").startsWith(head.getKey().replaceAll("^/|/$", ""))) continue;
+                if (!head.getValue().handle(exchange)) {
+                    headsPassed = false;
+                    break; // Head prevented further processing
+                }
+            }
+
+            // Process the actual handler
+            if (headsPassed) handler.handle(exchange);
+
+        } catch (Exception e) {
+            try {
+                exceptionHandler.handle(exchange, e);
+            } catch (IOException ignored) {
+
+            }
+        } finally {
+            try {
+                // Process tails
+                for (Map.Entry<String, ExchangeHandler<I>> tail : headsAndTails.getTails()) {
+                    if (!exchange.getRequestPath().replaceAll("^/|/$", "").startsWith(tail.getKey().replaceAll("^/|/$", ""))) continue;
+                    tail.getValue().handle(exchange);
+                }
+            } catch (Exception e) {
+                try {
+                    exceptionHandler.handle(exchange, e);
+                } catch (IOException ignored) {
+
+                }
+            }
+        }
+    }
+    
     private record Path(String url, String method) {}
 }
