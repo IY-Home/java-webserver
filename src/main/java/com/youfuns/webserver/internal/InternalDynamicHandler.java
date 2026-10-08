@@ -32,12 +32,14 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
     }
 
     public void addPath(String template, String method, DynamicExchangeHandler<I> dynamicExchangeHandler) {
-        if (method.trim().equalsIgnoreCase("default")) dynamicPathsDefault.put(template, dynamicExchangeHandler);
+        method = method.trim().toLowerCase();
+        if (method.equals("default")) dynamicPathsDefault.put(template, dynamicExchangeHandler);
         else dynamicPaths.put(new Path(template, method), dynamicExchangeHandler);
     }
 
     public void addPath(String template, String method, ExchangeHandler<I> exchangeHandler) {
-        if (method.trim().equalsIgnoreCase("default")) pathsDefault.put(template, exchangeHandler);
+        method = method.trim().toLowerCase();
+        if (method.equals("default")) pathsDefault.put(template, exchangeHandler);
         else paths.put(new Path(template, method), exchangeHandler);
     }
 
@@ -61,7 +63,7 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
 
         for (Map.Entry<Path, DynamicExchangeHandler<I>> pair : dynamicPaths.entrySet()) {
             Path path = pair.getKey();
-            String requiredMethod = path.method().toLowerCase();
+            String requiredMethod = path.method();
             String template = path.url();
             if (!exchange.getHttpMethod().toLowerCase().equals(requiredMethod)) {
                 continue;
@@ -86,7 +88,7 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
 
         for (Map.Entry<Path, ExchangeHandler<I>> pair : paths.entrySet()) {
             Path path = pair.getKey();
-            String requiredMethod = path.method().toLowerCase();
+            String requiredMethod = path.method();
             String url = path.url();
             if (!exchange.getHttpMethod().toLowerCase().equals(requiredMethod)) {
                 continue;
