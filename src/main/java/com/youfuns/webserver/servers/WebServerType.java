@@ -21,7 +21,7 @@ public enum WebServerType {
         this.serverInterfaceSupplier = serverInterfaceSupplier;
     }
 
-    public WebServerInterface<?, ?, ?> getServerInterface(SimpleLogger logger) {
+    public WebServerInterface<?, ?, ?> getServerInterface() {
         return serverInterfaceSupplier.get();
     }
 }

@@ -466,7 +466,7 @@ public class WebServer<S, I, H> {
         private Builder() {
             this.serverAddress = null;
             this.logger = new OutputLogger();
-            this.serverInterface = WebServerType.SUN_NET_HTTPSERVER.getServerInterface(logger);
+            this.serverInterface = WebServerType.SUN_NET_HTTPSERVER.getServerInterface();
             this.backlog = 0;
         }
 
@@ -501,7 +501,7 @@ public class WebServer<S, I, H> {
         }
 
         public Builder server(WebServerType serverType) {
-            this.serverInterface = serverType.getServerInterface(logger);
+            this.serverInterface = serverType.getServerInterface();
             return this;
         }
 

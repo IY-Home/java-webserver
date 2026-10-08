@@ -14,43 +14,42 @@ public class FileUploadTest {
         var webServer = WebServer.builder().port("127.0.0.1", 8080).logger(LoggerManager.INSTANCE.getLogger()).build();
 
         webServer
-                .ensureExists("./fileUploadDemo/uploads")
-                .on("/", exchange -> {
-                    TemplateEngine templateEngine = TemplateEngine.fromFile("./fileUploadDemo/index.html")
-                            .replace("title", "Welcome")
-                            .replace("welcome", "Welcome, " + exchange.getQueryParameter("user", "Guest"))
-                            .replace("user", exchange.getQueryParameter("user", "Guest"))
-                            .replace("image", "./pic");
-                    exchange.formatHTML();
-                    exchange.send(templateEngine.getTemplate());
-                })
-                .on("/upload", "POST", exchange -> {
-                    int result = exchange.getAndSaveAt("file", new String[]{"png", "jpg"}, file -> {
-                        String filePath = exchange.saveFileSafe(file, "./fileUploadDemo/uploads", true);
-                        webServer.serveFile("/pic", filePath);
-                        exchange.redirect("/");
-                    });
-
-                    switch (result) {
-                        case -1 -> exchange.sendBadRequest("Not multipart");      // Client error
-                        case -2 -> exchange.sendBadRequest("File missing");       // Client error
-                        case -3 -> exchange.sendBadRequest("Invalid extension");  // Client error
-                        case -4 -> exchange.sendBadRequest("Invalid file name");  // Path traversal attempt
-                        case 1 -> {
-                        }
+            .ensureExists("./fileUploadDemo/uploads")
+            .on("/", exchange -> {
+                TemplateEngine templateEngine = TemplateEngine.fromFile("./fileUploadDemo/index.html")
+                        .replace("title", "Welcome")
+                        .replace("welcome", "Welcome, " + exchange.getQueryParameter("user", "Guest"))
+                        .replace("user", exchange.getQueryParameter("user", "Guest"))
+                        .replace("image", "./pic");
+                exchange.formatHTML();
+                exchange.send(templateEngine.getTemplate());
+            })
+            .on("/upload", "POST", exchange -> {
+                int result = exchange.getAndSaveAt("file", new String[]{"png", "jpg"}, file -> {
+                    String filePath = exchange.saveFileSafe(file, "./fileUploadDemo/uploads", true);
+                    webServer.serveFile("/pic", filePath);
+                    exchange.redirect("/");
+                });
+                switch (result) {
+                    case -1 -> exchange.sendBadRequest("Not multipart");      // Client error
+                    case -2 -> exchange.sendBadRequest("File missing");       // Client error
+                    case -3 -> exchange.sendBadRequest("Invalid extension");  // Client error
+                    case -4 -> exchange.sendBadRequest("Invalid file name");  // Path traversal attempt
+                    case 1 -> {
                     }
-                })
-                .limitUploadSize(10 * 1024 * 1024)
-                .serveFile("/pic", "./fileUploadDemo/uploads/default.png")
-                .head(exchange -> {
-                    exchange.setAttribute("start_time", System.currentTimeMillis());
-                    return true;
-                })
-                .tail(exchange -> {
-                    LoggerManager.quickLog(FileUploadTest.class, "Request took " + (System.currentTimeMillis() - exchange.getAttribute("start_time", Long.class)) + " ms");
-                })
-                .onException((exchange, exception) -> {
-                    exchange.sendError(exception.getMessage());
-                }).start();
+                }
+            })
+            .limitUploadSize(10 * 1024 * 1024)
+            .serveFile("/pic", "./fileUploadDemo/uploads/default.png")
+            .head(exchange -> {
+                exchange.setAttribute("start_time", System.currentTimeMillis());
+                return true;
+            })
+            .tail(exchange -> {
+                LoggerManager.quickLog(FileUploadTest.class, "Request took " + (System.currentTimeMillis() - exchange.getAttribute("start_time", Long.class)) + " ms");
+            })
+            .onException((exchange, exception) -> {
+                exchange.sendError(exception.getMessage());
+            }).start();
     }
 }

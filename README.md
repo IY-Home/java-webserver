@@ -390,6 +390,7 @@ myServer.on("/change", exchange -> {
     // first parameter means the head only executes if path starts with the string. 
     // Slashes at front and end are ignored.
     // Only plain text, no regex or '?'.
+    // For more complex matching, check exchange.getRequestPath().
     String jwt = exchange.getBearerToken();
     return jwtService.authenticate(jwt); // if false, do not run the main endpoint. Stops subsequent heads too. Tails are unaffected.
 })
@@ -1005,7 +1006,7 @@ public class Main {
                         case -1 -> exchange.sendBadRequest("Expected multipart/form-data");
                         case -2 -> exchange.sendBadRequest("No config uploaded");
                         case -3 -> exchange.sendBadRequest("Only JSON files allowed");
-                        0 ->exchange.send("Uploaded successfully!");
+                        0 -> exchange.send("Uploaded successfully!");
                     }
                 })
                 .serveStatic("/", "./public", false, "index.html")

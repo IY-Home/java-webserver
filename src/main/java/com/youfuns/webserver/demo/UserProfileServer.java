@@ -25,7 +25,8 @@ public class UserProfileServer {
             "admin@system.com",
             "admin",
             "admin",
-            null
+            null,
+            true
     );
 
     public static void main(String[] args) {
@@ -79,7 +80,7 @@ public class UserProfileServer {
             }
 
             // Check password
-            if (!user.getPassword().equals(password)) {
+            if (!user.password().equals(password)) {
                 exchange.redirect("/login?error=Invalid+credentials");
                 return;
             }
@@ -115,11 +116,11 @@ public class UserProfileServer {
             }
 
             // Get form fields
-            String name = exchange.getFormField("name");
-            String email = exchange.getFormField("email");
-            String phone = exchange.getFormField("phone");
-            String password = exchange.getFormField("password");
-            boolean isAdmin = exchange.getFormField("admin") != null;
+            String name = exchange.getMultipartFormField("name");
+            String email = exchange.getMultipartFormField("email");
+            String phone = exchange.getMultipartFormField("phone");
+            String password = exchange.getMultipartFormField("password");
+            boolean isAdmin = exchange.getMultipartFormField("admin") != null;
 
             // Validate required fields
             if (name == null || name.trim().isEmpty() ||
@@ -170,22 +171,6 @@ public class UserProfileServer {
 
         // Admin page - Show all users (protected - admin only)
         .on("/admin", exchange -> {
-            // Check authentication
-            String token = exchange.getCookie("jwt");
-            if (token == null || !JwtService.validateToken(token)) {
-                exchange.redirect("/login");
-                return;
-            }
-
-            // Check if user is admin
-            String username = JwtService.extractSubject(token);
-            User currentUser = findUserByEmail(username);
-
-            if (currentUser == null || !currentUser.isAdmin()) {
-                exchange.redirect("/login?error=User+is+not+admin");
-                return;
-            }
-
             TemplateEngine engine = TemplateEngine.fromFile("./userServiceDemo/templates/admin.html");
 
             // Build user list HTML
@@ -206,10 +191,29 @@ public class UserProfileServer {
 
             engine.replace("users", userListHtml.toString())
                     .replace("count", String.valueOf(users.size()))
-                    .replace("admin_name", currentUser.getName());
+                    .replace("admin_name", exchange.getAttribute("user", User.class).name());
 
             exchange.formatHTML();
             exchange.send(engine.getTemplate());
+        })
+        .head("/admin", exchange -> {
+            // Check authentication
+            String token = exchange.getCookie("jwt");
+            if (token == null || !JwtService.validateToken(token)) {
+                exchange.redirect("/login");
+                return false;
+            }
+
+            // Check if user is admin
+            String username = JwtService.extractSubject(token);
+            User currentUser = findUserByEmail(username);
+
+            if (currentUser == null || !currentUser.isAdmin()) {
+                exchange.redirect("/login?error=User+is+not+admin");
+                return false;
+            }
+            exchange.setAttribute("user", currentUser);
+            return true;
         })
 
         // Serve uploaded avatars
@@ -236,8 +240,8 @@ public class UserProfileServer {
     }
 
     private static String generateUserCard(User user) {
-        String avatarImg = user.getAvatarPath() != null ?
-                "/avatars/" + user.getAvatarPath().substring(user.getAvatarPath().lastIndexOf('/') + 1) :
+        String avatarImg = user.avatarPath() != null ?
+                "/avatars/" + user.avatarPath().substring(user.avatarPath().lastIndexOf('/') + 1) :
                 "/avatars/default.png";
 
         return String.format("""
@@ -255,16 +259,16 @@ public class UserProfileServer {
                         </div>
                         """,
                 avatarImg,
-                user.getName(),
-                user.getName(),
-                user.getEmail(),
-                user.getPhone()
+                user.name(),
+                user.name(),
+                user.email(),
+                user.phone()
         );
     }
 
     private static User findUserByEmail(String email) {
         for (User user : users) {
-            if (user.getEmail().equalsIgnoreCase(email)) {
+            if (user.email().equalsIgnoreCase(email)) {
                 return user;
             }
         }
@@ -272,54 +276,5 @@ public class UserProfileServer {
     }
 
     // User model
-    static class User {
-        private final String name;
-        private final String email;
-        private final String phone;
-        private final String password;
-        private final String avatarPath;
-        private final boolean isAdmin;
-
-        public User(String name, String email, String phone, String password, String avatarPath) {
-            this.name = name;
-            this.email = email;
-            this.phone = phone;
-            this.password = password;
-            this.avatarPath = avatarPath;
-            this.isAdmin = true;
-        }
-
-        private User(String name, String email, String phone, String password, String avatarPath, boolean isAdmin) {
-            this.name = name;
-            this.email = email;
-            this.phone = phone;
-            this.password = password;
-            this.avatarPath = avatarPath;
-            this.isAdmin = isAdmin;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public String getPhone() {
-            return phone;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public String getAvatarPath() {
-            return avatarPath;
-        }
-
-        public boolean isAdmin() {
-            return isAdmin;
-        }
-    }
+    record User(String name, String email, String phone, String password, String avatarPath, boolean isAdmin) {}
 }
