@@ -2,7 +2,6 @@ package com.youfuns.webserver.demo;
 
 import com.youfuns.webserver.WebServer;
 
-import java.util.Arrays;
 import java.util.Map;
 
 public class Basic {

@@ -27,8 +27,8 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
         dynamicPathsDefault.put(template, dynamicExchangeHandler);
     }
 
-    public void addPath(String template, ExchangeHandler<I> exchangeHandler) {
-        pathsDefault.put(template, exchangeHandler);
+    public void addPath(String path, ExchangeHandler<I> exchangeHandler) {
+        pathsDefault.put(normalizePath(path), exchangeHandler);
     }
 
     public void addPath(String template, String method, DynamicExchangeHandler<I> dynamicExchangeHandler) {
@@ -37,10 +37,10 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
         else dynamicPaths.put(new Path(template, method), dynamicExchangeHandler);
     }
 
-    public void addPath(String template, String method, ExchangeHandler<I> exchangeHandler) {
+    public void addPath(String path, String method, ExchangeHandler<I> exchangeHandler) {
         method = method.trim().toLowerCase();
-        if (method.equals("default")) pathsDefault.put(template, exchangeHandler);
-        else paths.put(new Path(template, method), exchangeHandler);
+        if (method.equals("default")) pathsDefault.put(normalizePath(path), exchangeHandler);
+        else paths.put(new Path(normalizePath(path), method), exchangeHandler);
     }
 
     public void removePath(String inputPath) {
@@ -60,12 +60,13 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
     public void handle(Exchange<I> exchange) throws IOException {
         String address = exchange.getRequestPath();
         String matchableAddress = normalizePath(address);
+        String method = exchange.getHttpMethod().trim().toLowerCase();
 
         for (Map.Entry<Path, DynamicExchangeHandler<I>> pair : dynamicPaths.entrySet()) {
             Path path = pair.getKey();
             String requiredMethod = path.method();
             String template = path.url();
-            if (!exchange.getHttpMethod().toLowerCase().equals(requiredMethod)) {
+            if (!method.equals(requiredMethod)) {
                 continue;
             }
             String[] extracted = TemplateMatcher.extractValues(template, address);
@@ -90,12 +91,11 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
             Path path = pair.getKey();
             String requiredMethod = path.method();
             String url = path.url();
-            if (!exchange.getHttpMethod().toLowerCase().equals(requiredMethod)) {
+            if (!method.equals(requiredMethod)) {
                 continue;
             }
-            String matchablePath = normalizePath(url);
 
-            if (matchableAddress.equals(matchablePath)) {
+            if (matchableAddress.equals(url)) {
                 pair.getValue().handle(exchange);
                 return;
             }
@@ -103,17 +103,17 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
 
         for (Map.Entry<String, ExchangeHandler<I>> pair : pathsDefault.entrySet()) {
             String path = pair.getKey();
-            String matchablePath = normalizePath(path);
 
-            if (matchableAddress.equals(matchablePath)) {
+            if (matchableAddress.equals(path)) {
                 pair.getValue().handle(exchange);
                 return;
             }
         }
 
-        if (onNotFound != null) { onNotFound.handle(exchange); }
-        else { exchange.sendNotFound(); }
+        if (onNotFound != null) onNotFound.handle(exchange);
+        else exchange.sendNotFound();
     }
+
 
     public static <I> void handleExchange(Exchange<I> exchange, HeadsAndTails<I> headsAndTails, ExchangeHandler<I> handler, ExceptionHandler<I> exceptionHandler) {
         try {
@@ -133,8 +133,9 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
         } catch (Exception e) {
             try {
                 exceptionHandler.handle(exchange, e);
-            } catch (IOException ignored) {
-
+            } catch (IOException i) {
+                i.addSuppressed(e);
+                throw new RuntimeException(i);
             }
         } finally {
             try {
@@ -146,8 +147,9 @@ public class InternalDynamicHandler<I> implements ExchangeHandler<I> {
             } catch (Exception e) {
                 try {
                     exceptionHandler.handle(exchange, e);
-                } catch (IOException ignored) {
-
+                } catch (IOException i) {
+                    i.addSuppressed(e);
+                    throw new RuntimeException(i);
                 }
             }
         }

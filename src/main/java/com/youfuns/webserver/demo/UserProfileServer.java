@@ -12,6 +12,21 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
+/*
+    WARNING: This demo is for informational purposes only and lacks critical security measures.
+    It intends only to demonstrate features specific to this web server, such as
+    file upload, JWT tokens, and middleware, and is not a production application.
+    If you wish to adapt this into a real application, you must harden security by:
+    - Putting the server behind an HTTPS proxy
+    - Using a persistent database (e.g. PostgreSQL)
+    - Hashing passwords (e.g. Bcrypt, Argon2)
+    - Storing the JWT secret key securely
+    - Limiting admin access (the demo allows anyone to sign up)
+    - Isolating the security/infrastructure from the web server entirely
+    This framework is only a web microframework designed for quick prototyping and basic websites,
+    and is not a full-fledged framework like Spring.
+*/
+
 public class UserProfileServer {
 
     // In-memory user database — in a true application, you would save to a database
