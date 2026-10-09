@@ -1,15 +1,17 @@
 package com.youfuns.webserver.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class TemplateMatcher {
     private static final char placeholder = '?';
 
-    public static String[] extractValues(String template, String input) {
-        // If template has no placeholder, return empty array
+    public static Template compileTemplate(String template) {
+        // If template has no placeholder, return empty
         if (!template.contains(String.valueOf(placeholder))) {
-            return new String[0];
+            throw new IllegalArgumentException("Template does not contain placeholder: " + template);
         }
 
         // Parse the template into literal parts and placeholders
@@ -73,6 +75,11 @@ public class TemplateMatcher {
             literalParts.add(currentLiteral.toString());
         }
 
+        return new Template(Collections.unmodifiableList(literalParts), Collections.unmodifiableList(placeholderPositions));
+    }
+    public static String[] extractValues(Template template, String input) {
+        List<String> literalParts = template.literalParts;
+        List<Integer> placeholderPositions = template.placeholderPositions;
         // Now try to match the input against the template
         List<String> results = new ArrayList<>();
         int inputPos = 0;
@@ -124,4 +131,9 @@ public class TemplateMatcher {
 
         return results.toArray(new String[0]);
     }
+    public static void main(String[] args) {
+        Template temp = compileTemplate("/users/?/profile/?");
+        System.out.println(Arrays.toString(extractValues(temp, "/users/123/profile/456")));
+    }
+    public record Template(List<String> literalParts, List<Integer> placeholderPositions) {}
 }

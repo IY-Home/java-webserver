@@ -28,9 +28,15 @@ public class InternalHomeHandler<InternalExchange> implements ExchangeHandler<In
         this.dynamicHandler.addPath("/", method, root);
     }
 
-    public void setDynamicRoot(DynamicExchangeHandler<InternalExchange> root) {
+    public void setDynamicRoot(String template, DynamicExchangeHandler<InternalExchange> root) {
         logger.log(this.getClass(), "Set dynamic root path", SimpleLogger.Level.DEBUG);
-        this.dynamicHandler.addPath("/?", root);
+        this.dynamicHandler.addPath(template, root);
+    }
+
+
+    public void setDynamicRoot(String template, String method, DynamicExchangeHandler<InternalExchange> root) {
+        logger.log(this.getClass(), "Set dynamic root path", SimpleLogger.Level.DEBUG);
+        this.dynamicHandler.addPath(template, method, root);
     }
 
     public InternalDynamicHandler<InternalExchange> getDynamicHandler() {

@@ -16,19 +16,24 @@ public class Basic {
             String name = exchange.getQueryParameter("name", "Stranger");
             exchange.send("Hello, " + name + "!");
         })
+
         // Sending JSON
         .on("/api/status", exchange -> exchange.sendJson(Map.of(
                 "status", "running",
                 "message", "Hello World!",
                 "timestamp", System.currentTimeMillis()
         )))
+
         // Dynamic path
         .on("/users/?", (params, exchange) -> {
             String userId = params[0];
             exchange.send("User ID: " + userId);
         })
+
         // Default
-        .onNotFound(exchange -> exchange.send(404, "Custom 404, page not found: " + exchange.getRequestPath()))
+        .onNotFound(exchange ->
+                exchange.send(404, "Custom 404, page not found: " + exchange.getRequestPath()))
+
         // Start the server
         .start();
     }

@@ -97,7 +97,8 @@ public class WebServer<S, I, H> {
         checkContextAdditionAfterStart();
         if (endpoint.isEmpty() || endpoint.equals("/")) {
             for (String iMethod : method) homeHandler.setRoot(iMethod, action);
-            logger.log(WebServer.class, "Created endpoint: " + endpoint, SimpleLogger.Level.INFO);
+            logger.log(WebServer.class, "Created endpoint: " + endpoint +
+                    ((method.length > 0 && method[0] != null && !method[0].equals("DEFAULT")) ? " (" + Arrays.toString(method).replace("[", "").replace("]", "") + ")" : ""), SimpleLogger.Level.INFO);
             return this;
         }
         if (endpoint.endsWith("/")) {
@@ -140,7 +141,13 @@ public class WebServer<S, I, H> {
         checkContextAdditionAfterStart();
         int index = template.indexOf('?');
         String endpoint = index == -1 ? template : template.substring(0, index);
-        if (endpoint.endsWith("/") && !endpoint.equals("/")) {
+        if (endpoint.isEmpty() || endpoint.equals("/")) {
+            for (String iMethod : method) homeHandler.setDynamicRoot(template, iMethod, action);
+            logger.log(WebServer.class, "Created dynamic endpoint: " + endpoint +
+                    ((method.length > 0 && method[0] != null && !method[0].equals("DEFAULT")) ? " (" + Arrays.toString(method).replace("[", "").replace("]", "") + ")" : ""), SimpleLogger.Level.INFO);
+            return this;
+        }
+        if (endpoint.endsWith("/")) {
             endpoint = endpoint.substring(0, endpoint.length() - 1);
         }
         if (serverInterface.supportsMultipleContexts()) {
@@ -235,7 +242,7 @@ public class WebServer<S, I, H> {
         }
 
         if (normalizedPath.equals("/")) {
-            homeHandler.setDynamicRoot((p, e) -> handler.handle(e));
+            homeHandler.setDynamicRoot("/?", (p, e) -> handler.handle(e));
         }
 
         logger.log(WebServer.class, "Serving static files from " + directory + " at " + normalizedPath, SimpleLogger.Level.INFO);

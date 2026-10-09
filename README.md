@@ -281,6 +281,15 @@ Multiple parameters:
 - `/users/?/posts/?`: Correct, 2 parameters, targets `/users/123/posts/456`.
 - `/users/?id/posts/?postid`: Incorrect, targets `/users/123id/posts/456postid`.
 
+Additionally, **static paths take priority over dynamic paths**. 
+Therefore, if you have
+`/users` (static) returning `Base`, `/users/?` (dynamic) returning `User ID: [?]`, and `/users/123` (static) returning `Hello 123`:
+```
+'[base-url]/users' -> Base
+'[base-url]/users/anythingelse' -> User ID: anythingelse
+'[base-url]/users/123' -> Hello 123
+```
+
 ## Static File Serving
 
 ```java
