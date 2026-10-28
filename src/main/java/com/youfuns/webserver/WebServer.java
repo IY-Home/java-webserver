@@ -463,7 +463,7 @@ public class WebServer<S, I, H> {
         return new Builder();
     }
 
-    public static class Builder implements Serializable, Cloneable {
+    public static class Builder {
         private InetSocketAddress serverAddress;
         private SimpleLogger logger;
         private WebServerInterface<?, ?, ?> serverInterface;
